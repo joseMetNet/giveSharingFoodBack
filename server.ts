@@ -20,7 +20,7 @@ class Server {
     this.port = config.port || '8080';
     this.path = {
       // exmple
-      example: "/api/givesharingfood",
+      example: "/givesharingfood",
     };
 
     // Conectar a bd
