@@ -11,8 +11,6 @@ export const getCityByDepartment = async (data: dataCity): Promise<CitiesReposit
                                .query(query);
         const cities = result?.recordset;
 
-        console.log(query);
-        console.log(idDepartament);
         if (cities && cities.length > 0) {
             return {
                 code: 200,

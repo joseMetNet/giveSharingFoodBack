@@ -5,6 +5,8 @@ import { getDepartments } from "../controllers/Department.Controller";
 import { getCityByDepartment } from "../controllers/City.Controller";
 import { getTypeIdentification } from "../controllers/TypeIdentification.Controller";
 import { createUser } from "../controllers/User.Controller";
+import { getProducts } from "../controllers/Products.Controller";
+import { uploadFile } from "../controllers/Documents.controller";
 
 
 const routes = Router();
@@ -28,4 +30,9 @@ routes.post("/createUser", [body("idAuth"),
                             body("idRole"),
                             body("idCity")], createUser);
 
+//Rutas productos
+routes.get("/products", getProducts);
+
+//Rutas documentos
+routes.post('/upload', uploadFile);
 export default routes;

@@ -1,14 +1,14 @@
-import config from "./src/config/config";
-import { connectToSqlServer } from "./src/DB/config";
+import config from "../config/config";
+import { connectToSqlServer } from "../DB/config";
 import express, { Application } from "express";
 import cors from "cors";
 import morgan from "morgan";
 import "colors";
-import i18n from "./src/config/i18n";
+import i18n from "../config/i18n";
 import fileUpload from 'express-fileupload';
 
 //routes
-import exampleRoutes from "./src/routes/router.Router";
+import exampleRoutes from "../routes/router.Router";
 
 class Server {
   private app: Application;
@@ -52,7 +52,7 @@ class Server {
     this.app.use(
       fileUpload({
         useTempFiles: true,
-        tempFileDir: "/tmp/",
+        tempFileDir: "./tmp/",
         createParentPath: true,
       })
     );
