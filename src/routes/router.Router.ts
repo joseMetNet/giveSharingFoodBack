@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { body, check, param, query } from "express-validator";
-import { validateEnpoint } from "../middlewares/validatorEnpoint";
+import { checkExistingEmail, validateEnpoint } from "../middlewares/validatorEnpoint";
 import { getDepartments } from "../controllers/Department.Controller";
 import { getCityByDepartment } from "../controllers/City.Controller";
 import { getTypeIdentification } from "../controllers/TypeIdentification.Controller";
@@ -22,13 +22,13 @@ routes.get("/typeIdentification", getTypeIdentification);
 
 //Rutas usuario
 routes.post("/createUser", [body("idAuth"),
-                            body("name"),
-                            body("phone"),
-                            body("email"),
-                            body("googleAddress"),
-                            body("idOrganization"),
-                            body("idRole"),
-                            body("idCity")], createUser);
+                            body("name").isString().notEmpty(),
+                            body("phone").isString().notEmpty(),
+                            body("email").notEmpty().isEmail(),
+                            body("googleAddress").notEmpty(),
+                            body("idOrganization").notEmpty(),
+                            body("idRole").notEmpty(),
+                            body("idCity")],checkExistingEmail, createUser);
 
 //Rutas productos
 routes.get("/products", getProducts);

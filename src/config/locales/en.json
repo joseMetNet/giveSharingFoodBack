@@ -16,9 +16,12 @@
 		"error_server": "An error occurred on the server"
 	},
 	"user": {
-		"succesfull": "user.succesfull"
+		"succesfull": "user.succesfull",
+		"emailExists": "the email already exists",
+		"error_server": "An error occurred on the server"
 	},
-	"users": {
-		"emailExists": "users.emailExists"
+	"documents": {
+		"succesfull": "OK",
+		"emptyResponse": "No information found"
 	}
 }

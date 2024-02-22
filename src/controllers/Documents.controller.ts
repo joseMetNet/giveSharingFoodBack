@@ -7,7 +7,6 @@ import { UploadedFile } from "express-fileupload";
 export const uploadFile: RequestHandler = async(req, res) => {
     try {
         const { containerName, blobName } = req.body;
-        //type narrounin
         if (!req.files || Object.keys(req.files).length === 0) {
             res.status(400).send("No files were uploaded.");
             return;
@@ -17,7 +16,6 @@ export const uploadFile: RequestHandler = async(req, res) => {
             return;
           }
           const filePath = req.files.filePath as UploadedFile
-          console.log(filePath.name)
           filePath.mv('./tmp/' + filePath.name, function(err) {
             if (err)
 

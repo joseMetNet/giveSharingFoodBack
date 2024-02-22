@@ -14,5 +14,14 @@
 		"succesfull": "OK",
 		"emptyResponse": "No se encontró información",
 		"error_server": "Ocurrió un error en el servidor"
+	},
+	"user": {
+		"succesfull": "El usuario se creo correctamente",
+		"emailExists": "El correo electronico ya existe"
+	},
+	"documents": {
+		"succesfull": "OK",
+		"emptyResponse": "No se encontró información",
+		"error_server": "Ocurrió un error en el servidor"
 	}
 }
