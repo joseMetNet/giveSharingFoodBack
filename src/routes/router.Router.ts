@@ -7,6 +7,7 @@ import { getTypeIdentification } from "../controllers/TypeIdentification.Control
 import { createUser } from "../controllers/User.Controller";
 import { getProducts } from "../controllers/Products.Controller";
 import { uploadFile } from "../controllers/Documents.controller";
+import { createOrganization, getOrganizationById, updateOrganizationById } from "../controllers/Organization.Controller";
 
 
 const routes = Router();
@@ -30,9 +31,31 @@ routes.post("/createUser", [body("idAuth"),
                             body("idRole").notEmpty(),
                             body("idCity")],checkExistingEmail, createUser);
 
+//Rutas organizacion
+routes.post("/createOrganization", [body("representativeName").isString().notEmpty,
+                                    body("bussisnesName").isString().notEmpty(),
+                                    body("email").notEmpty().isEmail(),
+                                    body("password").notEmpty(),
+                                    body("representativePhone").isString().notEmpty(),
+                                    body("idTypeOrganitation").isInt().notEmpty], createOrganization);
+
+routes.get("/organization/:id", [param("id").notEmpty().isInt()], getOrganizationById);
+
+routes.put("/updateOrganization/:id", [param("id").notEmpty().isInt(),
+                                    body ("bussisnesName").notEmpty().isString(),
+                                    body("idTypeIdentification").notEmpty().isString(),
+                                    body("identification").notEmpty().isString(),
+                                    body("dv").notEmpty().isString(),
+                                    body("representativaName").notEmpty().isString(),
+                                    body("representativePhone").notEmpty().isString(),
+                                    body("email").notEmpty().isEmail(),
+                                    body("logo").notEmpty().isString()
+                                    ],updateOrganizationById);
+
 //Rutas productos
 routes.get("/products", getProducts);
 
 //Rutas documentos
-routes.post('/upload', uploadFile);
+routes.post('/upload', [body("filePath").isString().notEmpty(),
+                        body("blobName").isString().notEmpty()], uploadFile);
 export default routes;

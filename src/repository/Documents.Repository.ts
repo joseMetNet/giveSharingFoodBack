@@ -5,9 +5,10 @@ import { BlobServiceClient } from '@azure/storage-blob';
 import mime from 'mime-types';
 import { connectToSqlServer } from '../DB/config';
 
-export const uploadFile = async (containerName: string, filePath: string, originalBlobName: string) => {
+export const uploadFile = async (filePath: string, originalBlobName: string) => {
     try {
         const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING!);
+        const containerName = process.env.CONTAINERNAME || 'filesgivesharingfood'
         const containerClient = blobServiceClient.getContainerClient(containerName);
 
         const uniqueId = uuidv4();
