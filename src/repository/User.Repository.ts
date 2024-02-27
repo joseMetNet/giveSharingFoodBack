@@ -30,7 +30,7 @@ export const postContacts = async (data: dataUser): Promise<IresponseRepositoryS
         console.log("Error creating user", err);
         return {
             code: 400,
-            message: { translationKey: "users.errorInRepository", translationParams: { name: "createUser" } },
+            message: { translationKey: "user.error_server", translationParams: { name: "createUser" } },
         };
     }
 }

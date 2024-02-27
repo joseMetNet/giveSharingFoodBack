@@ -32,12 +32,12 @@ routes.post("/createUser", [body("idAuth"),
                             body("idCity")],checkExistingEmail, createUser);
 
 //Rutas organizacion
-routes.post("/createOrganization", [body("representativeName").isString().notEmpty,
+routes.post("/createOrganization", [body("representativaName").isString().notEmpty(),
                                     body("bussisnesName").isString().notEmpty(),
                                     body("email").notEmpty().isEmail(),
                                     body("password").notEmpty(),
                                     body("representativePhone").isString().notEmpty(),
-                                    body("idTypeOrganitation").isInt().notEmpty], createOrganization);
+                                    body("idTypeOrganitation").isInt().notEmpty()], createOrganization);
 
 routes.get("/organization/:id", [param("id").notEmpty().isInt()], getOrganizationById);
 

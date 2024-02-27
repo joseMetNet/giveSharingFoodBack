@@ -7,9 +7,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import mime from 'mime-types';
 
-export const postOrganization = async(data: dataOrganization): Promise<IresponseRepositoryService> => {
+export const postOrganization = async (data: dataOrganization): Promise<IresponseRepositoryService> => {
     try {
-        const { representativeName, bussisnesName, email, password, representativePhone, idTypeOrganitation } = data;
+        const { representativaName, bussisnesName, email, password, representativePhone, idTypeOrganitation } = data;
         const db = await connectToSqlServer();
 
         const emailCheckQuery = `
@@ -32,19 +32,18 @@ export const postOrganization = async(data: dataOrganization): Promise<Iresponse
 
         const insertOrganization = `
             INSERT INTO TB_Organizations (representativaName, bussisnesName, email, representativePhone, idTypeOrganitation)
-            OUTPUT inserted.id
+            OUTPUT inserted.id, inserted.representativaName, inserted.bussisnesName, inserted.email, inserted.representativePhone, inserted.idTypeOrganitation
             VALUES (@representativaName, @bussisnesName, @email, @representativePhone, @idTypeOrganitation)
         `;
         const insertResult = await db?.request()
-            .input('representativaName', representativeName)
+            .input('representativaName', representativaName)
             .input('bussisnesName', bussisnesName)
             .input('email', email)
             .input('representativePhone', representativePhone)
             .input('idTypeOrganitation', idTypeOrganitation)
             .query(insertOrganization);
 
-        
-        const organizationId = insertResult?.recordset[0]?.id;
+        const insertedOrganization = insertResult?.recordset[0];
 
         let idRole;
         if (idTypeOrganitation === 1) {
@@ -64,24 +63,24 @@ export const postOrganization = async(data: dataOrganization): Promise<Iresponse
 
         const userManagementResponse = await axios.post(userManagementUrl, userManagementData);
 
-        const idAuth = userManagementResponse.data.id;
-
+        const idAuth = userManagementResponse.data.data[0].id;
         const insertUser = `
             INSERT INTO TB_User (name, phone, email, idRole, idOrganization, idAuth)
             VALUES (@name, @phone, @email, @idRole, @idOrganization, @idAuth)
         `;
         const insertUserResult = await db?.request()
-            .input('name', representativeName)
+            .input('name', representativaName)
             .input('phone', representativePhone)
             .input('email', email)
             .input('idRole', idRole)
-            .input('idOrganization', organizationId)
+            .input('idOrganization', insertedOrganization.id)
             .input('idAuth', idAuth)
             .query(insertUser);
+
         return {
             code: 200,
             message: 'organizations.successful',
-            data: insertResult?.recordset
+            data: insertedOrganization
         }
     } catch (err) {
         console.log("Error creating organization", err);

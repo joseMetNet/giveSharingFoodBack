@@ -1,5 +1,5 @@
 export interface dataOrganization {
-    representativeName: string,
+    representativaName: string,
     bussisnesName: string,
     email: String,
     password: String,

@@ -16,7 +16,7 @@
 		"error_server": "An error occurred on the server"
 	},
 	"user": {
-		"succesfull": "user.succesfull",
+		"succesfull": "OK",
 		"emailExists": "the email already exists in user",
 		"error_server": "An error occurred on the server"
 	},
