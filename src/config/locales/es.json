@@ -17,11 +17,29 @@
 	},
 	"user": {
 		"succesfull": "El usuario se creo correctamente",
-		"emailExists": "El correo electronico ya existe"
+		"emailExists": "El correo electronico ya existe",
+		"error_server": "Ocurrió un error en el servidor",
+		"required_field_text": "Este campo es requerido de tipo texto",
+		"validate_email": "Este correo no es valido",
+		"validate_field_int": "Este campo es requerido de tipo entero"
 	},
 	"documents": {
 		"succesfull": "OK",
 		"emptyResponse": "No se encontró información",
-		"error_server": "Ocurrió un error en el servidor"
+		"error_server": "Ocurrió un error en el servidor",
+		"file_required":"Este campo es requerido de tipo texto"
+	},
+	"organizations": {
+		"error_server": "Ocurrió un error en el servidor",
+		"successful": "OK",
+		"exist_mail": "El correo electronico ya existe",
+		"emptyResponse": "No se encontró información",
+		"updated": "Information actualizada",
+		"required_field_text": "Este campo es requerido de tipo texto",
+		"validate_email": "Este correo no es valido",
+		"validate_field_int": "Este campo es requerido de tipo entero"
+	},
+	"city": {
+		"field": "Este campo es de tipo entero"
 	}
 }

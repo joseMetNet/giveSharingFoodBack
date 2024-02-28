@@ -18,18 +18,28 @@
 	"user": {
 		"succesfull": "OK",
 		"emailExists": "the email already exists in user",
-		"error_server": "An error occurred on the server"
+		"error_server": "An error occurred on the server",
+		"required_field_text": "This is a required text field.",
+		"validate_email": "This is not a valid email",
+		"validate_field_int": "This is a required field of type integer"
 	},
 	"documents": {
 		"succesfull": "OK",
 		"emptyResponse": "No information found",
-		"error_server": "An error occurred on the server"
+		"error_server": "An error occurred on the server",
+		"file_required":"This is a required text field"
 	},
 	"organizations": {
 		"error_server": "An error occurred on the server",
 		"successful": "OK",
 		"exist_mail": "The email already exists in organization",
 		"emptyResponse": "No information found",
-		"updated": "Information updated"
+		"updated": "Information updated",
+		"required_field_text": "This is a required text field.",
+		"validate_email": "This is not a valid email",
+		"validate_field_int": "This is a required field of type integer"
+	},
+	"city": {
+		"field": "The field must be an integer"
 	}
 }
