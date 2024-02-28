@@ -8,7 +8,13 @@ import i18n from "../config/i18n";
 import fileUpload from 'express-fileupload';
 
 //routes
-import exampleRoutes from "../routes/router.Router";
+import exampleRoutes from "../routes/Department.Router";
+import cityRouter from "../routes/City.Router";
+import typeIdentificationRouter from "../routes/TypeIdentification.Router";
+import userRouter from "../routes/User.Router";
+import organizationRouter from "../routes/Organization.Router";
+import productsRouter from "../routes/Products.Router";
+import documentsRouter from "../routes/Documents.Router";
 
 class Server {
   private app: Application;
@@ -63,6 +69,12 @@ class Server {
   routes() {
     // example
     this.app.use(this.path.example, exampleRoutes);
+    this.app.use(this.path.example, cityRouter);
+    this.app.use(this.path.example, typeIdentificationRouter);
+    this.app.use(this.path.example, userRouter);
+    this.app.use(this.path.example, organizationRouter);
+    this.app.use(this.path.example, productsRouter);
+    this.app.use(this.path.example, documentsRouter);
   }
 
   listen() {

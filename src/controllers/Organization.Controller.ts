@@ -7,7 +7,6 @@ import { UploadedFile } from "express-fileupload";
 
 export const createOrganization: RequestHandler = async(req, res) => {
     try {
-        console.log("llego")
         const { code, message, ...resto }: IresponseRepositoryService = await repository.postOrganization(req.body);
         res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
     } catch (err) {

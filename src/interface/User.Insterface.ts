@@ -1,12 +1,11 @@
 export interface dataUser {
-    idAuth?: number,
     name: string,
     phone: string,
     email: String,
     googleAddress: string,
     idOrganization: number,
-    idRole: number,
-    idCity: number
+    idCity: number,
+    idDepartmen: number
 }
 
 export interface ImessageComposed {

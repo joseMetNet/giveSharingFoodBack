@@ -3,22 +3,40 @@ import { IresponseRepositoryService, dataUser } from "../interface/User.Insterfa
 
 export const postContacts = async (data: dataUser): Promise<IresponseRepositoryService> => {
     try {
-        const { idAuth, name, phone, email, googleAddress, idOrganization, idRole, idCity } = data;
+        const { name, phone, email, googleAddress, idOrganization, idCity, idDepartmen } = data;
         const db = await connectToSqlServer();
 
+        const organizationQuery = `
+            SELECT idTypeOrganitation
+            FROM TB_Organizations
+            WHERE id = @IdOrganization
+        `;
+        const organizationResult = await db?.request()
+            .input('IdOrganization', idOrganization)
+            .query(organizationQuery);
+        console.log(organizationResult?.recordset)
+        let idRol: number = 4; // Valor por defecto asignado aquí
+        if (organizationResult?.recordset.length) {
+            const idTypeOrganization = organizationResult.recordset[0].idTypeOrganitation; // corregido aquí
+
+            if (idTypeOrganization === 1) {
+                idRol = 5;
+            }
+        }
+
         const insertQuery = `
-    INSERT INTO TB_User (IdAuth, Name, Phone, Email, GoogleAddress, IdOrganization, IdRole, IdCity) 
-    VALUES (@IdAuth, @Name, @Phone, @Email, @GoogleAddress, @IdOrganization, @IdRole, @IdCity)
-`;
+            INSERT INTO TB_User (Name, Phone, Email, GoogleAddress, IdOrganization, idRole, IdCity, idDepartmen) 
+            VALUES (@Name, @Phone, @Email, @GoogleAddress, @IdOrganization, @IdRole, @IdCity, @idDepartmen) 
+        `; // corregido aquí
         const insertResult = await db?.request()
-            .input('IdAuth', idAuth || null)
             .input('Name', name)
             .input('Phone', phone)
             .input('Email', email || null)
             .input('GoogleAddress', googleAddress || null)
             .input('IdOrganization', idOrganization)
-            .input('IdRole', idRole)
+            .input('IdRole', idRol)
             .input('IdCity', idCity)
+            .input('idDepartmen', idDepartmen)
             .query(insertQuery);
 
         return {
