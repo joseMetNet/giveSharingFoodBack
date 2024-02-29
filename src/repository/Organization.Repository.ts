@@ -1,11 +1,11 @@
 import { connectToSqlServer } from "../DB/config";
-import axios from 'axios';
 import { IresponseRepositoryService, IresponseRepositoryServiceGet, dataOrganization, updateOrganizationById } from "../interface/Organization.Interface";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
 import mime from 'mime-types';
+import { createUserInUserManagement } from "../helpers/UserManagment.Helper";
 
 export const postOrganization = async (data: dataOrganization): Promise<IresponseRepositoryService> => {
     try {
@@ -45,25 +45,10 @@ export const postOrganization = async (data: dataOrganization): Promise<Irespons
 
         const insertedOrganization = insertResult?.recordset[0];
 
-        let idRole;
-        if (idTypeOrganitation === 1) {
-            idRole = 3;
-        } else if (idTypeOrganitation === 2) {
-            idRole = 2;
-        } else {
-            idRole = 1;
-        }
+        const idRole = idTypeOrganitation === 1 ? 3 : idTypeOrganitation === 2 ? 2 : 1;
 
-        const userManagementUrl = process.env.USERA_MANAGEMENT_URL || 'https://usermanagementservicemetnet.azurewebsites.net/UserManagement';
-        const userManagementData = {
-            userGroup: process.env.USER_GROUP || 'Usersguivesharingfood',
-            userName: email,
-            password: password
-        };
+        const idAuth = await createUserInUserManagement(email, password);
 
-        const userManagementResponse = await axios.post(userManagementUrl, userManagementData);
-
-        const idAuth = userManagementResponse.data.data[0].id;
         const insertUser = `
             INSERT INTO TB_User (name, phone, email, idRole, idOrganization, idAuth)
             VALUES (@name, @phone, @email, @idRole, @idOrganization, @idAuth)
@@ -129,43 +114,38 @@ export const getOrganizationById = async (filter: { id: number }): Promise<Iresp
     }
 }
 
-export const updateOrganization = async (id: number,filePath: string, data: updateOrganizationById): Promise<IresponseRepositoryServiceGet> => {
+export const updateOrganization = async (id: number, filePath: string, data: updateOrganizationById): Promise<IresponseRepositoryServiceGet> => {
     try {
-        const { bussisnesName, idTypeIdentification, identificacion, dv, representativaName, representativePhone, representativeEmail,
-        name, phone, email, idCity, googleAddress } = data;
-        const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING!);
-        const containerName = process.env.CONTAINERNAME || 'filesgivesharingfood'
-        const containerClient = blobServiceClient.getContainerClient(containerName);
+        const { bussisnesName, idTypeIdentification, identification, dv, representativaName, representativePhone, representativeEmail,
+            name, phone, email, idCity, googleAddress } = data;
 
-        const uniqueId = uuidv4();
-        const blobExtension = path.extname(filePath);
-        const blobName = `${uniqueId}${blobExtension}`;
-        const fileBuffer = fs.readFileSync(filePath);
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
-        const fileMimeType = mime.lookup(filePath) || 'application/octet-stream';
-
-        const uploadBlobResponse = await blockBlobClient.uploadData(fileBuffer, {
-            blobHTTPHeaders: { blobContentType: fileMimeType }
-        });
-        const blobUrl = `https://${blobServiceClient.accountName}.blob.core.windows.net/filesgivesharingfood/${blobName}`;
+        const allowedImageExtensions = ['.jpg', '.jpeg', '.png'];
+        const fileExtension = path.extname(filePath).toLowerCase();
+        if (!allowedImageExtensions.includes(fileExtension)) {
+            return {
+                code: 400,
+                message: { translationKey: "organizations.invalid_image" },
+            };
+        }
 
         const db = await connectToSqlServer();
+
+        const blobUrl = await uploadImageToAzure(filePath);
 
         if ((representativeEmail && representativeEmail !== data.representativeEmail) || (email && email !== data.email)) {
             const emailCheckQuery = `
                 SELECT 
                     (SELECT COUNT(*)
                     FROM TB_Organizations
-                    WHERE email = @email) AS organizationsCount,
+                    WHERE email = @orgEmail) AS organizationsCount,
                     (SELECT COUNT(*)
                     FROM TB_User
                     WHERE email = @userEmail) AS userCount
             `;
         
             const CheckResult = await db?.request()
-                .input('email', representativeEmail ? representativeEmail : email)
-                .input('userEmail', email)
+                .input('orgEmail', representativeEmail ? representativeEmail : data.representativeEmail)
+                .input('userEmail', email ? email : data.email)
                 .query(emailCheckQuery);
         
             const organizationsCount = CheckResult?.recordset[0]?.organizationsCount || 0;
@@ -185,43 +165,44 @@ export const updateOrganization = async (id: number,filePath: string, data: upda
                 };
             }
         }
+
         const updatedUserQuery = `
-        UPDATE TB_User SET 
-            name = CASE WHEN @name IS NOT NULL THEN @name ELSE name END,
-            phone = CASE WHEN @phone IS NOT NULL THEN @phone ELSE phone END,
-            email = CASE WHEN @email IS NOT NULL THEN @email ELSE email END,
-            idCity = CASE WHEN @idCity IS NOT NULL THEN @idCity ELSE idCity END,
-            googleAddress = CASE WHEN @googleAddress IS NOT NULL THEN @googleAddress ELSE googleAddress END
-        WHERE idOrganization = @idOrganization
-    `;
-    
-    const updateOrganizationQuery = `
-    UPDATE TB_Organizations SET 
-        bussisnesName = CASE WHEN @bussisnesName IS NOT NULL THEN @bussisnesName ELSE bussisnesName END,
-        idTypeIdentification = CASE WHEN @idTypeIdentification IS NOT NULL THEN @idTypeIdentification ELSE idTypeIdentification END,
-        identification = CASE WHEN @identificacion IS NOT NULL THEN @identificacion ELSE identification END,
-        dv = CASE WHEN @dv IS NOT NULL THEN @dv ELSE dv END,
-        representativaName = CASE WHEN @representativaName IS NOT NULL THEN @representativaName ELSE representativaName END,
-        representativePhone = CASE WHEN @representativePhone IS NOT NULL THEN @representativePhone ELSE representativePhone END,
-        email = CASE WHEN @representativeEmail IS NOT NULL THEN @representativeEmail ELSE email END,
-        logo = CASE WHEN @logo IS NOT NULL THEN @logo ELSE logo END,
-        idStatus = CASE WHEN @idStatus IS NOT NULL THEN @idStatus ELSE idStatus END
-    WHERE id = @id
-`;
-    
-    const updatedOrganization = await db?.request()
-        .input('bussisnesName', bussisnesName)
-        .input('idTypeIdentification', idTypeIdentification)
-        .input('identificacion', identificacion)
-        .input('dv', dv)
-        .input('representativaName', representativaName)
-        .input('representativePhone', representativePhone)
-        .input('representativeEmail', representativeEmail)
-        .input('logo', blobUrl)
-        .input('idStatus', 1)
-        .input('id', id)
-        .query(updateOrganizationQuery);
+            UPDATE TB_User SET 
+                name = CASE WHEN @name IS NOT NULL THEN @name ELSE name END,
+                phone = CASE WHEN @phone IS NOT NULL THEN @phone ELSE phone END,
+                email = CASE WHEN @email IS NOT NULL THEN @email ELSE email END,
+                idCity = CASE WHEN @idCity IS NOT NULL THEN @idCity ELSE idCity END,
+                googleAddress = CASE WHEN @googleAddress IS NOT NULL THEN @googleAddress ELSE googleAddress END
+            WHERE idOrganization = @idOrganization
+        `;
         
+        const updateOrganizationQuery = `
+            UPDATE TB_Organizations SET 
+                bussisnesName = CASE WHEN @bussisnesName IS NOT NULL THEN @bussisnesName ELSE bussisnesName END,
+                idTypeIdentification = CASE WHEN @idTypeIdentification IS NOT NULL THEN @idTypeIdentification ELSE idTypeIdentification END,
+                identification = CASE WHEN @identification IS NOT NULL THEN @identification ELSE identification END,
+                dv = CASE WHEN @dv IS NOT NULL THEN @dv ELSE dv END,
+                representativaName = CASE WHEN @representativaName IS NOT NULL THEN @representativaName ELSE representativaName END,
+                representativePhone = CASE WHEN @representativePhone IS NOT NULL THEN @representativePhone ELSE representativePhone END,
+                email = CASE WHEN @representativeEmail IS NOT NULL THEN @representativeEmail ELSE email END,
+                logo = CASE WHEN @logo IS NOT NULL THEN @logo ELSE logo END,
+                idStatus = CASE WHEN @idStatus IS NOT NULL THEN @idStatus ELSE idStatus END
+            WHERE id = @id
+        `;
+        
+        const updatedOrganization = await db?.request()
+            .input('bussisnesName', bussisnesName)
+            .input('idTypeIdentification', idTypeIdentification)
+            .input('identification', identification)
+            .input('dv', dv)
+            .input('representativaName', representativaName)
+            .input('representativePhone', representativePhone)
+            .input('representativeEmail', representativeEmail)
+            .input('logo', blobUrl)
+            .input('idStatus', 1)
+            .input('id', id)
+            .query(updateOrganizationQuery);
+            
         const updatedUser = await db?.request()
             .input('name', name)
             .input('phone', phone)
@@ -230,6 +211,7 @@ export const updateOrganization = async (id: number,filePath: string, data: upda
             .input('googleAddress', googleAddress)
             .input('idOrganization', id)
             .query(updatedUserQuery);
+
         return {
             code: 200,
             message: { translationKey: "organizations.updated" },
@@ -243,7 +225,27 @@ export const updateOrganization = async (id: number,filePath: string, data: upda
     }
 };
 
+export const uploadImageToAzure = async (filePath: string): Promise<string> => {
 
+    const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING!);
+    const containerName = process.env.CONTAINERNAME || 'filesgivesharingfood'
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+
+    const uniqueId = uuidv4();
+    const blobExtension = path.extname(filePath);
+    const blobName = `${uniqueId}${blobExtension}`;
+    const fileBuffer = fs.readFileSync(filePath);
+    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+    const fileMimeType = mime.lookup(filePath) || 'application/octet-stream';
+
+    const uploadBlobResponse = await blockBlobClient.uploadData(fileBuffer, {
+        blobHTTPHeaders: { blobContentType: fileMimeType }
+    });
+    const blobUrl = `https://${blobServiceClient.accountName}.blob.core.windows.net/filesgivesharingfood/${blobName}`;
+
+    return blobUrl;
+};
 
 
 

@@ -27,7 +27,7 @@
 		"succesfull": "OK",
 		"emptyResponse": "No se encontró información",
 		"error_server": "Ocurrió un error en el servidor",
-		"file_required":"Este campo es requerido de tipo texto"
+		"file_required": "Este campo es requerido de tipo texto"
 	},
 	"organizations": {
 		"error_server": "Ocurrió un error en el servidor",
@@ -37,9 +37,16 @@
 		"updated": "Information actualizada",
 		"required_field_text": "Este campo es requerido de tipo texto",
 		"validate_email": "Este correo no es valido",
-		"validate_field_int": "Este campo es requerido de tipo entero"
+		"validate_field_int": "Este campo es requerido de tipo entero",
+		"invalid_image": "Solo se aceptan imágenes de tipo ['.jpg', '.jpeg', '.png']"
 	},
 	"city": {
 		"field": "Este campo es de tipo entero"
+	},
+	"login": {
+		"successful": "OK",
+		"error_server": "Ocurrió un error en el servidor",
+		"error_invalid_credentials": "El correo o contraseña son incorrectos",
+		"file_required": "Este campo es requerido de tipo texto"
 	}
 }
