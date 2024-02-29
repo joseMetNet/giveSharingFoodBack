@@ -32,7 +32,7 @@ export interface updateOrganizationById {
    // id?: number,
     bussisnesName?: string | undefined,
     idTypeIdentification?: number | undefined,
-    identificacion?: string | undefined,
+    identification?: string | undefined,
     dv?: string | undefined,
     representativaName?: string | undefined,
     representativePhone?: string | undefined,
