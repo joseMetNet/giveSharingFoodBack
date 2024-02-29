@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { body, param } from "express-validator";
-import { createOrganization, getOrganizationById, updateOrganizationById } from "../controllers/Organization.Controller";
+import { createOrganization, getListOrganizationById, getListOrganizations, getOrganizationById, updateOrganizationById } from "../controllers/Organization.Controller";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 import { validateEmailOrganizationExist, validateEmailUserExist } from "../middlewares/validator-custom";
 
@@ -49,4 +49,19 @@ organizationRouter.put(
     ],
     updateOrganizationById);
 
+organizationRouter.get(
+    "/listOrders",
+    [
+        param("page").isString(),
+        param("size").isString()
+    ],
+    getListOrganizations);
+
+organizationRouter.get(
+    "/listOrder/:id",
+    [
+        param("id","organizations.validate_field_int").notEmpty().isInt(),
+        validateEnpoint
+    ],
+    getListOrganizationById);
 export default organizationRouter;

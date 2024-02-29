@@ -225,6 +225,88 @@ export const updateOrganization = async (id: number, filePath: string, data: upd
     }
 };
 
+export const getListOrganizations = async (page: number = 0, size: number = 10) => {
+    try {
+        const db = await connectToSqlServer();
+
+        const offset = page * size;
+        
+        const organizations: any = await db?.request().query(`
+        SELECT DISTINCT tbo.id, tbto.typeOrganization, tbs.[status], tbo.bussisnesName, tbu.phone, tbo.email FROM  TB_Organizations AS tbo
+        LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
+        LEFT JOIN TB_Status AS tbs ON tbs.id = tbo.idStatus
+        LEFT JOIN TB_User AS tbu ON tbu.idOrganization = tbo.id
+        ORDER BY tbo.id
+        OFFSET ${offset} ROWS
+        FETCH NEXT ${size} ROWS ONLY`);
+
+        if (!organizations || !organizations.recordset || !organizations.recordset.length) {
+            return {
+                code: 204,
+                message: { translationKey: "organizations.emptyResponse" },
+            };
+        }
+
+        const totalCountQuery = await db?.request().query(`SELECT COUNT(*) AS totalCount FROM TB_Organizations`);
+        const totalCount = totalCountQuery?.recordset[0].totalCount;
+
+        const totalPages = Math.ceil(totalCount / size);
+
+        return {
+            code: 200,
+            message: { translationKey: "organizations.successful" },
+            data: {
+                organizations: organizations.recordset,
+                pagination: {
+                    totalCount,
+                    totalPages,
+                    currentPage: page,
+                    size,
+                }
+            }
+        }
+    } catch (err) {
+        return {
+            code: 400,
+            message: { translationKey: "organizations.error_server" },
+        };
+    }
+}
+
+export const getListOrganizationById = async (filter: { id: number }): Promise<IresponseRepositoryServiceGet> => {
+    try {
+        const { id } = filter;
+        const db = await connectToSqlServer();
+        const organizationId = `
+        SELECT DISTINCT tbo.id, tbto.typeOrganization, tbs.[status], tbo.bussisnesName, tbu.phone, tbo.email FROM  TB_Organizations AS tbo
+        LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
+        LEFT JOIN TB_Status AS tbs ON tbs.id = tbo.idStatus
+        LEFT JOIN TB_User AS tbu ON tbu.idOrganization = tbo.id
+            WHERE tbo.id = @id`;
+        const result = await db?.request()
+            .input('id', id)
+            .query(organizationId);
+        const organization = result?.recordset;
+        if (organization && organization.length > 0) {
+            return {
+                code: 200,
+                message: { translationKey: "organizations.successful" },
+                data: organization
+            };
+        } else {
+            return {
+                code: 400,
+                message: { translationKey: "organizations.emptyResponse" }
+            };
+        }
+    } catch (err) {
+        return {
+            code: 400,
+            message: { translationKey: "organizations.error_server" },
+        };
+    }
+}
+
 export const uploadImageToAzure = async (filePath: string): Promise<string> => {
 
     const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING!);

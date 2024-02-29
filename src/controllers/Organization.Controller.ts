@@ -2,7 +2,6 @@ import { RequestHandler } from "express";
 import * as repository from "../repository/Organization.Repository";
 import { IresponseRepositoryService, IresponseRepositoryServiceGet } from "../interface/Organization.Interface";
 import { parseMessageI18n } from "../utils/parse-messga-i18";
-import { json } from "sequelize";
 import { UploadedFile } from "express-fileupload";
 
 export const createOrganization: RequestHandler = async(req, res) => {
@@ -46,6 +45,32 @@ export const updateOrganizationById: RequestHandler = async (req, res) => {
           });
         const {code,message, ...resto}: IresponseRepositoryServiceGet = await repository.updateOrganization(id,`./tmp/${filePath.name}`,req.body);
         res.status(code).json({ message: parseMessageI18n(message, req), ...resto})
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: parseMessageI18n('error_server', req) });
+    }
+}
+
+export const getListOrganizations: RequestHandler = async (req, res) => {
+    try {
+        let { page = 0, size = 10 } = req.query;
+        
+        page = parseInt(page as string, 10);
+        size = parseInt(size as string, 10);
+        const { code, message, ...resto }: IresponseRepositoryServiceGet = await repository.getListOrganizations(page, size);
+        res.status(code).json({message: parseMessageI18n(message, req), ...resto});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: parseMessageI18n('error_server', req)});
+    }
+}
+
+export const getListOrganizationById: RequestHandler = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const {code,message, ...resto}: IresponseRepositoryServiceGet = await repository.getListOrganizationById({id});
+        res.status(code).json({ message: parseMessageI18n(message, req), ...resto})
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: parseMessageI18n('error_server', req) });
