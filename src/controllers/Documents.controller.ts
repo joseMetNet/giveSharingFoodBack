@@ -6,7 +6,7 @@ import { UploadedFile } from "express-fileupload";
 
 export const uploadFile: RequestHandler = async(req, res) => {
     try {
-        const { blobName } = req.body;
+        const { blobName, idOrganization } = req.body;
         if (!req.files || Object.keys(req.files).length === 0) {
             res.status(400).send("No files were uploaded.");
             return;
@@ -22,7 +22,7 @@ export const uploadFile: RequestHandler = async(req, res) => {
               return res.status(500).send(err);
           });
 
-        const { code, message, ...resto }: DocumentsRepositoryService = await repository.uploadFile(`./tmp/${filePath.name}`, blobName);
+        const { code, message, ...resto }: DocumentsRepositoryService = await repository.uploadFile(`./tmp/${filePath.name}`, blobName, idOrganization);
         res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
     } catch (err) {
         console.error(err);
