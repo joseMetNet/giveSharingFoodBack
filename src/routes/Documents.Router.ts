@@ -10,6 +10,7 @@ documentsRouter.post(
     [
         body("filePath"),
         body("blobName","documents.file_required").isString().notEmpty(),
+        body("idOrganization").isInt().notEmpty(),
         validateEnpoint
     ],
     uploadFile);

@@ -81,14 +81,15 @@ export const getOrganizationById = async (filter: { id: number }): Promise<Iresp
         const { id } = filter;
         const db = await connectToSqlServer();
         const organizationId = `
-            SELECT tbo.bussisnesName AS razonSocial, tbti.typeIdentification, tbo.identification, tbo.dv,
-            tbo.representativaName, tbo.representativePhone, tbo.email AS emailRepresentative,
-            tbu.name, tbu.phone, tbu.email, tbu.googleAddress, tbc.City, tbd.department
-            FROM TB_Organizations AS tbo
-            LEFT JOIN TB_TypeIdentification AS tbti ON tbti.id = tbo.idTypeIdentification
-            LEFT JOIN TB_User AS tbu ON tbu.idOrganization = tbo.id
-            LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
-            LEFT JOIN TB_Departments AS tbd ON tbd.id = tbc.idDepartment
+        SELECT tbds.[url] AS logo, tbo.bussisnesName AS razonSocial, tbti.typeIdentification, tbo.identification, tbo.dv,
+        tbo.representativaName, tbo.representativePhone, tbo.email AS emailRepresentative,
+        tbu.name, tbu.phone, tbu.email, tbu.googleAddress, tbc.City, tbd.department
+        FROM TB_Organizations AS tbo
+        LEFT JOIN TB_TypeIdentification AS tbti ON tbti.id = tbo.idTypeIdentification
+        LEFT JOIN TB_User AS tbu ON tbu.idOrganization = tbo.id
+        LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
+        LEFT JOIN TB_Departments AS tbd ON tbd.id = tbc.idDepartment
+        LEFT JOIN TB_Documents AS tbds ON tbds.idOrganitation = tbo.id
             WHERE tbo.id = @id`;
         const result = await db?.request()
             .input('id', id)

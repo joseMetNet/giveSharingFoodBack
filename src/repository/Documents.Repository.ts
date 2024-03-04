@@ -5,7 +5,7 @@ import { BlobServiceClient } from '@azure/storage-blob';
 import mime from 'mime-types';
 import { connectToSqlServer } from '../DB/config';
 
-export const uploadFile = async (filePath: string, originalBlobName: string) => {
+export const uploadFile = async (filePath: string, originalBlobName: string, idOrganization: number) => {
     try {
         const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING!);
         const containerName = process.env.CONTAINERNAME || 'filesgivesharingfood'
@@ -31,7 +31,8 @@ export const uploadFile = async (filePath: string, originalBlobName: string) => 
         const result = await db?.request()
             .input('document', blockBlobClient.name)
             .input('url', blobUrl)
-            .query('INSERT INTO TB_Documents (document, url) VALUES (@document, @url)');
+            .input('idOrganitation', idOrganization)
+            .query('INSERT INTO TB_Documents (document, url, idOrganitation) VALUES (@document, @url, @idOrganitation)');
 
         return {
             code: 200,
