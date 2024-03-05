@@ -48,7 +48,7 @@ class Server {
 
   configurarCORS() {
     const corsOptions = {
-        origin: process.env.URL_FRONT || 'https://givesharingfood.azurewebsites.net', 
+        origin: process.env.URL_FRONT, 
         methods: ["GET", "POST", "PUT", "DELETE"], 
         allowedHeaders: ["Content-Type", "Authorization"], 
         optionsSuccessStatus: 200 
