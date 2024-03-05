@@ -1,17 +1,26 @@
 import axios, { AxiosError } from "axios";
 import { IresponseRepositoryService, dataLogin } from "../interface/Login.Interface";
 import { authenticateUser } from '../helpers/UserManagment.Helper';
+import { connectToSqlServer } from "../DB/config";
 
 export const loginUser = async (data: dataLogin): Promise<IresponseRepositoryService> => {
     try {
         const { email, password } = data;
-
         const userManagementResponse = await authenticateUser(email, password);
 
+        const db = await connectToSqlServer();
+        const user = `
+        SELECT tbu.id, [name], email, idRole, tbr.[role] FROM TB_User AS tbu
+        LEFT JOIN TB_Rol AS tbr ON tbr.id = tbu.idRole
+        WHERE email = @email
+        `;
+        const result = await db?.request()
+            .input('email', email)
+            .query(user);
         return {
             code: 200,
             message: { translationKey: "login.successful" },
-            data: userManagementResponse.data.data
+            data: result?.recordset
         }
     } catch (err) {
         if (axios.isAxiosError(err)) {

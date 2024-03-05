@@ -46,6 +46,17 @@ class Server {
     await connectToSqlServer();
   }
 
+  configurarCORS() {
+    const corsOptions = {
+        origin: process.env.URL_FRONT || 'https://givesharingfood.azurewebsites.net', 
+        methods: ["GET", "POST", "PUT", "DELETE"], 
+        allowedHeaders: ["Content-Type", "Authorization"], 
+        optionsSuccessStatus: 200 
+    };
+
+    this.app.use(cors(corsOptions));
+}
+
   middlewares() {
     // CORS
     this.app.use(cors());
