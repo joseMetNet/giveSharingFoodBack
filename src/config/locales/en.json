@@ -38,7 +38,9 @@
 		"required_field_text": "This is a required text field.",
 		"validate_email": "This is not a valid email",
 		"validate_field_int": "This is a required field of type integer",
-		"invalid_image": "Only images of type ['.jpg', '.jpeg', '.png'] are accepted"
+		"invalid_image": "Only images of type ['.jpg', '.jpeg', '.png'] are accepted",
+		"invalid_email": "the email already exists",
+		"email_already_exists": "the email already exists"
 	},
 	"city": {
 		"field": "The field must be an integer"
@@ -47,6 +49,8 @@
 		"successful": "OK",
 		"error_server": "An error occurred on the server",
 		"error_invalid_credentials": "the email or password is incorrect",
-		"file_required": "This is a required text field"
+		"file_required": "this is a required field",
+		"file_required_password": "this is a required field",
+		"file_required_tex": "this is a required field as string"
 	}
 }

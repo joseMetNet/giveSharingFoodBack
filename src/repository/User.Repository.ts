@@ -14,10 +14,10 @@ export const postContacts = async (data: dataUser): Promise<IresponseRepositoryS
         const organizationResult = await db?.request()
             .input('IdOrganization', idOrganization)
             .query(organizationQuery);
-        console.log(organizationResult?.recordset)
-        let idRol: number = 4; // Valor por defecto asignado aquí
+        
+        let idRol: number = 4;
         if (organizationResult?.recordset.length) {
-            const idTypeOrganization = organizationResult.recordset[0].idTypeOrganitation; // corregido aquí
+            const idTypeOrganization = organizationResult.recordset[0].idTypeOrganitation;
 
             if (idTypeOrganization === 1) {
                 idRol = 5;
@@ -26,8 +26,8 @@ export const postContacts = async (data: dataUser): Promise<IresponseRepositoryS
 
         const insertQuery = `
             INSERT INTO TB_User (Name, Phone, Email, GoogleAddress, IdOrganization, idRole, IdCity, idDepartmen) 
-            VALUES (@Name, @Phone, @Email, @GoogleAddress, @IdOrganization, @IdRole, @IdCity, @idDepartmen) 
-        `; // corregido aquí
+            VALUES (@Name, @Phone, @Email, @GoogleAddress, @IdOrganization, @IdRole, @IdCity, @idDepartmen)`;
+
         const insertResult = await db?.request()
             .input('Name', name)
             .input('Phone', phone)
