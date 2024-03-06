@@ -8,10 +8,11 @@ const loginRouter = Router();
 loginRouter.post(
     "/login",
     [
-        body("email", "login.file_required").notEmpty().isString(),
-        body("password", "login.file_required").notEmpty().isString(),
+        body("email").notEmpty().withMessage("login.file_required").isString().withMessage("login.file_required_tex"),
+        body("password").notEmpty().withMessage("login.file_required_password").isString().withMessage("login.file_required_tex"),
         validateEnpoint
     ], 
-    login);
+    login
+);
 
 export default loginRouter;

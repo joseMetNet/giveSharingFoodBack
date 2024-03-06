@@ -4,7 +4,7 @@ export const authenticateUser = async (email: String, password: String) => {
     try {
         const userManagementUrl = process.env.USER_MANAGEMENT_URL_LOGIN || 'https://usermanagementservicemetnet.azurewebsites.net/UserManagement/authenticationUser';
         const userManagementData = {
-            userGroup: process.env.USER_GROUP || 'Usersguivesharingfood',
+            userGroup: process.env.USER_GROUP || 'guivesharingfood',
             userName: email,
             password: password
         };
@@ -19,7 +19,7 @@ export const createUserInUserManagement = async (email: String, password: String
     try {
         const userManagementUrl = process.env.USERA_MANAGEMENT_URL || 'https://usermanagementservicemetnet.azurewebsites.net/UserManagement';
         const userManagementData = {
-            userGroup: process.env.USER_GROUP || 'Usersguivesharingfood',
+            userGroup: process.env.USER_GROUP || 'guivesharingfood',
             userName: email,
             password: password
         };

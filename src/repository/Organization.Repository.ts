@@ -81,7 +81,7 @@ export const getOrganizationById = async (filter: { id: number }): Promise<Iresp
         const { id } = filter;
         const db = await connectToSqlServer();
         const organizationId = `
-        SELECT tbds.[url] AS logo, tbo.bussisnesName AS razonSocial, tbti.typeIdentification, tbo.identification, tbo.dv,
+        SELECT DISTINCT tbo.logo, tbo.bussisnesName AS razonSocial, tbti.typeIdentification, tbo.identification, tbo.dv,
         tbo.representativaName, tbo.representativePhone, tbo.email AS emailRepresentative,
         tbu.name, tbu.phone, tbu.email, tbu.googleAddress, tbc.City, tbd.department
         FROM TB_Organizations AS tbo
@@ -133,36 +133,62 @@ export const updateOrganization = async (id: number, filePath: string, data: upd
 
         const blobUrl = await uploadImageToAzure(filePath);
 
-        if ((representativeEmail && representativeEmail !== data.representativeEmail) || (email && email !== data.email)) {
+        const existingEmailQuery = `
+            SELECT TOP 1 email FROM TB_Organizations WHERE id = @id
+        `;
+
+        const existingEmailResult = await db?.request()
+            .input('id', id)
+            .query(existingEmailQuery);
+
+        const existingEmail = existingEmailResult?.recordset[0]?.email;
+
+        let emailAlreadyExists = false;
+        if (existingEmail !== representativeEmail) {
             const emailCheckQuery = `
-                SELECT 
-                    (SELECT COUNT(*)
-                    FROM TB_Organizations
-                    WHERE email = @orgEmail) AS organizationsCount,
-                    (SELECT COUNT(*)
-                    FROM TB_User
-                    WHERE email = @userEmail) AS userCount
+                SELECT COUNT(*) AS emailCount FROM TB_Organizations WHERE email = @representativeEmail
             `;
-        
-            const CheckResult = await db?.request()
-                .input('orgEmail', representativeEmail ? representativeEmail : data.representativeEmail)
-                .input('userEmail', email ? email : data.email)
+
+            const emailCheckResult = await db?.request()
+                .input('representativeEmail', representativeEmail)
                 .query(emailCheckQuery);
-        
-            const organizationsCount = CheckResult?.recordset[0]?.organizationsCount || 0;
-            const userCount = CheckResult?.recordset[0]?.userCount || 0;
-        
-            if (organizationsCount > 0) {
+
+            emailAlreadyExists = emailCheckResult?.recordset[0]?.emailCount > 0;
+
+            if (emailAlreadyExists) {
                 return {
                     code: 400,
-                    message: 'organizations.exist_mail',
+                    message: { translationKey: "organizations.email_already_exists" },
                 };
             }
-        
-            if (userCount > 0) {
+        }
+
+        const existingEmailQueryUser = `
+            SELECT TOP 1 email FROM TB_User WHERE idOrganization = @idOrganization
+        `;
+
+        const existingEmailResultUser = await db?.request()
+            .input('idOrganization', id)
+            .query(existingEmailQueryUser);
+
+        const existingEmailUser = existingEmailResultUser?.recordset[0]?.email;
+
+        let emailAlreadyExistsUser = false;
+        if (existingEmailUser !== email) {
+            const emailCheckQueryUser = `
+                SELECT COUNT(*) AS emailCount FROM TB_User WHERE email = @email
+            `;
+
+            const emailCheckResultUser = await db?.request()
+                .input('email', email)
+                .query(emailCheckQueryUser);
+
+            emailAlreadyExistsUser = emailCheckResultUser?.recordset[0]?.emailCount > 0;
+
+            if (emailAlreadyExistsUser) {
                 return {
                     code: 400,
-                    message: 'user.emailExists',
+                    message: { translationKey: "organizations.email_already_exists" },
                 };
             }
         }
@@ -174,7 +200,7 @@ export const updateOrganization = async (id: number, filePath: string, data: upd
                 email = CASE WHEN @email IS NOT NULL THEN @email ELSE email END,
                 idCity = CASE WHEN @idCity IS NOT NULL THEN @idCity ELSE idCity END,
                 googleAddress = CASE WHEN @googleAddress IS NOT NULL THEN @googleAddress ELSE googleAddress END
-            WHERE idOrganization = @idOrganization
+            WHERE idOrganization = @idOrganization AND idRole in (2,3)
         `;
         
         const updateOrganizationQuery = `
@@ -279,20 +305,53 @@ export const getListOrganizationById = async (filter: { id: number }): Promise<I
         const { id } = filter;
         const db = await connectToSqlServer();
         const organizationId = `
-        SELECT DISTINCT tbo.id, tbto.typeOrganization, tbs.[status], tbo.bussisnesName, tbu.phone, tbo.email FROM  TB_Organizations AS tbo
-        LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
-        LEFT JOIN TB_Status AS tbs ON tbs.id = tbo.idStatus
+        SELECT
+        tbo.id, logo, bussisnesName AS razonSocial, tbti.typeIdentification, identification, dv, 
+        representativaName, representativePhone, tbo.email AS representativeEmail, tbs.[status], tbu.googleAddress, tbc.city,
+        tbu.[name], tbu.phone, tbu.email
+        FROM TB_Organizations AS tbo
+        LEFT JOIN TB_TypeIdentification AS tbti ON tbti.id = tbo.idTypeIdentification
         LEFT JOIN TB_User AS tbu ON tbu.idOrganization = tbo.id
-            WHERE tbo.id = @id`;
+        LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
+        LEFT JOIN TB_Status AS tbs ON tbs.id = tbo.idStatus
+            WHERE tbo.id = @id AND tbu.idRole NOT IN (4,5)`;
+
+        const usersQuery = `
+        SELECT tbu.idAuth, tbu.[name], tbu.phone, tbu.email, tbr.[role], tbc.city, tbu.googleAddress, tbd.department 
+        FROM TB_User AS tbu
+        LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
+        LEFT JOIN TB_Departments AS tbd ON tbd.id = tbu.idDepartmen
+        LEFT JOIN TB_Rol AS tbr ON tbr.id = tbu.idRole
+        WHERE idOrganization = @id AND tbu.idRole NOT IN (1,2,3)`;
+
+        const documentsOrganizatios = `
+        SELECT id, idOrganitation, document, [url] FROM TB_Documents WHERE idOrganitation = @id`;
+
+        const resultDocuments = await db?.request()
+            .input('id', id)
+            .query(documentsOrganizatios);
+
+        const resultUsers = await db?.request()
+            .input('id', id)
+            .query(usersQuery);
+
         const result = await db?.request()
             .input('id', id)
             .query(organizationId);
+
         const organization = result?.recordset;
+        const users = resultUsers?.recordset;
+        const documents = resultDocuments?.recordset;
+
         if (organization && organization.length > 0) {
             return {
                 code: 200,
                 message: { translationKey: "organizations.successful" },
-                data: organization
+                data: {
+                    organization,
+                    users,
+                    documents
+                }
             };
         } else {
             return {
