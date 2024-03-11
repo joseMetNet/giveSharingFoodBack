@@ -29,27 +29,27 @@ export const getOrganizationById: RequestHandler = async (req, res) => {
 export const updateOrganizationById: RequestHandler = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        if (!req.files || Object.keys(req.files).length === 0) {
-            res.status(400).send("No files were uploaded.");
-            return;
-          }
-          if (!req.files.filePath) {
-            res.status(400).send("No files were uploaded.");
-            return;
-          }
-          const filePath = req.files.filePath as UploadedFile
-          filePath.mv('./tmp/' + filePath.name, function(err) {
-            if (err)
 
-              return res.status(500).send(err);
-          });
-        const {code,message, ...resto}: IresponseRepositoryServiceGet = await repository.updateOrganization(id,`./tmp/${filePath.name}`,req.body);
-        res.status(code).json({ message: parseMessageI18n(message, req), ...resto})
+        let filePath: string = '';
+
+        if (req.files && req.files.filePath) {
+            const uploadedFile = req.files.filePath as UploadedFile;
+            filePath = './tmp/' + uploadedFile.name;
+            
+            uploadedFile.mv(filePath, function(err) {
+                if (err) {
+                    return res.status(500).send(err);
+                }
+            });
+        }
+
+        const { code, message, ...resto }: IresponseRepositoryServiceGet = await repository.updateOrganization(id, filePath, req.body);
+        res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: parseMessageI18n('error_server', req) });
     }
-}
+};
 
 export const getListOrganizations: RequestHandler = async (req, res) => {
     try {
