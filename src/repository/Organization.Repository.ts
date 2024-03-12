@@ -120,18 +120,40 @@ export const updateOrganization = async (id: number, filePath: string, data: upd
         const { bussisnesName, idTypeIdentification, identification, dv, representativaName, representativePhone, representativeEmail,
             name, phone, email, idCity, googleAddress } = data;
 
-        const allowedImageExtensions = ['.jpg', '.jpeg', '.png'];
-        const fileExtension = path.extname(filePath).toLowerCase();
-        if (!allowedImageExtensions.includes(fileExtension)) {
-            return {
-                code: 400,
-                message: { translationKey: "organizations.invalid_image" },
-            };
-        }
+            const allowedImageExtensions = ['.jpg', '.jpeg', '.png'];
 
-        const db = await connectToSqlServer();
-
-        const blobUrl = await uploadImageToAzure(filePath);
+            let fileExtension = '';
+            if (filePath !== '') {
+                fileExtension = path.extname(filePath).toLowerCase();
+            }
+    
+            if (filePath !== '' && !allowedImageExtensions.includes(fileExtension)) {
+                return {
+                    code: 400,
+                    message: { translationKey: "organizations.invalid_image" },
+                };
+            }
+    
+            const db = await connectToSqlServer();
+    
+            let blobUrl = '';
+            if (filePath !== '') {
+                blobUrl = await uploadImageToAzure(filePath);
+            }
+    
+            const existingFilePathQuery = `
+                SELECT logo FROM TB_Organizations WHERE id = @id
+            `;
+    
+            const existingFilePathResult = await db?.request()
+                .input('id', id)
+                .query(existingFilePathQuery);
+    
+            let existingFilePath = existingFilePathResult?.recordset[0]?.logo || '';
+    
+            if (filePath === '') {
+                blobUrl = existingFilePath;
+            }
 
         const existingEmailQuery = `
             SELECT TOP 1 email FROM TB_Organizations WHERE id = @id

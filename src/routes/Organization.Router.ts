@@ -28,26 +28,27 @@ organizationRouter.get(
     ],
     getOrganizationById);
 
-organizationRouter.put(
-    "/updateOrganization/:id",
-    [
-        param("id", "organizations.validate_field_int").notEmpty().isInt(),
-        body ("bussisnesName", "organizations.required_field_text").notEmpty().isString(),
-        body("idTypeIdentification", "organizations.validate_field_int").notEmpty().isInt(),
-        body("identification", "organizations.required_field_text").notEmpty().isString(),
-        body("dv", "organizations.required_field_text").notEmpty().isString(),
-        body("representativaName", "organizations.required_field_text").notEmpty().isString(),
-        body("representativePhone", "organizations.required_field_text").notEmpty().isString(),
-        body("representativeEmail", "organizations.validate_email").notEmpty().isEmail(),
-        body("filePath"),
-        body("idCity", "organizations.validate_field_int").notEmpty().isInt(),
-        body("googleAddress", "organizations.required_field_text").notEmpty().isString(),
-        body("name", "organizations.required_field_text").notEmpty().isString(),
-        body("phone", "organizations.required_field_text").notEmpty().isString(),
-        body("email", "organizations.validate_email").notEmpty().isEmail(),
-        validateEnpoint
-    ],
-    updateOrganizationById);
+    organizationRouter.put(
+        "/updateOrganization/:id",
+        [
+            param("id", "organizations.validate_field_int").notEmpty().isInt(),
+            body("bussisnesName", "organizations.required_field_text").notEmpty().isString(),
+            body("idTypeIdentification", "organizations.validate_field_int").notEmpty().isInt(),
+            body("identification", "organizations.required_field_text").notEmpty().isString(),
+            body("dv", "organizations.required_field_text").notEmpty().isString(),
+            body("representativaName", "organizations.required_field_text").notEmpty().isString(),
+            body("representativePhone", "organizations.required_field_text").notEmpty().isString(),
+            body("representativeEmail", "organizations.validate_email").notEmpty().isEmail(),
+            body("filePath"),
+            body("idCity", "organizations.validate_field_int").notEmpty().isInt(),
+            body("googleAddress", "organizations.required_field_text").notEmpty().isString(),
+            body("name", "organizations.required_field_text").notEmpty().isString(),
+            body("phone", "organizations.required_field_text").notEmpty().isString(),
+            body("email", "organizations.validate_email").notEmpty().isEmail(),
+            validateEnpoint
+        ],
+        updateOrganizationById
+    );
 
 organizationRouter.get(
     "/listOrders",
