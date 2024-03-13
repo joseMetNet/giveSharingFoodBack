@@ -39,7 +39,7 @@ organizationRouter.get(
             body("representativaName", "organizations.required_field_text").notEmpty().isString(),
             body("representativePhone", "organizations.required_field_text").notEmpty().isString(),
             body("representativeEmail", "organizations.validate_email").notEmpty().isEmail(),
-            body("filePath"),
+            body("filePath"), 
             body("idCity", "organizations.validate_field_int").notEmpty().isInt(),
             body("googleAddress", "organizations.required_field_text").notEmpty().isString(),
             body("name", "organizations.required_field_text").notEmpty().isString(),
