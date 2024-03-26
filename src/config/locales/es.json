@@ -27,7 +27,10 @@
 		"succesfull": "OK",
 		"emptyResponse": "No se encontró información",
 		"error_server": "Ocurrió un error en el servidor",
-		"file_required": "Este campo es requerido de tipo texto"
+		"file_required": "Este campo es requerido de tipo texto",
+		"updated": "Documento actualizado",
+		"update_error": "Error al atualizar el documento",
+		"update_success": "Documento actualizado"
 	},
 	"organizations": {
 		"error_server": "Ocurrió un error en el servidor",

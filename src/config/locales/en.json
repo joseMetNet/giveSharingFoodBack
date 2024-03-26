@@ -27,7 +27,10 @@
 		"succesfull": "OK",
 		"emptyResponse": "No information found",
 		"error_server": "An error occurred on the server",
-		"file_required": "This is a required text field"
+		"file_required": "This is a required text field",
+		"updated": "document updated",
+		"update_error": "An error ocurred on the updated document",
+		"update_success": "document updated"
 	},
 	"organizations": {
 		"error_server": "An error occurred on the server",
