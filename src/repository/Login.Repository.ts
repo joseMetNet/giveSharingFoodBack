@@ -2,6 +2,7 @@ import axios, { AxiosError } from "axios";
 import { IresponseRepositoryService, dataLogin } from "../interface/Login.Interface";
 import { authenticateUser } from '../helpers/UserManagment.Helper';
 import { connectToSqlServer } from "../DB/config";
+import { generateJWT, parseJwt } from "../helpers/generateJWT";
 
 export const loginUser = async (data: dataLogin): Promise<IresponseRepositoryService> => {
     try {
@@ -14,13 +15,21 @@ export const loginUser = async (data: dataLogin): Promise<IresponseRepositorySer
         LEFT JOIN TB_Rol AS tbr ON tbr.id = tbu.idRole
         WHERE email = @email
         `;
+
+        const token = await generateJWT(user, '1h');
+        const expiresIn = await parseJwt(token);
         const result = await db?.request()
             .input('email', email)
             .query(user);
         return {
             code: 200,
             message: { translationKey: "login.successful" },
-            data: result?.recordset
+            // data: result?.recordset
+            data: {
+                "user": result?.recordset,
+                token,
+                expiresIn
+            }
         }
     } catch (err) {
         if (axios.isAxiosError(err)) {

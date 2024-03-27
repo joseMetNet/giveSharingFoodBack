@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@azure/storage-blob": "^12.17.0",
+    "@types/jsonwebtoken": "^9.0.6",
     "@types/mssql": "^9.1.4",
     "axios": "^1.6.7",
     "colors": "^1.4.0",
@@ -23,6 +24,7 @@
     "file-type": "^19.0.0",
     "fs-extra": "^11.1.1",
     "i18n": "^0.15.1",
+    "jsonwebtoken": "^9.0.2",
     "mammoth": "^1.7.0",
     "mongoose": "^7.5.0",
     "morgan": "^1.10.0",

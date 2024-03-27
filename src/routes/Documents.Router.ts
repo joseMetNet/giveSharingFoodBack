@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { body } from "express-validator";
-import { uploadFile } from "../controllers/Documents.controller";
+import { updateFileController, uploadFile } from "../controllers/Documents.controller";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 
 const documentsRouter = Router();
@@ -15,4 +15,13 @@ documentsRouter.post(
     ],
     uploadFile);
 
+documentsRouter.put(
+    '/updatedocument',
+    [
+        body("filePath"),
+        body("blobName", "documents.file_required").isString().notEmpty(),
+        body("idDocument").isInt().notEmpty(),
+        validateEnpoint
+    ],
+    updateFileController);
 export default documentsRouter;
