@@ -16,6 +16,7 @@ import organizationRouter from "../routes/Organization.Router";
 import productsRouter from "../routes/Products.Router";
 import documentsRouter from "../routes/Documents.Router";
 import loginRouter from "../routes/Login.Router";
+import measureRouter from "../routes/Measure.Router";
 
 class Server {
   private app: Application;
@@ -88,6 +89,7 @@ class Server {
     this.app.use(this.path.example, productsRouter);
     this.app.use(this.path.example, documentsRouter);
     this.app.use(this.path.example, loginRouter);
+    this.app.use(this.path.example, measureRouter);
   }
 
   listen() {

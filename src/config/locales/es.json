@@ -55,5 +55,15 @@
 		"file_required": "Este campo es requerido",
 		"file_required_password": "Este campo es requerido",
 		"file_required_tex": "Este campo es requerio de tipo string"
+	},
+	"product": {
+		"successful": "OK",
+		"emptyResponse": "No se encontró información",
+		"error_server": "Ocurrió un error en el servidor"
+	},
+	"measure": {
+		"succesfull": "OK",
+		"emptyResponse": "No se encontró información",
+		"error_server": "Ocurrió un error en el servidor"
 	}
 }

@@ -55,5 +55,15 @@
 		"file_required": "this is a required field",
 		"file_required_password": "this is a required field",
 		"file_required_tex": "this is a required field as string"
+	},
+	"product": {
+		"successful": "OK",
+		"emptyResponse": "No information found",
+		"error_server": "An error occurred on the server"
+	},
+	"measure": {
+		"succesfull": "OK",
+		"emptyResponse": "No information found",
+		"error_server": "An error occurred on the server"
 	}
 }
