@@ -15,6 +15,18 @@ export const getProducts: RequestHandler = async (req, res) => {
     }
 }
 
+export const getProductsToDonate: RequestHandler = async (req, res) => {
+    try {
+        const productName: string = req.query.productName as string; 
+        const filter: filterProduct = { productName };
+        const { code, message, ... resto }: ProductRepositoryService = await repository.getProductsToDonate(filter);
+        res.status(code).json({message: parseMessageI18n(message, req), ...resto});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({message: parseMessageI18n('error_server', req)});        
+    }
+}
+
 export const postProduct: RequestHandler = async (req, res) => {
     try {
         const { code, message, ...resto}: postProductRepositoryService = await repository.postProducts(req.body);

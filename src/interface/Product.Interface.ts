@@ -22,6 +22,7 @@ export interface postProduct {
     quantity: number,
     expirationDate: Date,
     deliverDate: Date
+    idUser: number
 }
 
 export interface filterProduct{

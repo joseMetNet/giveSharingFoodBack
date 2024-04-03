@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getProducts, postProduct } from "../controllers/Products.Controller";
+import { getProducts, getProductsToDonate, postProduct } from "../controllers/Products.Controller";
 import { body, param, query } from "express-validator";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 
@@ -14,14 +14,24 @@ productsRouter.get(
     getProducts
 );
 
+productsRouter.get(
+    "/donateproducts",
+    [
+        query('productName').optional(),
+        validateEnpoint
+    ],
+    getProductsToDonate
+);
+
 productsRouter.post(
     "/postProduct",
     [
-        body("idProduct").isInt().notEmpty(),
-        body("idOrganization").isInt().notEmpty(),
-        body("idMeasure").isInt().notEmpty(),
-        body("quantity").isInt().notEmpty(),
+        body("idProduct", "product.validate_field_int").isInt().notEmpty(),
+        body("idOrganization", "product.validate_field_int").isInt().notEmpty(),
+        body("idMeasure", "product.validate_field_int").isInt().notEmpty(),
+        body("quantity", "product.validate_field_int").isInt().notEmpty(),
         body("expirationDate").notEmpty(),
+        body("idUser", "product.validate_field_int").isInt().notEmpty(),
         validateEnpoint
     ],
     postProduct);

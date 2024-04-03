@@ -13,6 +13,7 @@ userRouter.post(
         body("phone","user.required_field_text").isString().notEmpty(),
         body("email", "user.validate_email").notEmpty().isEmail(),
         body("email").custom(validateEmailUserExist),
+        body("password", "user.required_field_text").isString().notEmpty,
         body("googleAddress","user.required_field_text").notEmpty().isString(),
         body("idOrganization","user.validate_field_int").notEmpty().isInt(),
         body("idCity","user.validate_field_int").notEmpty().isInt(),
