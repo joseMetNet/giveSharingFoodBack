@@ -2,6 +2,7 @@ export interface dataUser {
     name: string,
     phone: string,
     email: String,
+    password: string,
     googleAddress: string,
     idOrganization: number,
     idCity: number,
