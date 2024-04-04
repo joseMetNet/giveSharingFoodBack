@@ -61,7 +61,8 @@
 		"emptyResponse": "No se encontró información",
 		"error_server": "Ocurrió un error en el servidor",
 		"required_field_text": "Este campo es requerido de tipo texto",
-		"validate_field_int": "Este campo es requerido de tipo entero"
+		"validate_field_int": "Este campo es requerido de tipo entero",
+		"not_found": ""
 	},
 	"measure": {
 		"succesfull": "OK",

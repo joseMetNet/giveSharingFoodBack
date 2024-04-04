@@ -61,7 +61,8 @@
 		"emptyResponse": "No information found",
 		"error_server": "An error occurred on the server",
 		"required_field_text": "This is a required text field.",
-		"validate_field_int": "This is a required field of type integer"
+		"validate_field_int": "This is a required field of type integer",
+		"not_found": "id not found"
 	},
 	"measure": {
 		"succesfull": "OK",
