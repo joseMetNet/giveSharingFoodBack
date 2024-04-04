@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getProducts, getProductsToDonate, postProduct } from "../controllers/Products.Controller";
+import { getProducts, getProductsToDonate, postProduct, putPreductReserved } from "../controllers/Products.Controller";
 import { body, param, query } from "express-validator";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 
@@ -35,5 +35,14 @@ productsRouter.post(
         validateEnpoint
     ],
     postProduct);
+
+productsRouter.put(
+    "/putproductdreserved/:id",
+    [
+        param("id", "product.validate_field_int").notEmpty().isInt(),
+        validateEnpoint
+    ],
+    putPreductReserved
+);
 
 export default productsRouter;

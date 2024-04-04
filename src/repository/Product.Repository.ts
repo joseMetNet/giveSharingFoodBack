@@ -70,7 +70,7 @@ export const getProductsToDonate = async (filter: filterProduct): Promise<Produc
     try {
         const { productName } = filter;
         const db = await connectToSqlServer();
-        let query = `SELECT DISTINCT tbp.product, tbp.urlImage,
+        let query = `SELECT DISTINCT tbpo.id, tbp.product, tbp.urlImage,
                     tbo.bussisnesName,
                     tbpo.quantity,
                     tbm.measure,
@@ -113,3 +113,34 @@ export const getProductsToDonate = async (filter: filterProduct): Promise<Produc
         };
     }
 }
+
+export const putProductReserve = async (id: number): Promise<ProductRepositoryService> => {
+    try {
+        const db = await connectToSqlServer();
+
+        const checkProductQuery = `SELECT * FROM TB_ProductsOrganization WHERE id = ${id}`;
+        const checkProductResult: any = await db?.request().query(checkProductQuery);
+
+        if (!checkProductResult.recordset || checkProductResult.recordset.length === 0) {
+            return {
+                code: 404,
+                message: { translationKey: "product.not_found" },
+            };
+        }
+
+        const updateQuery = `UPDATE TB_ProductsOrganization SET idStatus = 3 WHERE id = ${id}`;
+        const updateProduct: any = await db?.request().query(updateQuery);
+
+        return {
+            code: 200,
+            message: { translationKey: "product.successful" },
+            data: updateProduct.recordset,
+        };
+    } catch (err) {
+        console.log("Error al actualizar el producto", err);
+        return {
+            code: 500,
+            message: { translationKey: "product.error_server" },
+        };
+    }
+};
