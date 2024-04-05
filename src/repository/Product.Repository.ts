@@ -144,3 +144,48 @@ export const putProductReserve = async (id: number): Promise<ProductRepositorySe
         };
     }
 };
+
+export const getProductsReserved = async () => {
+    try {
+        const db = await connectToSqlServer();
+        let query = `SELECT DISTINCT
+        tbpo.id,
+        tbp.product,
+        tbp.urlImage,
+        tbo.bussisnesName,
+        tbpo.quantity,
+        tbm.measure,
+        tbpo.expirationDate,
+        tbpo.idUser,
+        tbu.idCity,
+        tbu.googleAddress,
+        tbc.city,
+        tbu.phone,
+        tbpo.deliverDate,
+        tbs.[status]
+        FROM TB_User AS tbu
+        LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
+        left join TB_Rol as tbr on tbr.id = tbu.idRole
+        LEFT JOIN TB_ProductsOrganization AS tbpo ON tbpo.idUser = tbu.id
+        LEFT JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct
+        LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
+        LEFT JOIN TB_Measure AS tbm ON tbm.id = tbpo.idmeasure
+        LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
+        WHERE
+        tbs.id = 3 AND (tbr.id != 2 OR tbr.id != 3 OR tbr.id != 1)`;
+        const productsReserved: any = await db?.request().query(query);
+        const totalRecords = productsReserved.recordset.length;
+        return {
+            code: 200,
+            message: { translationKey: "product.successful" },
+            data: productsReserved.recordset,
+            totalRecords: totalRecords,
+        };
+    } catch (err) {
+        console.log("Error al traer los productos", err);
+        return {
+            code: 400,
+            message: { translationKey: "product.error_server" },
+        };
+    }
+}

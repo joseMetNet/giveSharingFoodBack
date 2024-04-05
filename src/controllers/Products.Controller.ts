@@ -47,3 +47,13 @@ export const putPreductReserved: RequestHandler = async (req, res) => {
         res.status(500).json({ message: parseMessageI18n("error_server", req)})
     }
 }
+
+export const getProductsReserved: RequestHandler = async (req, res) => {
+    try {
+        const { code, message, ... resto }: ProductRepositoryService = await repository.getProductsReserved();
+        res.status(code).json({message: parseMessageI18n(message, req), ...resto});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({message: parseMessageI18n('error_server', req)});        
+    }
+}
