@@ -145,6 +145,7 @@ export const putProductReserve = async (id: number): Promise<ProductRepositorySe
     }
 };
 
+
 export const getProductsReserved = async () => {
     try {
         const db = await connectToSqlServer();
