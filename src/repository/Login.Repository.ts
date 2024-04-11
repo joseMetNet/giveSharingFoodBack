@@ -11,9 +11,9 @@ export const loginUser = async (data: dataLogin): Promise<IresponseRepositorySer
 
         const db = await connectToSqlServer();
         const user = `
-        SELECT tbu.id, [name], email, idRole, tbr.[role] FROM TB_User AS tbu
+        SELECT tbu.id, tbu.idOrganization, [name], tbu.email, idRole, tbr.[role] FROM TB_User AS tbu
         LEFT JOIN TB_Rol AS tbr ON tbr.id = tbu.idRole
-        WHERE email = @email
+        WHERE tbu.email = @email
         `;
 
         const token = await generateJWT(user, '1h');
