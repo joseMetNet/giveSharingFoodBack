@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { createUser } from "../controllers/User.Controller";
-import { body } from "express-validator";
+import { createUser, getUserByOrganization } from "../controllers/User.Controller";
+import { body, param } from "express-validator";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 import { validateEmailUserExist } from "../middlewares/validator-custom";
 
@@ -22,4 +22,12 @@ userRouter.post(
     ],
     createUser);
 
+userRouter.get(
+    "/users/:idOrganization",
+    [
+        param("idOrganization", "user.required_field_text").notEmpty().isInt(),
+        validateEnpoint
+    ],
+    getUserByOrganization
+);
 export default userRouter;

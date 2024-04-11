@@ -19,3 +19,13 @@ export interface IresponseRepositoryService {
     message: string | ImessageComposed,
     data?: any
 }
+
+export interface UserRepositoryService {
+    code: number,
+    message: string| { translationKey: string },
+    data?: any
+}
+
+export interface idOrganization{
+    idOrganization?: string;
+}
