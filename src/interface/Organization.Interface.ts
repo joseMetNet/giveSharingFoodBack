@@ -45,3 +45,7 @@ export interface updateOrganizationById {
     idCity?: number | undefined,
     googleAddress?: string | undefined
 }
+
+export interface idHistory {
+    idOrganization?: number
+}

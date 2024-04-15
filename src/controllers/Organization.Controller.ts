@@ -76,3 +76,13 @@ export const getListOrganizationById: RequestHandler = async (req, res) => {
         res.status(500).json({ message: parseMessageI18n('error_server', req) });
     }
 }
+
+export const getDonationHistory: RequestHandler = async (req, res) => {
+    try {
+        const { code, message, ...resto }: IresponseRepositoryServiceGet = await repository.getDonationHistory(req.params);
+        res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: parseMessageI18n('error_server', req) });
+    }
+}

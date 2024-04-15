@@ -49,7 +49,7 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
             .input('idMeasure', idMeasure || null)
             .input('quantity', quantity || null)
             .input('expirationDate', expirationDate || null)
-            .input('idStatus', 2)
+            .input('idStatus', 4)
             .input('idUser', idUser)
             .query(insertQuery);
         return {
@@ -129,7 +129,7 @@ export const putProductReserve = async (id: number): Promise<ProductRepositorySe
             };
         }
 
-        const updateQuery = `UPDATE TB_ProductsOrganization SET idStatus = 3 WHERE id = ${id}`;
+        const updateQuery = `UPDATE TB_ProductsOrganization SET idStatus = 3, solicitDate = getDate() WHERE id = ${id}`;
         const updateProduct: any = await db?.request().query(updateQuery);
 
         return {
@@ -190,3 +190,34 @@ export const getProductsReserved = async () => {
         };
     }
 }
+
+export const putProductDelivered = async (id: number): Promise<ProductRepositoryService> => {
+    try {
+        const db = await connectToSqlServer();
+
+        const checkProductQuery = `SELECT * FROM TB_ProductsOrganization WHERE id = ${id}`;
+        const checkProductResult: any = await db?.request().query(checkProductQuery);
+
+        if (!checkProductResult.recordset || checkProductResult.recordset.length === 0) {
+            return {
+                code: 404,
+                message: { translationKey: "product.not_found" },
+            };
+        }
+
+        const updateQuery = `UPDATE TB_ProductsOrganization SET idStatus = 5, deliverDate = getDate() WHERE id = ${id}`;
+        const updateProduct: any = await db?.request().query(updateQuery);
+
+        return {
+            code: 200,
+            message: { translationKey: "product.successful" },
+            data: updateProduct.recordset,
+        };
+    } catch (err) {
+        console.log("Error al actualizar el producto", err);
+        return {
+            code: 500,
+            message: { translationKey: "product.error_server" },
+        };
+    }
+} 
