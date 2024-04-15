@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getProducts, getProductsReserved, getProductsToDonate, postProduct, putPreductReserved } from "../controllers/Products.Controller";
+import { getProducts, getProductsReserved, getProductsToDonate, postProduct, putProductDelivered, putProductReserved } from "../controllers/Products.Controller";
 import { body, param, query } from "express-validator";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 
@@ -42,11 +42,20 @@ productsRouter.put(
         param("id", "product.validate_field_int").notEmpty().isInt(),
         validateEnpoint
     ],
-    putPreductReserved
+    putProductReserved
 );
 
 productsRouter.get(
     "/getproductreserved", getProductsReserved
+);
+
+productsRouter.put(
+    "/putproductdelivered/:id",
+    [
+        param("id", "product.validate_field_int").notEmpty().isInt(),
+        validateEnpoint
+    ],
+    putProductDelivered
 );
 
 export default productsRouter;

@@ -69,5 +69,11 @@
 		"succesfull": "OK",
 		"emptyResponse": "No se encontró información",
 		"error_server": "Ocurrió un error en el servidor"
+	},
+	"qualification": {
+		"succesfull": "OK",
+		"validate_field_int": "Este campo es requerido de tipo entero",
+		"emptyResponse": "No se encontró información",
+		"error_server": "Ocurrió un error en el servidor"
 	}
 }

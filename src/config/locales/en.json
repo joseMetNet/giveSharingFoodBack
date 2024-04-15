@@ -69,5 +69,11 @@
 		"succesfull": "OK",
 		"emptyResponse": "No information found",
 		"error_server": "An error occurred on the server"
+	},
+	"qualification": {
+		"succesfull": "OK",
+		"validate_field_int": "This is a required field of type integer",
+		"emptyResponse": "No information found",
+		"error_server": "An error occurred on the server"
 	}
 }

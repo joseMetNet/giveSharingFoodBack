@@ -1,5 +1,5 @@
 import { connectToSqlServer } from "../DB/config";
-import { IresponseRepositoryService, IresponseRepositoryServiceGet, dataOrganization, updateOrganizationById } from "../interface/Organization.Interface";
+import { IresponseRepositoryService, IresponseRepositoryServiceGet, dataOrganization, idHistory, updateOrganizationById } from "../interface/Organization.Interface";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
@@ -411,6 +411,43 @@ export const uploadImageToAzure = async (filePath: string): Promise<string> => {
 
     return blobUrl;
 };
+
+export const getDonationHistory = async(id : idHistory): Promise<IresponseRepositoryServiceGet> => {
+    try {
+        const { idOrganization } = id;
+        const db = await connectToSqlServer();
+        const queryHistory = `SELECT tbpo.idOrganization, tbo.bussisnesName, tbo.logo, tbpo.quantity, tbpo.deliverDate, tbpo.solicitDate, tbs.[status],
+            tbq.timelyColection, tbq.timelyComunication, tbq.totalQualification, tbto.typeOrganization FROM TB_ProductsOrganization AS tbpo
+            LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
+            LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
+            LEFT JOIN TB_Qualification AS tbq ON tbq.idOrganization = tbo.id
+            LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
+            WHERE tbpo.idOrganization = @idOrganization`;
+        const result = await db?.request()
+                                .input('idOrganization', idOrganization)
+                                .query(queryHistory);
+
+        const donateHistory = result?.recordset;
+        if( donateHistory && donateHistory.length > 0 ){
+            return {
+                code: 200,
+                message: { translationKey : "organizations.successful"},
+                data: donateHistory
+            };
+        } else {
+            return {
+                code: 204,
+                message: { translationKey : "organizations.emptyResponse"},
+            };
+        }
+    } catch (err) {
+        console.log("Error al traer el historial de donaciones", err);
+        return {
+            code: 400,
+            message: { translationKey: "organizations.error_server"},
+        }
+    }
+}
 
 
 

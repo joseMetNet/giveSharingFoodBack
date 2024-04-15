@@ -37,7 +37,7 @@ export const postProduct: RequestHandler = async (req, res) => {
     }
 }
 
-export const putPreductReserved: RequestHandler = async (req, res) => {
+export const putProductReserved: RequestHandler = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         const { code, message, ...resto}: ProductRepositoryService = await repository.putProductReserve(id);
@@ -55,5 +55,17 @@ export const getProductsReserved: RequestHandler = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({message: parseMessageI18n('error_server', req)});        
+    }
+}
+
+
+export const putProductDelivered: RequestHandler = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { code, message, ...resto}: ProductRepositoryService = await repository.putProductDelivered(id);
+        res.status(code).json({ message: parseMessageI18n(message, req), ...resto});
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: parseMessageI18n("error_server", req)})
     }
 }
