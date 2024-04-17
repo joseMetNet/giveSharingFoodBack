@@ -1,8 +1,8 @@
 export interface dataQualification {
     idOrganization: number,
-    timelyColection: number,
-    timelyComunication: number,
-    totalQualification: number,
+    idProductsOrganization: number,
+    idPointsToGrade: number,
+    qualification: number,
     observations: string,
 }
 
@@ -21,4 +21,8 @@ export interface QualificationRepositoryService {
     code: number,
     message: string| { translationKey: string },
     data?: any
+}
+
+export interface idOrganizationQualification {
+    idOrganization?: number,
 }
