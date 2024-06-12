@@ -5,7 +5,13 @@ import { getCommentsQuailification, getPointsToGrade, getQuailification, postQua
 
 const qualificationRouter = Router();
 
-qualificationRouter.get("/pointsGrade", getPointsToGrade);
+qualificationRouter.get(
+    "/pointsGradeByIdRol/:idRol",
+    [
+        param("idRol", "qualification.validate_field_int").notEmpty().isInt(),
+        validateEnpoint
+    ],
+    getPointsToGrade);
 
 qualificationRouter.post(
     "/postQuailification",
