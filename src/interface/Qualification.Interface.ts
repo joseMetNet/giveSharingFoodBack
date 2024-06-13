@@ -26,3 +26,7 @@ export interface QualificationRepositoryService {
 export interface idOrganizationQualification {
     idOrganization?: number,
 }
+
+export interface IfilterQuantificationByIdRol {
+    idRol?: number,
+}

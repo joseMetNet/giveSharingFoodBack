@@ -5,7 +5,7 @@ import { parseMessageI18n } from "../utils/parse-messga-i18";
 
 export const getPointsToGrade: RequestHandler = async (req, res) => {
     try {
-        const { code, message, ...resto }: QualificationRepositoryService = await repository.getPointsToGrade();
+        const { code, message, ...resto }: QualificationRepositoryService = await repository.getPointsToGradeByIdRol(req.params);
         res.status(code).json({message: parseMessageI18n(message, req), ...resto});
     } catch (err) {
         console.error(err);

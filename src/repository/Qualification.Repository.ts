@@ -1,13 +1,18 @@
 import { connectToSqlServer } from "../DB/config"
-import { QualificationRepositoryService, dataQualification, idOrganizationQualification } from "../interface/Qualification.Interface"
+import { IfilterQuantificationByIdRol, QualificationRepositoryService, dataQualification, idOrganizationQualification } from "../interface/Qualification.Interface"
 
-export const getPointsToGrade = async () => {
+export const getPointsToGradeByIdRol = async (filter: IfilterQuantificationByIdRol): Promise<QualificationRepositoryService> => {
     try {
+        const { idRol } = filter;
         const db = await connectToSqlServer();
-        const pointsToGrade: any = await db?.request()
-            .query(`SELECT * FROM TB_PointsToGrade`);
+        let queryPointsToGrade = `SELECT tbptg.id, tbptg.[description], tbptg.idRol, tbr.[role] FROM TB_PointsToGrade AS tbptg
+                    LEFT JOIN TB_Rol AS tbr ON tbr.id = tbptg.idRol
+                    WHERE tbr.id = @idRol`;
+        const resultPointsToGrade: any = await db?.request()
+                    .input('idRol', idRol)
+                    .query(queryPointsToGrade)            
         
-        if (!pointsToGrade || !pointsToGrade.recordset || !pointsToGrade.recordset.length) {
+        if (!resultPointsToGrade || !resultPointsToGrade.recordset || !resultPointsToGrade.recordset.length) {
             return {
                 code: 204,
                 message: { translationKey: "qualification.emptyResponse" },
@@ -16,13 +21,13 @@ export const getPointsToGrade = async () => {
         return {
             code: 200,
             message: { translationKey: "qualification.succesfull" },
-            data: pointsToGrade.recordset
+            data: resultPointsToGrade.recordset
         }
     } catch (err) {
         console.log("Error al traer departamentos", err)
         return {
             code: 400,
-            message: { translationKey: "qualification..error_server", translationParams: { name: "getPointsToGrade" } },
+            message: { translationKey: "qualification..error_server" },
         };        
     };
 }
