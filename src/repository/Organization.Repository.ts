@@ -466,7 +466,7 @@ export const getDonationHistoryById = async(ids : idHistory): Promise<IresponseR
                                 .input('idOrganization', idOrganization)
                                 .input('idProductOrganization', idProductOrganization)
                                 .query(queryHistory);
-        console.log(queryHistory)
+
         const donateHistory = result?.recordset;
         if( donateHistory && donateHistory.length > 0 ){
             return {
