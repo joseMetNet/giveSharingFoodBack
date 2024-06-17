@@ -451,6 +451,43 @@ export const getDonationHistory = async(id : idHistory): Promise<IresponseReposi
     }
 }
 
+export const getDonationHistoryById = async(ids : idHistory): Promise<IresponseRepositoryServiceGet> => {
+    try {
+        const { idOrganization, idProductOrganization } = ids;
+        
+        const db = await connectToSqlServer();
+        const queryHistory = `SELECT tbpo.id AS idProductOrganization, tbo.id AS idOrganization, tbo.logo, tbpo.quantity, tbpo.deliverDate, tbpo.expirationDate, tbs.[status], tbto.typeOrganization
+                                FROM TB_ProductsOrganization AS tbpo
+                                LEFT JOIN TB_Organizations  AS tbo ON tbpo.idOrganization = tbo.id
+                                LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
+                                LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
+                                 WHERE tbo.id = @idOrganization AND tbpo.id = @idProductOrganization`;
+        const result = await db?.request()
+                                .input('idOrganization', idOrganization)
+                                .input('idProductOrganization', idProductOrganization)
+                                .query(queryHistory);
+        console.log(queryHistory)
+        const donateHistory = result?.recordset;
+        if( donateHistory && donateHistory.length > 0 ){
+            return {
+                code: 200,
+                message: { translationKey : "organizations.successful"},
+                data: donateHistory
+            };
+        } else {
+            return {
+                code: 204,
+                message: { translationKey : "organizations.emptyResponse"},
+            };
+        }
+    } catch (err) {
+        console.log("Error al traer el historial de donaciones por id", err);
+        return {
+            code: 400,
+            message: { translationKey: "organizations.error_server"},
+        }
+    }
+}
 
 
 
