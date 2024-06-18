@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { body, param } from "express-validator";
-import { createOrganization, getDonationHistory, getListOrganizationById, getListOrganizations, getOrganizationById, updateOrganizationById } from "../controllers/Organization.Controller";
+import { createOrganization, getDonationHistory, getDonationHistoryById, getListOrganizationById, getListOrganizations, getOrganizationById, updateOrganizationById } from "../controllers/Organization.Controller";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 import { validateEmailOrganizationExist, validateEmailUserExist } from "../middlewares/validator-custom";
 import { or } from "sequelize";
@@ -74,6 +74,16 @@ organizationRouter.get(
         validateEnpoint
     ],
     getDonationHistory
+);
+
+organizationRouter.get(
+    "/historyById/:idOrganization/:idProductOrganization",
+    [
+        param("idOrganization", "organizations.validate_field_int").notEmpty().isInt(),
+        param("idProductOrganization","organizations.validate_field_int").notEmpty().isInt(),
+        validateEnpoint
+    ],
+    getDonationHistoryById
 );
 
 export default organizationRouter;

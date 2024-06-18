@@ -29,7 +29,6 @@ export interface IresponseRepositoryServiceGet{
 }
 
 export interface updateOrganizationById {
-   // id?: number,
     bussisnesName?: string | undefined,
     idTypeIdentification?: number | undefined,
     identification?: string | undefined,
@@ -38,7 +37,6 @@ export interface updateOrganizationById {
     representativePhone?: string | undefined,
     representativeEmail?: string | undefined,
     logo?: string,
-    //info_contacto
     name?: string | undefined,
     phone?: string | undefined,
     email?: string | undefined,
@@ -47,5 +45,6 @@ export interface updateOrganizationById {
 }
 
 export interface idHistory {
-    idOrganization?: number
+    idOrganization?: number,
+    idProductOrganization?: number
 }
