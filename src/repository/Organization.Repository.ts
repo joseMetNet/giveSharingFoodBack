@@ -416,15 +416,23 @@ export const getDonationHistory = async(id : idHistory): Promise<IresponseReposi
     try {
         const { idOrganization } = id;
         const db = await connectToSqlServer();
-        const queryHistory = `SELECT tbpo.id, tbpo.idOrganization, tbo.bussisnesName, tbo.logo, tbpo.quantity, tbpo.deliverDate, tbpo.solicitDate, tbs.[status],
-        tba.avarage AS calificacion,tbto.typeOrganization FROM TB_ProductsOrganization AS tbpo
-        LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
-        LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
-        LEFT JOIN TB_Qualification AS tbq ON tbq.idOrganization = tbo.id
-        LEFT JOIN TB_PointsToGrade AS tbptg ON tbptg.id = tbq.idPointsToGrade
-        LEFT JOIN TB_Avarage AS tba ON tba.idOrganization = tbo.id
-        LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
-        WHERE tbpo.idOrganization = @idOrganization`;
+        const queryHistory = `SELECT 
+                                tbo.id AS idOrganization,
+                                tbpo.id AS idProductOrganization,
+                                tbo.bussisnesName,
+                                tbpo.quantity,
+                                tbpo.deliverDate,
+                                tbpo.solicitDate,
+                                tbs.[status],
+                                tbq.qualification,
+                                tbto.typeOrganization,
+                                tbo.logo
+                                FROM TB_ProductsOrganization AS tbpo
+                                LEFT JOIN TB_Qualification AS tbq ON tbpo.id = tbq.idProductsOrganization
+                                LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
+                                LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
+                                LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
+                                WHERE tbo.id = @idOrganization `;
         const result = await db?.request()
                                 .input('idOrganization', idOrganization)
                                 .query(queryHistory);
