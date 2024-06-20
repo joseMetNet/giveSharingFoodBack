@@ -86,7 +86,7 @@ export const getProductsToDonate = async (filter: filterProduct): Promise<Produc
                     LEFT JOIN TB_Measure AS tbm ON tbm.id = tbpo.idmeasure
                     LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
                     LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
-                    WHERE tbs.id = 2 AND tbu.idCity = (SELECT idCity FROM TB_User WHERE id = tbpo.idUser)`;
+                    WHERE tbs.id = 4 AND tbu.idCity = (SELECT idCity FROM TB_User WHERE id = tbpo.idUser)`;
             
         if (productName) {
             query += ` AND tbp.product LIKE '%${productName}%'`;
