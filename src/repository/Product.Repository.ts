@@ -145,7 +145,7 @@ export const putProductReserve = async (id: number): Promise<ProductRepositorySe
     }
 };
 
-export const getProductsReserved = async () => {
+export const getProductsReserved = async (idUser?: number) => {
     try {
         const db = await connectToSqlServer();
         let query = `SELECT DISTINCT
@@ -173,6 +173,10 @@ export const getProductsReserved = async () => {
         LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
         WHERE
         tbs.id = 3 AND (tbr.id != 2 OR tbr.id != 3 OR tbr.id != 1)`;
+
+        if (idUser) {
+            query += ` AND tbpo.idUser = ${idUser}`;
+        }
         const productsReserved: any = await db?.request().query(query);
         const totalRecords = productsReserved.recordset.length;
         return {
@@ -220,3 +224,33 @@ export const putProductDelivered = async (id: number): Promise<ProductRepository
         };
     }
 } 
+
+export const deleteProductOrganization = async (id:number): Promise<ProductRepositoryService> => {
+    try {
+        const db = await connectToSqlServer();
+        const checkProductQuery = `SELECT * FROM TB_ProductsOrganization WHERE id = ${id}`;
+        const checkProductResult: any = await db?.request().query(checkProductQuery);
+
+        if (!checkProductResult.recordset || checkProductResult.recordset.length === 0) {
+            return {
+                code: 404,
+                message: { translationKey: "product.not_found" },
+            };
+        }
+
+        const deleteQuery = `DELETE TB_ProductsOrganization WHERE id = ${id}`;
+        const deleteProduct: any = await db?.request().query(deleteQuery);
+
+        return {
+            code: 200,
+            message: {translationKey: "product.successful" },
+            data: deleteProduct.recordset,
+        }
+    } catch (err) {
+        console.log("Error al eliminar producto")
+        return {
+            code: 500,
+            message: { translationKey: "product.error_server" }
+        }
+    }
+}

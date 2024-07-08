@@ -6,6 +6,81 @@ import { validateEmailUserExist } from "../middlewares/validator-custom";
 
 const userRouter = Router();
 
+/**
+ * @swagger
+ * /createUser:
+ *   post:
+ *     tags:
+ *       - Users
+ *     summary: Add a new user
+ *     description: Add a new user to the organization.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               googleAddress:
+ *                 type: string
+ *               idOrganization:
+ *                 type: number
+ *               idCity:
+ *                 type: number
+ *               idDepartmen:
+ *                 type: number           
+ *     responses:
+ *       200:
+ *         description: User added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: user.successfull
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: user.error_invalid_data
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
 userRouter.post(
     "/createUser",
     [
@@ -23,6 +98,77 @@ userRouter.post(
     createUser
 );
 
+/**
+ * @swagger
+ * /users/{idOrganization}:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Get users by organization ID
+ *     description: Retrieve a list of users associated with a specific organization by its ID.
+ *     parameters:
+ *       - in: path
+ *         name: idOrganization
+ *         required: true
+ *         description: ID of the organization to retrieve users for
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: A list of users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: number
+ *                   idAuth:
+ *                     type: number 
+ *                   name:
+ *                     type: string
+ *                   phone:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                   role:
+ *                     type: string
+ *                   city:
+ *                     type: string
+ *                   department:
+ *                     type: string
+ *                   bussisnesName:
+ *                     type: string
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: user.error_invalid_data
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
 userRouter.get(
     "/users/:idOrganization",
     [

@@ -6,7 +6,7 @@ import morgan from "morgan";
 import "colors";
 import i18n from "../config/i18n";
 import fileUpload from 'express-fileupload';
-
+import { swaggerDocs, swaggerUi } from '../helpers/swagger';
 //routes
 import exampleRoutes from "../routes/Department.Router";
 import cityRouter from "../routes/City.Router";
@@ -78,6 +78,7 @@ class Server {
     );
     // translator handler 
     this.app.use(i18n.init);
+    this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
   }
 
   routes() {
@@ -93,7 +94,7 @@ class Server {
     this.app.use(this.path.example, measureRouter);
     this.app.use(this.path.example, qualificationRouter);
   }
-
+  
   listen() {
     console.clear();
     this.app.listen(this.port, () => {
