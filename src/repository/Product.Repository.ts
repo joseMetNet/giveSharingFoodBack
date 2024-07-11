@@ -255,3 +255,34 @@ export const deleteProductOrganization = async (id:number): Promise<ProductRepos
         }
     }
 }
+
+export const putProductNotReserved = async (id: number): Promise<ProductRepositoryService> => {
+    try {
+        const db = await connectToSqlServer();
+
+        const checkProductQuery = `SELECT * FROM TB_ProductsOrganization WHERE id = ${id}`;
+        const checkProductResult: any = await db?.request().query(checkProductQuery);
+
+        if (!checkProductResult.recordset || checkProductResult.recordset.length === 0) {
+            return {
+                code: 404,
+                message: { translationKey: "product.not_found" },
+            };
+        }
+
+        const updateQuery = `UPDATE TB_ProductsOrganization SET idStatus = 4, solicitDate = getDate() WHERE id = ${id}`;
+        const updateProduct: any = await db?.request().query(updateQuery);
+
+        return {
+            code: 200,
+            message: { translationKey: "product.successful" },
+            data: updateProduct.recordset,
+        };
+    } catch (err) {
+        console.log("Error al actualizar el producto", err);
+        return {
+            code: 500,
+            message: { translationKey: "product.error_server" },
+        };
+    }
+}

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { deleteProductOrganization, getProducts, getProductsReserved, getProductsToDonate, postProduct, putProductDelivered, putProductReserved } from "../controllers/Products.Controller";
+import { deleteProductOrganization, getProducts, getProductsReserved, getProductsToDonate, postProduct, putProductDelivered, putProductNotReserved, putProductReserved } from "../controllers/Products.Controller";
 import { body, param, query } from "express-validator";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 
@@ -571,5 +571,74 @@ productsRouter.delete(
         validateEnpoint
     ],
     deleteProductOrganization
+);
+
+/**
+ * @swagger
+ * /putProductNotReserved/{id}:
+ *   put:
+ *     tags:
+ *       - Products
+ *     summary: Mark a product as not reserved 
+ *     description: Update the status of a origanization product by its ID for not reserved.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the organization product to update
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: Product updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: product.successful
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: product.error_invalid_data
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+productsRouter.put(
+    "/putProductNotReserved/:id",
+    [
+        param("id", "product.validate_field_int").notEmpty().isInt(),
+        validateEnpoint
+    ],
+    putProductNotReserved
 );
 export default productsRouter;

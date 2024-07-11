@@ -81,3 +81,14 @@ export const deleteProductOrganization: RequestHandler = async (req, res) => {
         res.status(500).json({ message: parseMessageI18n("error_server", req)})
     }
 }
+
+export const putProductNotReserved: RequestHandler = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { code, message, ...resto}: ProductRepositoryService = await repository.putProductNotReserved(id);
+        res.status(code).json({ message: parseMessageI18n(message, req), ...resto});
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: parseMessageI18n("error_server", req)})
+    }
+}
