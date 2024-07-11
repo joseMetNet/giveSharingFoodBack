@@ -26,9 +26,9 @@ export const postContacts = async (data: dataUser): Promise<IresponseRepositoryS
         }
         const idAuth = await createUserInUserManagement(email, password);
         const insertQuery = `
-            INSERT INTO TB_User (idAuth, Name, Phone, Email, GoogleAddress, IdOrganization, idRole, IdCity, idDepartmen)
+            INSERT INTO TB_User (idAuth, Name, Phone, Email, GoogleAddress, IdOrganization, idRole, IdCity, idDepartmen, idStatus)
             OUTPUT INSERTED.* 
-            VALUES (@idAuth, @Name, @Phone, @Email, @GoogleAddress, @IdOrganization, @IdRole, @IdCity, @idDepartmen)`;
+            VALUES (@idAuth, @Name, @Phone, @Email, @GoogleAddress, @IdOrganization, @IdRole, @IdCity, @idDepartmen, @idStatus)`;
 
         const insertResult = await db?.request()
             .input('idAuth', idAuth)
@@ -40,6 +40,7 @@ export const postContacts = async (data: dataUser): Promise<IresponseRepositoryS
             .input('IdRole', idRol)
             .input('IdCity', idCity)
             .input('idDepartmen', idDepartmen)
+            .input('idStatus', 7)
             .query(insertQuery);
 
         return {
@@ -96,6 +97,28 @@ export const getUserByOrganization = async (data: idOrganization): Promise<UserR
         return {
             code: 400,
             message: { translationKey: "user.error_server" },
+        };
+    }
+}
+
+export const putActivateStatusUser = async (id: number): Promise<IresponseRepositoryService> => {
+    try {
+        const db = await connectToSqlServer();
+        const query = `
+            UPDATE TB_User
+            SET idStatus = 6
+            WHERE id = @id
+        `;
+        const result = await db?.request().input('id', id).query(query);
+        return {
+            code: 200,
+            message: 'user.activate'
+        };
+    } catch (err) {
+        console.log("Error al activar usuario", err);
+        return {
+            code: 400,
+            message: { translationKey: "user.error_server", translationParams: { name: "activateUser" } }
         };
     }
 }

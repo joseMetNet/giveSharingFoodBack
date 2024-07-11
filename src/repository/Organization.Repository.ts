@@ -50,8 +50,8 @@ export const postOrganization = async (data: dataOrganization): Promise<Irespons
         const idAuth = await createUserInUserManagement(email, password);
 
         const insertUser = `
-            INSERT INTO TB_User (name, phone, email, idRole, idOrganization, idAuth)
-            VALUES (@name, @phone, @email, @idRole, @idOrganization, @idAuth)
+            INSERT INTO TB_User (name, phone, email, idRole, idOrganization, idAuth, idStatus)
+            VALUES (@name, @phone, @email, @idRole, @idOrganization, @idAuth, @idStatus)
         `;
         const insertUserResult = await db?.request()
             .input('name', representativaName)
@@ -60,6 +60,7 @@ export const postOrganization = async (data: dataOrganization): Promise<Irespons
             .input('idRole', idRole)
             .input('idOrganization', insertedOrganization.id)
             .input('idAuth', idAuth)
+            .input('idStatus', 7)
             .query(insertUser);
 
         return {
@@ -285,7 +286,7 @@ export const getListOrganizations = async (page: number = 0, size: number = 10) 
         LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
         LEFT JOIN TB_Status AS tbs ON tbs.id = tbo.idStatus
         LEFT JOIN TB_User AS tbu ON tbu.idOrganization = tbo.id
-        ORDER BY tbo.id
+        ORDER BY tbo.id DESC
         OFFSET ${offset} ROWS
         FETCH NEXT ${size} ROWS ONLY`);
 
