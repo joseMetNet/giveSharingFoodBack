@@ -282,10 +282,20 @@ export const getListOrganizations = async (page: number = 0, size: number = 10) 
         const offset = page * size;
         
         const organizations: any = await db?.request().query(`
-        SELECT DISTINCT tbo.id, tbto.typeOrganization, tbs.[status], tbo.bussisnesName, tbu.phone, tbo.email FROM  TB_Organizations AS tbo
+        SELECT DISTINCT 
+            tbo.id, 
+            tbto.typeOrganization, 
+            tbs1.[status] AS organizationStatus, 
+            tbo.bussisnesName, 
+            tbu.phone, 
+            tbo.email, 
+            tbu.idStatus AS userIdStatus, 
+            tbs2.[status] AS userStatus 
+        FROM TB_Organizations AS tbo
         LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
-        LEFT JOIN TB_Status AS tbs ON tbs.id = tbo.idStatus
+        LEFT JOIN TB_Status AS tbs1 ON tbs1.id = tbo.idStatus
         LEFT JOIN TB_User AS tbu ON tbu.idOrganization = tbo.id
+        LEFT JOIN TB_Status AS tbs2 ON tbs2.id = tbu.idStatus
         ORDER BY tbo.id DESC
         OFFSET ${offset} ROWS
         FETCH NEXT ${size} ROWS ONLY`);
@@ -341,11 +351,12 @@ export const getListOrganizationById = async (filter: { id: number }): Promise<I
             WHERE tbo.id = @id AND tbu.idRole NOT IN (4,5)`;
 
         const usersQuery = `
-        SELECT tbu.idAuth, tbu.[name], tbu.phone, tbu.email, tbr.[role], tbc.city, tbu.googleAddress, tbd.department 
+        SELECT tbu.idAuth, tbu.[name], tbu.phone, tbu.email, tbr.[role], tbc.city, tbu.googleAddress, tbd.department, tbu.idStatus, tbs.[status]
         FROM TB_User AS tbu
         LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
         LEFT JOIN TB_Departments AS tbd ON tbd.id = tbu.idDepartmen
         LEFT JOIN TB_Rol AS tbr ON tbr.id = tbu.idRole
+        LEFT JOIN TB_Status AS tbs ON tbs.id = tbu.idStatus
         WHERE idOrganization = @id AND tbu.idRole NOT IN (1,2,3)`;
 
         const documentsOrganizatios = `
