@@ -23,7 +23,8 @@
 		"validate_email": "This is not a valid email",
 		"validate_field_int": "This is a required field of type integer",
 		"emptyResponse": "No information found",
-		"activate": "The user was successfully activated"
+		"activate": "The user was successfully activated",
+		"deactivate": "The user was successfully deactivated"
 	},
 	"documents": {
 		"succesfull": "OK",
@@ -64,7 +65,8 @@
 		"error_server": "An error occurred on the server",
 		"required_field_text": "This is a required text field.",
 		"validate_field_int": "This is a required field of type integer",
-		"not_found": "id not found"
+		"not_found": "id not found",
+		"error_uploading_image": "Error uploading image"
 	},
 	"measure": {
 		"succesfull": "OK",

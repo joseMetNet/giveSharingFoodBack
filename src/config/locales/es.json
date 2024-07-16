@@ -23,7 +23,8 @@
 		"validate_email": "Este correo no es valido",
 		"validate_field_int": "Este campo es requerido de tipo entero",
 		"emptyResponse": "No se encontró información",
-		"activate": "El usuario ha sido activado"
+		"activate": "El usuario ha sido activado",
+		"deactivate": "El usuario ha sido desactivado"
 	},
 	"documents": {
 		"succesfull": "OK",
@@ -64,7 +65,8 @@
 		"error_server": "Ocurrió un error en el servidor",
 		"required_field_text": "Este campo es requerido de tipo texto",
 		"validate_field_int": "Este campo es requerido de tipo entero",
-		"not_found": "No se encontro el id"
+		"not_found": "No se encontro el id",
+		"error_uploading_image": "Error al subir la imagen"
 	},
 	"measure": {
 		"succesfull": "OK",

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createUser, getUserByOrganization, putActivateStatusUser } from "../controllers/User.Controller";
+import { createUser, getUserByOrganization, putActiveOrInactiveUser } from "../controllers/User.Controller";
 import { body, param } from "express-validator";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 import { validateEmailUserExist } from "../middlewares/validator-custom";
@@ -180,12 +180,12 @@ userRouter.get(
 
 /**
  * @swagger
- * /putActiveUser/{id}:
+ * /putActiveOrInactiveUser/{id}:
  *   put:
  *     tags:
  *       - Users
- *     summary: Activate a user
- *     description: Update the status of a user for activate.
+ *     summary: Activate or inactive a user
+ *     description: Update the status of a user for activate o inactivate.
  *     parameters:
  *       - in: path
  *         name: id
@@ -239,11 +239,11 @@ userRouter.get(
  *                   example: Internal server error
  */
 userRouter.put(
-    "/putActiveUser/:id",
+    "/putActiveOrInactiveUser/:id",
     [
         param("id", "user.validate_field_int").notEmpty().isInt(),
         validateEnpoint
     ],
-    putActivateStatusUser
+    putActiveOrInactiveUser
 )
 export default userRouter;
