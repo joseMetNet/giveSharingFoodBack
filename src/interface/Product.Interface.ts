@@ -21,10 +21,24 @@ export interface postProduct {
     idMeasure: number,
     quantity: number,
     expirationDate: Date,
-    deliverDate: Date
-    idUser: number
+    deliverDate: Date,
+    idUser: number,
+    price: number
+}
+
+export interface PostNewProductData {
+    product: string;
+    idUser: number;
+    urlImage?: string;
+    urlImagen2?: string;
+    urlImagen3?: string;
+    urlImagen4?: string;
+    urlImagen5?: string;
+    urlImagen6?: string;
 }
 
 export interface filterProduct{
     productName?: string;
 }
+
+export type ImageField = 'urlImage' | 'urlImagen2' | 'urlImagen3' | 'urlImagen4' | 'urlImagen5' | 'urlImagen6';

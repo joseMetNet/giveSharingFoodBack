@@ -101,24 +101,42 @@ export const getUserByOrganization = async (data: idOrganization): Promise<UserR
     }
 }
 
-export const putActivateStatusUser = async (id: number): Promise<IresponseRepositoryService> => {
+export const putActiveOrInactiveUser = async (id: number): Promise<IresponseRepositoryService> => {
     try {
         const db = await connectToSqlServer();
-        const query = `
-            UPDATE TB_User
-            SET idStatus = 6
+
+        // Consultar el estado actual del usuario
+        const selectQuery = `
+            SELECT idStatus
+            FROM TB_User
             WHERE id = @id
         `;
-        const result = await db?.request().input('id', id).query(query);
+        const selectResult = await db?.request().input('id', id).query(selectQuery);
+        const currentStatus = selectResult?.recordset[0]?.idStatus;
+
+        if (currentStatus === undefined) {
+            return {
+                code: 404,
+                message: 'user.not_found'
+            };
+        }
+        const newStatus = currentStatus === 6 ? 7 : 6;
+        const updateQuery = `
+            UPDATE TB_User
+            SET idStatus = @newStatus
+            WHERE id = @id
+        `;
+        await db?.request().input('id', id).input('newStatus', newStatus).query(updateQuery);
+
         return {
             code: 200,
-            message: 'user.activate'
+            message: currentStatus === 6 ? 'user.deactivate' : 'user.activate'
         };
     } catch (err) {
-        console.log("Error al activar usuario", err);
+        console.log("Error al cambiar el estado del usuario", err);
         return {
             code: 400,
-            message: { translationKey: "user.error_server", translationParams: { name: "activateUser" } }
+            message: { translationKey: "user.error_server", translationParams: { name: "toggleUserStatus" } }
         };
     }
 }

@@ -23,10 +23,10 @@ export const getUserByOrganization: RequestHandler = async (req, res) => {
     }
 }
 
-export const putActivateStatusUser: RequestHandler = async (req, res) => {
+export const putActiveOrInactiveUser: RequestHandler = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const { code, message, ...resto }: UserRepositoryService = await repository.putActivateStatusUser(id);
+        const { code, message, ...resto }: UserRepositoryService = await repository.putActiveOrInactiveUser(id);
         res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
     } catch (err) {
         console.error(err);

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { deleteProductOrganization, getProducts, getProductsReserved, getProductsToDonate, postProduct, putProductDelivered, putProductNotReserved, putProductReserved } from "../controllers/Products.Controller";
+import { deleteProductOrganization, getProducts, getProductsReserved, getProductsToDonate, postNewProductHandler, postProduct, putProductDelivered, putProductNotReserved, putProductReserved } from "../controllers/Products.Controller";
 import { body, param, query } from "express-validator";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 
@@ -146,7 +146,9 @@ productsRouter.get(
  *                       city:
  *                         type: string
  *                       status:
- *                         type: string  
+ *                         type: string
+ *                       price:
+ *                         type: string   
  *       400:
  *         description: Bad request
  *         content:
@@ -211,6 +213,8 @@ productsRouter.get(
  *                 format: date
  *               idUser:
  *                 type: integer
+ *               price:
+ *                 type: number
  *     responses:
  *       200:
  *         description: Product added successfully
@@ -264,9 +268,118 @@ productsRouter.post(
         body("quantity", "product.validate_field_int").isInt().notEmpty(),
         body("expirationDate").notEmpty(),
         body("idUser", "product.validate_field_int").isInt().notEmpty(),
+        body("price", "product.validate_field_int").notEmpty(),
         validateEnpoint
     ],
     postProduct);
+
+/**
+ * @swagger
+ * /postNewProducts:
+ *   post:
+ *     tags:
+ *       - Products
+ *     summary: Create a new product
+ *     description: Create a new product with the details provided and optionally upload images.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               product:
+ *                 type: string
+ *                 description: Product name
+ *               idUser:
+ *                 type: integer
+ *                 description: User ID
+ *               urlImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: Main product image
+ *               urlImagen2:
+ *                 type: string
+ *                 format: binary
+ *                 description: Additional product image 2
+ *               urlImagen3:
+ *                 type: string
+ *                 format: binary
+ *                 description: Additional product image 3
+ *               urlImagen4:
+ *                 type: string
+ *                 format: binary
+ *                 description: Additional product image 4
+ *               urlImagen5:
+ *                 type: string
+ *                 format: binary
+ *                 description: Additional product image 5
+ *               urlImagen6:
+ *                 type: string
+ *                 format: binary
+ *                 description: Additional product image 6
+ *     responses:
+ *       '200':
+ *         description: Successfully created product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: product.successful
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       product:
+ *                         type: string
+ *                       urlImage:
+ *                         type: string
+ *                       urlImagen2:
+ *                         type: string
+ *                       urlImagen3:
+ *                         type: string
+ *                       urlImagen4:
+ *                         type: string
+ *                       urlImagen5:
+ *                         type: string
+ *                       urlImagen6:
+ *                         type: string
+ *                       idUser:
+ *                         type: integer
+ *       '400':
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: product.error_server
+ *       '500':
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: error_server
+ */
+productsRouter.post("/postNewProducts", postNewProductHandler);
 
 /**
  * @swagger
@@ -403,6 +516,8 @@ productsRouter.put(
  *                         format: date-time
  *                       status:
  *                         type: string
+ *                       price:
+ *                         type: number
  *                 totalRecords:
  *                   type: integer
  *                   example: 1

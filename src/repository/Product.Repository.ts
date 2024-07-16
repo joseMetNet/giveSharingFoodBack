@@ -1,5 +1,12 @@
+import { BlobServiceClient } from "@azure/storage-blob";
+import { v4 as uuidv4 } from 'uuid';
+import * as fs from 'fs';
+import * as path from 'path';
+import mime from 'mime-types';
 import { connectToSqlServer } from "../DB/config"
-import { ProductRepositoryService, filterProduct, postProduct, postProductRepositoryService } from "../interface/Product.Interface";
+import { ImageField, PostNewProductData, ProductRepositoryService, filterProduct, postProduct, postProductRepositoryService } from "../interface/Product.Interface";
+import { UploadedFile } from "express-fileupload";
+
 
 export const getProducts = async (filter: filterProduct): Promise<ProductRepositoryService> => {
     try {
@@ -36,12 +43,12 @@ export const getProducts = async (filter: filterProduct): Promise<ProductReposit
 
 export const postProducts = async(data: postProduct): Promise<postProductRepositoryService> => {
     try {
-        const { idProduct, idOrganization, idMeasure, quantity, expirationDate, idUser } = data;
+        const { idProduct, idOrganization, idMeasure, quantity, expirationDate, idUser, price } = data;
         const db = await connectToSqlServer();
         const insertQuery = `
-        INSERT INTO TB_ProductsOrganization (idproduct,idOrganization,idMeasure,quantity,expirationDate,idStatus,idUser)
+        INSERT INTO TB_ProductsOrganization (idproduct,idOrganization,idMeasure,quantity,expirationDate,idStatus,idUser,price)
         OUTPUT INSERTED.*
-        VALUES (@idproduct, @idOrganization,@idMeasure,@quantity,@expirationDate,@idStatus, @idUser)`;
+        VALUES (@idproduct, @idOrganization,@idMeasure,@quantity,@expirationDate,@idStatus, @idUser,@price)`;
 
         const insertResult = await db?.request()
             .input('idProduct', idProduct)
@@ -51,6 +58,7 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
             .input('expirationDate', expirationDate || null)
             .input('idStatus', 4)
             .input('idUser', idUser)
+            .input('price', price)
             .query(insertQuery);
         return {
             code: 200,
@@ -66,6 +74,66 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
     }
 }
 
+export const postNewProduct = async (data: PostNewProductData): Promise<ProductRepositoryService> => {
+    try {
+        const { product, idUser, urlImage, urlImagen2, urlImagen3, urlImagen4, urlImagen5, urlImagen6 } = data;
+
+        const db = await connectToSqlServer();
+
+        const insertParams = {
+            product,
+            idUser,
+            blobUrls: [] as string[]
+        };
+
+        const imageFiles = [urlImage, urlImagen2, urlImagen3, urlImagen4, urlImagen5, urlImagen6];
+        for (let i = 0; i < imageFiles.length; i++) {
+            const filePath = imageFiles[i];
+            let blobUrl = '';
+            if (filePath) {
+                try {
+                    blobUrl = await uploadImageProductToAzure(filePath);
+                } catch (uploadError) {
+                    console.error(`Error uploading image for file ${i}:`, uploadError);
+                    return {
+                        code: 500,
+                        message: { translationKey: "product.error_uploading_image" },
+                    };
+                }
+            }
+
+            insertParams.blobUrls.push(blobUrl);
+        }
+
+        const insertQuery = `
+            INSERT INTO TB_Products (product, urlImage, urlImagen2, urlImagen3, urlImagen4, urlImagen5, urlImagen6, idUser)
+            OUTPUT INSERTED.*
+            VALUES (@product, @urlImage, @urlImagen2, @urlImagen3, @urlImagen4, @urlImagen5, @urlImagen6, @idUser)`;
+        const insertResult = await db?.request()
+            .input('product', insertParams.product)
+            .input('urlImage', insertParams.blobUrls[0] || null)
+            .input('urlImagen2', insertParams.blobUrls[1] || null)
+            .input('urlImagen3', insertParams.blobUrls[2] || null)
+            .input('urlImagen4', insertParams.blobUrls[3] || null)
+            .input('urlImagen5', insertParams.blobUrls[4] || null)
+            .input('urlImagen6', insertParams.blobUrls[5] || null)
+            .input('idUser', insertParams.idUser)
+            .query(insertQuery);
+
+        return {
+            code: 200,
+            message: "product.successful",
+            data: insertResult?.recordset
+        };
+    } catch (err) {
+        console.error("Error creating product", err);
+        return {
+            code: 400,
+            message: { translationKey: "product.error_server" },
+        };
+    }
+};
+
 export const getProductsToDonate = async (filter: filterProduct): Promise<ProductRepositoryService> => {
     try {
         const { productName } = filter;
@@ -78,7 +146,8 @@ export const getProductsToDonate = async (filter: filterProduct): Promise<Produc
                     tbpo.idUser,
                     tbu.idCity,
                     tbc.city,
-                    tbs.[status]
+                    tbs.[status],
+                    tbpo.price
                     FROM TB_ProductsOrganization AS tbpo
                     LEFT JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct
                     LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
@@ -163,7 +232,8 @@ export const getProductsReserved = async (idUser?: number) => {
         tbc.city,
         tbu.phone,
         tbpo.deliverDate,
-        tbs.[status]
+        tbs.[status],
+		tbpo.price
         FROM TB_User AS tbu
         LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
         left join TB_Rol as tbr on tbr.id = tbu.idRole
@@ -286,3 +356,43 @@ export const putProductNotReserved = async (id: number): Promise<ProductReposito
         };
     }
 }
+
+export const uploadImageProductToAzure = async (filePath: string): Promise<string> => {
+    try {
+        const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING!);
+        const containerName = process.env.CONTAINERNAME || 'filesgivesharingfood';
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+
+        const uniqueId = uuidv4();
+        const blobExtension = path.extname(filePath);
+        const blobName = `${uniqueId}${blobExtension}`;
+
+        const fileBuffer = fs.readFileSync(filePath);
+        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+        const fileMimeType = mime.lookup(filePath) || 'application/octet-stream';
+
+        await blockBlobClient.uploadData(fileBuffer, {
+            blobHTTPHeaders: { blobContentType: fileMimeType }
+        });
+
+        const blobUrl = `https://${blobServiceClient.accountName}.blob.core.windows.net/${containerName}/${blobName}`;
+        return blobUrl;
+    } catch (error) {
+        console.error('Error uploading image to Azure:', error);
+        throw error;
+    }
+};
+
+export const deleteTemporaryFiles = (productData: PostNewProductData, imageFields: ImageField[]) => {
+    for (let field of imageFields) {
+        if (productData[field]) {
+            try {
+                if (fs.existsSync(productData[field]!)) {
+                    fs.unlinkSync(productData[field]!);
+                }
+            } catch (unlinkError) {
+                console.error(`Error deleting file ${productData[field]}:`, unlinkError);
+            }
+        }
+    }
+};

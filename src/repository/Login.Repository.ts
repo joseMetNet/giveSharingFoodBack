@@ -11,8 +11,9 @@ export const loginUser = async (data: dataLogin): Promise<IresponseRepositorySer
 
         const db = await connectToSqlServer();
         const user = `
-        SELECT tbu.id, tbu.idOrganization, [name], tbu.email, idRole, tbr.[role] FROM TB_User AS tbu
+        SELECT tbu.id, tbu.idOrganization, [name], tbu.email, idRole, tbr.[role], tbs.id AS idStatus, tbs.[status] FROM TB_User AS tbu
         LEFT JOIN TB_Rol AS tbr ON tbr.id = tbu.idRole
+		LEFT JOIN TB_Status AS tbs ON tbs.id = tbu.idStatus
         WHERE tbu.email = @email
         `;
 
