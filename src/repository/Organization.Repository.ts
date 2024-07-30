@@ -12,6 +12,18 @@ export const postOrganization = async (data: dataOrganization): Promise<Irespons
         const { representativaName, bussisnesName, email, password, representativePhone, idTypeOrganitation } = data;
         const db = await connectToSqlServer();
 
+        const typeOrgCheckQuery = `SELECT id FROM TB_TypeOrganization WHERE id = @idTypeOrganitation`;
+        const typeOrgResult = await db?.request()
+            .input('idTypeOrganitation', idTypeOrganitation)
+            .query(typeOrgCheckQuery);
+
+        if (typeOrgResult?.recordset.length === 0) {
+            return {
+                code: 400,
+                message: { translationKey: "organizations.invalid_type_organization", translationParams: { idTypeOrganitation } },
+            };
+        }
+
         const emailCheckQuery = `
             SELECT COUNT(*) AS emailCount
             FROM TB_Organizations
@@ -67,7 +79,7 @@ export const postOrganization = async (data: dataOrganization): Promise<Irespons
             code: 200,
             message: 'organizations.successful',
             data: insertedOrganization
-        }
+        };
     } catch (err) {
         console.log("Error creating organization", err);
         return {
@@ -75,7 +87,7 @@ export const postOrganization = async (data: dataOrganization): Promise<Irespons
             message: { translationKey: "organizations.error_server", translationParams: { name: "createOrganization" } },
         };
     }
-}
+};
 
 export const getOrganizationById = async (filter: { id: number }): Promise<IresponseRepositoryServiceGet> => {
     try {

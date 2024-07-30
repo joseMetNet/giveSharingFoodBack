@@ -35,7 +35,7 @@ export const getCommentsQuailification: RequestHandler = async(req, res) => {
 
 export const getQuailification: RequestHandler = async(req, res) => {
     try {
-        const {code, message, ...resto}: QualificationRepositoryService = await repository.getQuailification(req.params)
+        const {code, message, ...resto}: QualificationRepositoryService = await repository.getQualification(req.params)
         res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
     } catch (err) {
         console.error(err);

@@ -137,36 +137,55 @@ export const getCommentsQuailification = async(id: idOrganizationQualification):
     }
 }
 
-export const getQuailification = async(id: idOrganizationQualification): Promise<QualificationRepositoryService> => {
+export const getQualification = async(id: idOrganizationQualification): Promise<QualificationRepositoryService> => {
     try {
         const { idOrganization } = id;
         const db = await connectToSqlServer();
-        let qualifications = `SELECT tbptg.description, tbq.qualification, max(tba.avarage) as max_average FROM TB_PointsToGrade AS tbptg
-        LEFT JOIN TB_Qualification AS tbq ON tbq.idPointsToGrade = tbptg.id
-        LEFT JOIN TB_Avarage AS tba ON tba.idOrganization = tbq.idOrganization
-        WHERE tbq.idOrganization = @idOrganization
-        GROUP BY tbptg.description, tbq.qualification`
+
+        const organizationCheckQuery = `SELECT id FROM TB_Organizations WHERE id = @idOrganization`;
+        const organizationCheckResult = await db?.request()
+            .input('idOrganization', idOrganization)
+            .query(organizationCheckQuery);
+
+        if (organizationCheckResult?.recordset.length === 0) {
+            return {
+                code: 400,
+                message: { translationKey: "qualification.invalid_organization" }
+            };
+        }
+
+        // Consultar las calificaciones
+        const qualificationsQuery = `
+            SELECT tbptg.description, tbq.qualification, MAX(tba.avarage) AS max_average 
+            FROM TB_PointsToGrade AS tbptg
+            LEFT JOIN TB_Qualification AS tbq ON tbq.idPointsToGrade = tbptg.id
+            LEFT JOIN TB_Avarage AS tba ON tba.idOrganization = tbq.idOrganization
+            WHERE tbq.idOrganization = @idOrganization
+            GROUP BY tbptg.description, tbq.qualification
+        `;
         const resultQualifications = await db?.request()
-                                    .input('idOrganization', idOrganization)
-                                    .query(qualifications);
+            .input('idOrganization', idOrganization)
+            .query(qualificationsQuery);
+
         const qualification = resultQualifications?.recordset;
-        if(qualification && qualification.length > 0) {
+
+        if (qualification && qualification.length > 0) {
             return {
                 code: 200,
-                message: { translationKey: "qualification.succesfull"},
+                message: { translationKey: "qualification.successful" },
                 data: qualification
             };
         } else {
             return {
-                code: 204,
-                message: {translationKey: "qualification.emptyResponse"}
-            }
+                code: 400,
+                message: { translationKey: "qualification.emptyResponse" }
+            };
         }
     } catch (err) {
         console.log("Error al traer las calificaciones", err);
         return {
             code: 400,
-            message: { translationKey: "qualification.error_server"}
-        }
+            message: { translationKey: "qualification.error_server" }
+        };
     }
-}
+};

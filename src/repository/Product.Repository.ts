@@ -45,10 +45,23 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
     try {
         const { idProduct, idOrganization, idMeasure, quantity, expirationDate, idUser, price } = data;
         const db = await connectToSqlServer();
+
+        const checkOrgQuery = `SELECT id FROM TB_Organizations WHERE id = @idOrganization`;
+        const orgResult = await db?.request()
+            .input('idOrganization', idOrganization)
+            .query(checkOrgQuery);
+
+        if (orgResult?.recordset.length === 0) {
+            return {
+                code: 400,
+                message: { translationKey: "product.error_invalid_organization", translationParams: { idOrganization } },
+            };
+        }
+
         const insertQuery = `
-        INSERT INTO TB_ProductsOrganization (idproduct,idOrganization,idMeasure,quantity,expirationDate,idStatus,idUser,price)
+        INSERT INTO TB_ProductsOrganization (idProduct, idOrganization, idMeasure, quantity, expirationDate, idStatus, idUser, price)
         OUTPUT INSERTED.*
-        VALUES (@idproduct, @idOrganization,@idMeasure,@quantity,@expirationDate,@idStatus, @idUser,@price)`;
+        VALUES (@idProduct, @idOrganization, @idMeasure, @quantity, @expirationDate, @idStatus, @idUser, @price)`;
 
         const insertResult = await db?.request()
             .input('idProduct', idProduct)
@@ -60,19 +73,20 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
             .input('idUser', idUser)
             .input('price', price)
             .query(insertQuery);
+
         return {
             code: 200,
-            message:  "product.successful",
+            message: "product.successful",
             data: insertResult?.recordset
-        }
+        };
     } catch (err) {
         console.log("Error creating product", err);
         return {
             code: 400,
-            message: {translationKey: "product.error_server", translationParams: {name: "postProducts"} },
-        }
+            message: { translationKey: "product.error_server", translationParams: { name: "postProducts" } },
+        };
     }
-}
+};
 
 export const postNewProduct = async (data: PostNewProductData): Promise<ProductRepositoryService> => {
     try {
