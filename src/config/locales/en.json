@@ -46,7 +46,8 @@
 		"validate_field_int": "This is a required field of type integer",
 		"invalid_image": "Only images of type ['.jpg', '.jpeg', '.png'] are accepted",
 		"invalid_email": "the email already exists",
-		"email_already_exists": "the email already exists"
+		"email_already_exists": "the email already exists",
+		"invalid_type_organization": "The id type of organization does not exist"
 	},
 	"city": {
 		"field": "The field must be an integer"
@@ -66,7 +67,8 @@
 		"required_field_text": "This is a required text field.",
 		"validate_field_int": "This is a required field of type integer",
 		"not_found": "id not found",
-		"error_uploading_image": "Error uploading image"
+		"error_uploading_image": "Error uploading image",
+		"error_invalid_organization": "The id of the organization does not exist"
 	},
 	"measure": {
 		"succesfull": "OK",
@@ -77,6 +79,7 @@
 		"succesfull": "OK",
 		"validate_field_int": "This is a required field of type integer",
 		"emptyResponse": "No information found",
-		"error_server": "An error occurred on the server"
+		"error_server": "An error occurred on the server",
+		"invalid_organization": "The id of the organization does not exist"
 	}
 }

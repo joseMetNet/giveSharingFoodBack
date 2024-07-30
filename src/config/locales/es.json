@@ -46,7 +46,8 @@
 		"validate_field_int": "Este campo es requerido de tipo entero",
 		"invalid_image": "Solo se aceptan imágenes de tipo ['.jpg', '.jpeg', '.png']",
 		"invalid_email": "El correo electronico ya existe",
-		"email_already_exists": "El correo electronico ya existe"
+		"email_already_exists": "El correo electronico ya existe",
+		"invalid_type_organization": "El id de el tipo de organización no existe"
 	},
 	"city": {
 		"field": "Este campo es de tipo entero"
@@ -66,7 +67,8 @@
 		"required_field_text": "Este campo es requerido de tipo texto",
 		"validate_field_int": "Este campo es requerido de tipo entero",
 		"not_found": "No se encontro el id",
-		"error_uploading_image": "Error al subir la imagen"
+		"error_uploading_image": "Error al subir la imagen",
+		"error_invalid_organization": "El id de la organización no existe"
 	},
 	"measure": {
 		"succesfull": "OK",
@@ -77,6 +79,7 @@
 		"succesfull": "OK",
 		"validate_field_int": "Este campo es requerido de tipo entero",
 		"emptyResponse": "No se encontró información",
-		"error_server": "Ocurrió un error en el servidor"
+		"error_server": "Ocurrió un error en el servidor",
+		"invalid_organization": "El id de la organización no existe"
 	}
 }
