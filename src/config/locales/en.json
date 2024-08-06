@@ -47,7 +47,9 @@
 		"invalid_image": "Only images of type ['.jpg', '.jpeg', '.png'] are accepted",
 		"invalid_email": "the email already exists",
 		"email_already_exists": "the email already exists",
-		"invalid_type_organization": "The id type of organization does not exist"
+		"invalid_type_organization": "The id type of organization does not exist",
+		"deactivate": "The organization does not have pending processes",
+		"activate": "The organization has pending processes"
 	},
 	"city": {
 		"field": "The field must be an integer"

@@ -524,6 +524,45 @@ export const getDonationHistoryById = async(ids : idHistory): Promise<IresponseR
     }
 }
 
+export const putActiveOrInactiveOrganization = async (id: number): Promise<IresponseRepositoryService> => {
+    try {
+        const db = await connectToSqlServer();
+
+        const selectQuery = `
+            SELECT idStatus
+            FROM TB_Organizations
+            WHERE id = @id
+        `;
+        const selectResult = await db?.request().input('id', id).query(selectQuery);
+        const currentStatus = selectResult?.recordset[0]?.idStatus;
+
+        if (currentStatus === undefined) {
+            return {
+                code: 404,
+                message: 'organizations.emptyResponse'
+            };
+        }
+        const newStatus = currentStatus === 1 ? 8 : 1;
+        const updateQuery = `
+            UPDATE TB_Organizations
+            SET idStatus = @newStatus
+            WHERE id = @id
+        `;
+        await db?.request().input('id', id).input('newStatus', newStatus).query(updateQuery);
+
+        return {
+            code: 200,
+            message: currentStatus === 1 ? 'organizations.deactivate' : 'organizations.activate'
+        };
+    } catch (err) {
+        console.log("Error al cambiar el estado de la organizacion", err);
+        return {
+            code: 400,
+            message: { translationKey: "organizations.error_server", translationParams: { name: "putActiveOrInactiveOrganization" } }
+        };
+    }
+}
+
 
 
 

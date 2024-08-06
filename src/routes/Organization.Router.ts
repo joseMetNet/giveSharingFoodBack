@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { body, param } from "express-validator";
-import { createOrganization, getDonationHistory, getDonationHistoryById, getListOrganizationById, getListOrganizations, getOrganizationById, updateOrganizationById } from "../controllers/Organization.Controller";
+import { createOrganization, getDonationHistory, getDonationHistoryById, getListOrganizationById, getListOrganizations, getOrganizationById, putActiveOrInactiveOrganization, updateOrganizationById } from "../controllers/Organization.Controller";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
-import { validateEmailOrganizationExist, validateEmailUserExist } from "../middlewares/validator-custom";
+import { validateEmailOrganizationExist } from "../middlewares/validator-custom";
 import { or } from "sequelize";
 
 const organizationRouter = Router();
@@ -579,5 +579,74 @@ organizationRouter.get(
     ],
     getDonationHistoryById
 );
+
+/**
+ * @swagger
+ * /putActiveOrInactiveOrganization/{id}:
+ *   put:
+ *     tags:
+ *       - Organizations
+ *     summary: Activate or inactive a organization
+ *     description: Update the status of a organization for activate o inactivate.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the organization to update
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: organization updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: organization.successful
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: organization.error_invalid_data
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+organizationRouter.put(
+    "/putActiveOrInactiveOrganization/:id",
+    [
+        param("id", "organizations.validate_field_int").notEmpty().isInt(),
+        validateEnpoint
+    ],
+    putActiveOrInactiveOrganization
+)
 
 export default organizationRouter;
