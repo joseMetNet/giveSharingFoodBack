@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { body, param } from "express-validator";
-import { createOrganization, getDonationHistory, getDonationHistoryById, getListOrganizationById, getListOrganizations, getOrganizationById, putActiveOrInactiveOrganization, updateOrganizationById } from "../controllers/Organization.Controller";
+import { createOrganization, getDonationHistory, getDonationHistoryById, getListOrganizationById, getListOrganizations, getOrganizationById, getTypeOrganization, putActiveOrInactiveOrganization, updateOrganizationById } from "../controllers/Organization.Controller";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 import { validateEmailOrganizationExist } from "../middlewares/validator-custom";
 import { or } from "sequelize";
@@ -579,6 +579,41 @@ organizationRouter.get(
     ],
     getDonationHistoryById
 );
+
+/**
+ * @swagger
+ * /getTypeOrganization:
+ *   get:
+ *     tags:
+ *       - Organizations
+ *     summary: Get all type organizations
+ *     description: Retrieve a list of all type organizations.
+ *     responses:
+ *       200:
+ *         description: A list of type organizations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   typeOrganization:
+ *                     type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+organizationRouter.get("/getTypeOrganization", getTypeOrganization);
 
 /**
  * @swagger
