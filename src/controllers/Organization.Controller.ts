@@ -97,6 +97,16 @@ export const getDonationHistoryById: RequestHandler = async (req, res) => {
     }
 }
 
+export const getTypeOrganization: RequestHandler = async (req, res) => {
+    try {
+        const { code, message, ...resto }: IresponseRepositoryServiceGet = await repository.getTypeOrganization();
+        res.status(code).json({message: parseMessageI18n(message, req), ...resto});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: parseMessageI18n('error_server', req)});
+    }
+}
+
 export const putActiveOrInactiveOrganization: RequestHandler = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
