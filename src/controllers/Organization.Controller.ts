@@ -118,3 +118,27 @@ export const putActiveOrInactiveOrganization: RequestHandler = async (req, res) 
         res.status(500).json({ message: parseMessageI18n('error_server', req) });
     }
 }
+
+export const getFoundationTypeOrgaization: RequestHandler = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page as string) || 1;
+        const size = parseInt(req.query.size as string) || 10;
+        const { code, message, ...resto }: IresponseRepositoryServiceGet = await repository.getFoundationTypeOrgaization(page, size);
+        res.status(code).json({message: parseMessageI18n(message, req), ...resto});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: parseMessageI18n('error_server', req)});
+    }
+}
+
+export const getDonatorTypeOrgaization: RequestHandler = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page as string) || 1;
+        const size = parseInt(req.query.size as string) || 10;
+        const { code, message, ...resto }: IresponseRepositoryServiceGet = await repository.getDonatorTypeOrgaization(page, size);
+        res.status(code).json({message: parseMessageI18n(message, req), ...resto});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: parseMessageI18n('error_server', req)});
+    }
+}

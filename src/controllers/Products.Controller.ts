@@ -71,16 +71,42 @@ export const postNewProductHandler: RequestHandler = async (req, res) => {
     }
 };
 
-export const putProductReserved: RequestHandler = async (req, res) => {
+export const putProductPreReserved: RequestHandler = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const { code, message, ...resto}: ProductRepositoryService = await repository.putProductReserve(id);
+        const { code, message, ...resto}: ProductRepositoryService = await repository.putProductPreReserved(id);
         res.status(code).json({ message: parseMessageI18n(message, req), ...resto});
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: parseMessageI18n("error_server", req)})
     }
 }
+
+export const getProductsPreReserved: RequestHandler = async (req, res) => {
+    try {
+        const idUser = req.query.idUser ? parseInt(req.query.idUser as string) : undefined;
+        const { code, message, ... resto }: ProductRepositoryService = await repository.getProductsPreReserved(idUser);
+        res.status(code).json({message: parseMessageI18n(message, req), ...resto});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({message: parseMessageI18n('error_server', req)});        
+    }
+}
+
+export const putProductReserved: RequestHandler = async (req, res) => {
+    try {
+        const ids = req.body.ids; 
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ message: parseMessageI18n({ translationKey: "product.error_invalid_data" }, req) });
+        }
+
+        const { code, message, ...resto }: ProductRepositoryService = await repository.putProductReserved(ids);
+        res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: parseMessageI18n("error_server", req) });
+    }
+};
 
 export const getProductsReserved: RequestHandler = async (req, res) => {
     try {
@@ -101,6 +127,17 @@ export const putProductDelivered: RequestHandler = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: parseMessageI18n("error_server", req)})
+    }
+}
+
+export const getProductsDeliveredByOrganization: RequestHandler = async (req, res) => {
+    try {
+        const idOrganization = req.params.idOrganization ? parseInt(req.params.idOrganization as string) : undefined;
+        const { code, message, ...resto }: ProductRepositoryService = await repository.getProductsDeliveredByOrganization(idOrganization);
+        res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: parseMessageI18n('error_server', req) });
     }
 }
 

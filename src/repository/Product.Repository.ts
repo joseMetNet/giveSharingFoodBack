@@ -197,7 +197,7 @@ export const getProductsToDonate = async (filter: filterProduct): Promise<Produc
     }
 }
 
-export const putProductReserve = async (id: number): Promise<ProductRepositoryService> => {
+export const putProductPreReserved = async (id: number): Promise<ProductRepositoryService> => {
     try {
         const db = await connectToSqlServer();
 
@@ -211,7 +211,7 @@ export const putProductReserve = async (id: number): Promise<ProductRepositorySe
             };
         }
 
-        const updateQuery = `UPDATE TB_ProductsOrganization SET idStatus = 3, solicitDate = getDate() WHERE id = ${id}`;
+        const updateQuery = `UPDATE TB_ProductsOrganization SET idStatus = 9, solicitDate = getDate() WHERE id = ${id}`;
         const updateProduct: any = await db?.request().query(updateQuery);
 
         return {
@@ -221,6 +221,89 @@ export const putProductReserve = async (id: number): Promise<ProductRepositorySe
         };
     } catch (err) {
         console.log("Error al actualizar el producto", err);
+        return {
+            code: 500,
+            message: { translationKey: "product.error_server" },
+        };
+    }
+};
+
+export const getProductsPreReserved = async (idUser?: number) => {
+    try {
+        const db = await connectToSqlServer();
+        let query = `SELECT DISTINCT
+        tbpo.id,
+        tbp.product,
+        tbp.urlImage,
+        tbo.bussisnesName,
+        tbpo.quantity,
+        tbm.measure,
+        tbpo.expirationDate,
+        tbpo.idUser,
+        tbu.idCity,
+        tbu.googleAddress,
+        tbc.city,
+        tbu.phone,
+        tbpo.deliverDate,
+        tbs.[status],
+		tbpo.price
+        FROM TB_User AS tbu
+        LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
+        left join TB_Rol as tbr on tbr.id = tbu.idRole
+        LEFT JOIN TB_ProductsOrganization AS tbpo ON tbpo.idUser = tbu.id
+        LEFT JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct
+        LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
+        LEFT JOIN TB_Measure AS tbm ON tbm.id = tbpo.idmeasure
+        LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
+        WHERE
+        tbs.id = 9 AND (tbr.id != 2 OR tbr.id != 3 OR tbr.id != 1)`;
+
+        if (idUser) {
+            query += ` AND tbpo.idUser = ${idUser}`;
+        }
+        const productsReserved: any = await db?.request().query(query);
+        const totalRecords = productsReserved.recordset.length;
+        return {
+            code: 200,
+            message: { translationKey: "product.successful" },
+            data: productsReserved.recordset,
+            totalRecords: totalRecords,
+        };
+    } catch (err) {
+        console.log("Error al traer los productos", err);
+        return {
+            code: 400,
+            message: { translationKey: "product.error_server" },
+        };
+    }
+}
+
+export const putProductReserved = async (ids: number[]): Promise<ProductRepositoryService> => {
+    try {
+        const db = await connectToSqlServer();
+
+        const checkProductQuery = `SELECT id FROM TB_ProductsOrganization WHERE id IN (${ids.join(",")})`;
+        const checkProductResult: any = await db?.request().query(checkProductQuery);
+
+        const foundIds = checkProductResult.recordset.map((row: any) => row.id);
+
+        if (foundIds.length !== ids.length) {
+            return {
+                code: 404,
+                message: { translationKey: "product.not_found" },
+                data: { foundIds, missingIds: ids.filter(id => !foundIds.includes(id)) },
+            };
+        }
+
+        const updateQuery = `UPDATE TB_ProductsOrganization SET idStatus = 3, solicitDate = getDate() WHERE id IN (${ids.join(",")})`;
+        await db?.request().query(updateQuery);
+
+        return {
+            code: 200,
+            message: { translationKey: "product.successful" },
+        };
+    } catch (err) {
+        console.log("Error al actualizar los productos", err);
         return {
             code: 500,
             message: { translationKey: "product.error_server" },
@@ -308,6 +391,40 @@ export const putProductDelivered = async (id: number): Promise<ProductRepository
         };
     }
 } 
+
+export const getProductsDeliveredByOrganization = async(idOrganization?: number): Promise<ProductRepositoryService> => {
+    try {
+        const db = await connectToSqlServer();
+        const queryHistory = `SELECT tbpo.id AS idProductOrganization, tbo.id AS idOrganization, tbo.logo, tbpo.quantity, tbpo.deliverDate, tbpo.expirationDate, tbs.[status], tbto.typeOrganization
+                                FROM TB_ProductsOrganization AS tbpo
+                                LEFT JOIN TB_Organizations  AS tbo ON tbpo.idOrganization = tbo.id
+                                LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
+                                LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
+                                 WHERE tbpo.idStatus = 5 AND tbo.id = @idOrganization`;
+        const result = await db?.request()
+                                .input('idOrganization', idOrganization)
+                                .query(queryHistory);
+        const productHistory = result?.recordset;
+        if( productHistory && productHistory.length > 0 ){
+            return {
+                code: 200,
+                message: { translationKey : "product.successful"},
+                data: productHistory
+            };
+        } else {
+            return {
+                code: 204,
+                message: { translationKey : "product.emptyResponse"},
+            };
+        }
+    } catch (err) {
+        console.log("Error al traer el historial de productos por organización", err);
+        return {
+            code: 400,
+            message: { translationKey: "product.error_server"},
+        }
+    }
+}
 
 export const deleteProductOrganization = async (id:number): Promise<ProductRepositoryService> => {
     try {
