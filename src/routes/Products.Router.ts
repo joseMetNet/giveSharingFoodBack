@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { deleteProductOrganization, getProducts, getProductsReserved, getProductsToDonate, postNewProductHandler, postProduct, putProductDelivered, putProductNotReserved, putProductReserved } from "../controllers/Products.Controller";
+import { deleteProductOrganization, getProducts, getProductsDeliveredByOrganization, getProductsPreReserved, getProductsReserved, getProductsToDonate, postNewProductHandler, postProduct, putProductDelivered, putProductNotReserved, putProductPreReserved, putProductReserved } from "../controllers/Products.Controller";
 import { body, param, query } from "express-validator";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 
@@ -383,7 +383,7 @@ productsRouter.post("/postNewProducts", postNewProductHandler);
 
 /**
  * @swagger
- * /putproductdreserved/{id}:
+ * /putProductPreReserved/{id}:
  *   put:
  *     tags:
  *       - Products
@@ -442,9 +442,212 @@ productsRouter.post("/postNewProducts", postNewProductHandler);
  *                   example: Internal server error
  */
 productsRouter.put(
-    "/putproductdreserved/:id",
+    "/putProductPreReserved/:id",
     [
         param("id", "product.validate_field_int").notEmpty().isInt(),
+        validateEnpoint
+    ],
+    putProductPreReserved
+);
+
+/**
+ * @swagger
+ * /getProductPreReserved:
+ *   get:
+ *     tags:
+ *       - Products
+ *     summary: Get pre-reserved products
+ *     description: Retrieve a list of pre-reserved products, optionally filtered by user ID.
+ *     parameters:
+ *       - in: query
+ *         name: idUser
+ *         schema:
+ *           type: integer
+ *         description: User ID to filter products by.
+ *     responses:
+ *       200:
+ *         description: A list of pre-reserved products.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: product.successful
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       product:
+ *                         type: string
+ *                       urlImage:
+ *                         type: string
+ *                       bussisnesName:
+ *                         type: string
+ *                       quantity:
+ *                         type: integer
+ *                       measure:
+ *                         type: string
+ *                       expirationDate:
+ *                         type: string
+ *                         format: date-time
+ *                       idUser:
+ *                         type: integer
+ *                       idCity:
+ *                         type: integer
+ *                       googleAddress:
+ *                         type: string
+ *                       city:
+ *                         type: string
+ *                       phone:
+ *                         type: string
+ *                       deliverDate:
+ *                         type: string
+ *                         format: date-time
+ *                       status:
+ *                         type: string
+ *                       price:
+ *                         type: number
+ *                 totalRecords:
+ *                   type: integer
+ *                   example: 1
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: product.error_server
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+productsRouter.get(
+    "/getProductPreReserved", getProductsPreReserved
+);
+
+/**
+ * @swagger
+ * /putProductReserved:
+ *   put:
+ *     tags:
+ *       - Products
+ *     summary: Mark products as reserved
+ *     description: Update the status of one or more organization products by their IDs for reserve.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               ids:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 example: [1, 2, 3]
+ *     responses:
+ *       200:
+ *         description: Products updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: product.successful
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: product.error_invalid_data
+ *       404:
+ *         description: Not all products found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: product.not_all_found
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     foundIds:
+ *                       type: array
+ *                       items:
+ *                         type: integer
+ *                     missingIds:
+ *                       type: array
+ *                       items:
+ *                         type: integer
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+productsRouter.put(
+    "/putProductReserved",
+    [
+        body("ids", "product.validate_field_array").isArray({ min: 1 }),
+        body("ids.*", "product.validate_field_int").isInt(),
         validateEnpoint
     ],
     putProductReserved
@@ -618,6 +821,77 @@ productsRouter.put(
         validateEnpoint
     ],
     putProductDelivered
+);
+
+/**
+ * @swagger
+ * /getProductsDeliveredByOrganization/{idOrganization}:
+ *   get:
+ *     tags:
+ *       - Products
+ *     summary: Get donation history for delivered products Organization ID
+ *     description: Get donation history for delivered products Organization ID.
+ *     parameters:
+ *       - in: path
+ *         name: idOrganization
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the organization whose product history you want to obtain.
+ *     responses:
+ *       200:
+ *         description: Organization details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 representativaName:
+ *                   type: string
+ *                 bussisnesName:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                 representativePhone:
+ *                   type: string
+ *                 idTypeOrganitation:
+ *                   type: integer
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: organizations.error_invalid_data
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+productsRouter.get(
+    "/getProductsDeliveredByOrganization/:idOrganization",
+    [
+        param("idOrganization", "organizations.validate_field_int").notEmpty().isInt(),
+        validateEnpoint
+    ],
+    getProductsDeliveredByOrganization
 );
 
 /**

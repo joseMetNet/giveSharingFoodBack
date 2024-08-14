@@ -131,7 +131,7 @@ export const getOrganizationById = async (filter: { id: number }): Promise<Iresp
 export const updateOrganization = async (id: number, filePath: string, data: updateOrganizationById): Promise<IresponseRepositoryServiceGet> => {
     try {
         const { bussisnesName, idTypeIdentification, identification, dv, representativaName, representativePhone, representativeEmail,
-            name, phone, email, idCity, googleAddress } = data;
+            name, phone, email, idCity, googleAddress, observations } = data;
 
             const allowedImageExtensions = ['.jpg', '.jpeg', '.png'];
 
@@ -248,7 +248,8 @@ export const updateOrganization = async (id: number, filePath: string, data: upd
                 representativePhone = CASE WHEN @representativePhone IS NOT NULL THEN @representativePhone ELSE representativePhone END,
                 email = CASE WHEN @representativeEmail IS NOT NULL THEN @representativeEmail ELSE email END,
                 logo = CASE WHEN @logo IS NOT NULL THEN @logo ELSE logo END,
-                idStatus = CASE WHEN @idStatus IS NOT NULL THEN @idStatus ELSE idStatus END
+                idStatus = CASE WHEN @idStatus IS NOT NULL THEN @idStatus ELSE idStatus END,
+                observations = CASE WHEN @observations IS NOT NULL THEN @observations ELSE observations END
             WHERE id = @id
         `;
         
@@ -262,6 +263,7 @@ export const updateOrganization = async (id: number, filePath: string, data: upd
             .input('representativeEmail', representativeEmail)
             .input('logo', blobUrl)
             .input('idStatus', 1)
+            .input('observations', observations)
             .input('id', id)
             .query(updateOrganizationQuery);
             
@@ -527,9 +529,9 @@ export const getDonationHistoryById = async(ids : idHistory): Promise<IresponseR
 export const getTypeOrganization = async () => {
     try {
         const db = await connectToSqlServer();
-        const typeIdentidication: any = await db?.request()
+        const typeOrganization: any = await db?.request()
             .query(`SELECT * FROM TB_TypeOrganization`);
-        if (!typeIdentidication || !typeIdentidication.recordset || !typeIdentidication.recordset.length) {
+        if (!typeOrganization || !typeOrganization.recordset || !typeOrganization.recordset.length) {
             return {
                 code: 204,
                 message: { translationKey: "organizations.emptyResponse" },
@@ -538,7 +540,7 @@ export const getTypeOrganization = async () => {
         return {
             code: 200,
             message: { translationKey: "organizations.successful" },
-            data: typeIdentidication.recordset
+            data: typeOrganization.recordset
         }
     } catch (err) {
         console.log("Error al traer los tipos de organizaciones", err)
@@ -548,7 +550,6 @@ export const getTypeOrganization = async () => {
         };        
     };       
 }
-
 
 export const putActiveOrInactiveOrganization = async (id: number): Promise<IresponseRepositoryService> => {
     try {
@@ -589,6 +590,97 @@ export const putActiveOrInactiveOrganization = async (id: number): Promise<Iresp
     }
 }
 
+export const getFoundationTypeOrgaization = async (page: number = 0, size: number = 10) => {
+    try {
+        const db = await connectToSqlServer();
+        const totalCountResult: any = await db?.request()
+        .query(`SELECT COUNT(*) as totalCount 
+                FROM TB_Organizations 
+                WHERE idTypeOrganitation = 1`);
+        const totalCount = totalCountResult.recordset[0].totalCount;
+        const totalPages = Math.ceil(totalCount / size);
+        const offset = page * size;
+        const foundationType: any = await db?.request()
+            .query(`SELECT tbo.id, tbo.bussisnesName, tbo.idTypeIdentification, tbti.typeIdentification, tbo.dv, 
+                    tbo.representativaName,tbo.email,tbo.logo, tbo.idStatus, tbs.status, tbo.idTypeOrganitation, tbto.typeOrganization 
+                    FROM TB_Organizations AS tbo
+                    LEFT JOIN TB_TypeIdentification AS tbti ON tbti.id = tbo.idTypeIdentification
+                    LEFT JOIN TB_Status AS tbs ON tbs.id = tbo.idStatus
+                    LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
+                    WHERE tbo.idTypeOrganitation = 1
+                    ORDER BY tbo.id
+                    OFFSET ${offset} ROWS FETCH NEXT ${size} ROWS ONLY`);
+        if (!foundationType || !foundationType.recordset || !foundationType.recordset.length) {
+            return {
+                code: 204,
+                message: { translationKey: "organizations.emptyResponse" },
+            };
+        }
+        return {
+            code: 200,
+            message: { translationKey: "organizations.successful" },
+            data: foundationType.recordset,
+            pagination: {
+                totalCount,
+                totalPages,
+                currentPage: page,
+                size,
+            }
+        }
+    } catch (err) {
+        console.log("Error al traer las organizaciones tipo fundaciones", err)
+        return {
+            code: 400,
+            message: { translationKey: "organizations.error_server", translationParams: { name: "getFoundationTypeOrgaization" } },
+        };        
+    };       
+}
+
+export const getDonatorTypeOrgaization = async (page: number = 0, size: number = 10) => {
+    try {
+        const db = await connectToSqlServer();
+        const totalCountResult: any = await db?.request()
+        .query(`SELECT COUNT(*) as totalCount 
+                FROM TB_Organizations 
+                WHERE idTypeOrganitation = 2`);
+        const totalCount = totalCountResult.recordset[0].totalCount;
+        const totalPages = Math.ceil(totalCount / size);
+        const offset = page * size;
+        const donatorType: any = await db?.request()
+            .query(`SELECT tbo.id, tbo.bussisnesName, tbo.idTypeIdentification, tbti.typeIdentification, tbo.dv, 
+                    tbo.representativaName,tbo.email,tbo.logo, tbo.idStatus, tbs.status, tbo.idTypeOrganitation, tbto.typeOrganization 
+                    FROM TB_Organizations AS tbo
+                    LEFT JOIN TB_TypeIdentification AS tbti ON tbti.id = tbo.idTypeIdentification
+                    LEFT JOIN TB_Status AS tbs ON tbs.id = tbo.idStatus
+                    LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
+                    WHERE tbo.idTypeOrganitation = 2
+                    ORDER BY tbo.id
+                    OFFSET ${offset} ROWS FETCH NEXT ${size} ROWS ONLY`);
+        if (!donatorType || !donatorType.recordset || !donatorType.recordset.length) {
+            return {
+                code: 204,
+                message: { translationKey: "organizations.emptyResponse" },
+            };
+        }
+        return {
+            code: 200,
+            message: { translationKey: "organizations.successful" },
+            data: donatorType.recordset,
+            pagination: {
+                totalCount,
+                totalPages,
+                currentPage: page,
+                size,
+            }
+        }
+    } catch (err) {
+        console.log("Error al traer las organizaciones tipo donante", err)
+        return {
+            code: 400,
+            message: { translationKey: "organizations.error_server", translationParams: { name: "getDonatorTypeOrgaization" } },
+        };        
+    };       
+}
 
 
 

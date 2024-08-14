@@ -41,7 +41,8 @@ export interface updateOrganizationById {
     phone?: string | undefined,
     email?: string | undefined,
     idCity?: number | undefined,
-    googleAddress?: string | undefined
+    googleAddress?: string | undefined,
+    observations?: string | undefined
 }
 
 export interface idHistory {

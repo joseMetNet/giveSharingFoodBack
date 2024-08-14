@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { body, param } from "express-validator";
-import { createOrganization, getDonationHistory, getDonationHistoryById, getListOrganizationById, getListOrganizations, getOrganizationById, getTypeOrganization, putActiveOrInactiveOrganization, updateOrganizationById } from "../controllers/Organization.Controller";
+import { createOrganization, getDonationHistory, getDonationHistoryById, getDonatorTypeOrgaization, getFoundationTypeOrgaization, getListOrganizationById, getListOrganizations, getOrganizationById, getTypeOrganization, putActiveOrInactiveOrganization, updateOrganizationById } from "../controllers/Organization.Controller";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 import { validateEmailOrganizationExist } from "../middlewares/validator-custom";
 import { or } from "sequelize";
@@ -223,6 +223,9 @@ organizationRouter.get(
  *               phone:
  *                 type: string
  *                 description: The phone number of the organization
+ *               observations:
+ *                 type: string
+ *                 description: The observations of the organization
  *               email:
  *                 type: string
  *                 format: email
@@ -282,6 +285,7 @@ organizationRouter.put(
         body("name", "organizations.required_field_text").notEmpty().isString(),
         body("phone", "organizations.required_field_text").notEmpty().isString(),
         body("email", "organizations.validate_email").notEmpty().isEmail(),
+        body("observations", "organizations.validate_email").notEmpty().isString(),
         validateEnpoint
     ],
     updateOrganizationById
@@ -682,6 +686,142 @@ organizationRouter.put(
         validateEnpoint
     ],
     putActiveOrInactiveOrganization
-)
+);
+
+/**
+ * @swagger
+ * /getFoundationTypeOrgaization:
+ *   get:
+ *     tags:
+ *       - Organizations
+ *     summary: Get all organizations by type foundation
+ *     description: Retrieve a list of all organizations by type foundation.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: integer
+ *           example: 10
+ *         description: Number of records per page
+ *     responses:
+ *       200:
+ *         description: A list of organizations by type foundation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   bussisnesName:
+ *                     type: string
+ *                   idTypeIdentification:
+ *                     type: integer
+ *                   typeIdentification:
+ *                     type: string
+ *                   dv:
+ *                     type: string
+ *                   representativaName:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                   logo:
+ *                     type: string
+ *                   idStatus:
+ *                     type: integer
+ *                   status: 
+ *                     type: string
+ *                   idTypeOrganitation:
+ *                     type: integer
+ *                   typeOrganization:
+ *                     type: string 
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+organizationRouter.get("/getFoundationTypeOrgaization", getFoundationTypeOrgaization);
+
+/**
+ * @swagger
+ * /getDonatorTypeOrgaization:
+ *   get:
+ *     tags:
+ *       - Organizations
+ *     summary: Get all organizations by type donator
+ *     description: Retrieve a list of all organizations by type donator.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: integer
+ *           example: 10
+ *         description: Number of records per page
+ *     responses:
+ *       200:
+ *         description: A list of organizations by type donator
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   bussisnesName:
+ *                     type: string
+ *                   idTypeIdentification:
+ *                     type: integer
+ *                   typeIdentification:
+ *                     type: string
+ *                   dv:
+ *                     type: string
+ *                   representativaName:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                   logo:
+ *                     type: string
+ *                   idStatus:
+ *                     type: integer
+ *                   status: 
+ *                     type: string
+ *                   idTypeOrganitation:
+ *                     type: integer
+ *                   typeOrganization:
+ *                     type: string 
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+organizationRouter.get("/getDonatorTypeOrgaization", getDonatorTypeOrgaization);
 
 export default organizationRouter;
