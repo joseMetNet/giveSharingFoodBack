@@ -85,7 +85,8 @@ export const putProductPreReserved: RequestHandler = async (req, res) => {
 export const getProductsPreReserved: RequestHandler = async (req, res) => {
     try {
         const idUser = req.query.idUser ? parseInt(req.query.idUser as string) : undefined;
-        const { code, message, ... resto }: ProductRepositoryService = await repository.getProductsPreReserved(idUser);
+        const idOrganization = req.query.idOrganization ? parseInt(req.query.idOrganization as string) : undefined;
+        const { code, message, ... resto }: ProductRepositoryService = await repository.getProductsPreReserved(idUser,idOrganization);
         res.status(code).json({message: parseMessageI18n(message, req), ...resto});
     } catch (err) {
         console.error(err);
@@ -111,7 +112,8 @@ export const putProductReserved: RequestHandler = async (req, res) => {
 export const getProductsReserved: RequestHandler = async (req, res) => {
     try {
         const idUser = req.query.idUser ? parseInt(req.query.idUser as string) : undefined;
-        const { code, message, ... resto }: ProductRepositoryService = await repository.getProductsReserved(idUser);
+        const idOrganization = req.query.idOrganization ? parseInt(req.query.idOrganization as string) : undefined;
+        const { code, message, ... resto }: ProductRepositoryService = await repository.getProductsReserved(idUser,idOrganization);
         res.status(code).json({message: parseMessageI18n(message, req), ...resto});
     } catch (err) {
         console.error(err);
