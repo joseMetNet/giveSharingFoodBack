@@ -452,16 +452,19 @@ export const getDonationHistory = async(id : idHistory): Promise<IresponseReposi
                                     tbs.[status],
                                     ROUND(AVG(CAST(tbq.qualification AS FLOAT)), 2) AS qualification,
                                     tbto.typeOrganization,
+                                    tbp.product,
+                                    tbp.urlImage,
                                     tbo.logo
                                 FROM 
                                 TB_ProductsOrganization AS tbpo
+                                LEFT JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct
                                 LEFT JOIN TB_Qualification AS tbq ON tbpo.id = tbq.idProductsOrganization
                                 LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
                                 LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
                                 LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
                                 WHERE tbo.id = @idOrganization 
                                 GROUP BY tbo.id, tbpo.id, tbo.bussisnesName, tbpo.quantity, tbpo.deliverDate,
-                                tbpo.solicitDate, tbs.[status], tbto.typeOrganization, tbo.logo`;
+                                tbpo.solicitDate, tbs.[status], tbto.typeOrganization, tbp.product, tbp.urlImage, tbo.logo`;
         const result = await db?.request()
                                 .input('idOrganization', idOrganization)
                                 .query(queryHistory);

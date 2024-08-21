@@ -228,7 +228,7 @@ export const putProductPreReserved = async (id: number): Promise<ProductReposito
     }
 };
 
-export const getProductsPreReserved = async (idUser?: number) => {
+export const getProductsPreReserved = async (idUser?: number, idOrganization?: number) => {
     try {
         const db = await connectToSqlServer();
         let query = `SELECT DISTINCT
@@ -249,7 +249,7 @@ export const getProductsPreReserved = async (idUser?: number) => {
 		tbpo.price
         FROM TB_User AS tbu
         LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
-        left join TB_Rol as tbr on tbr.id = tbu.idRole
+        LEFT JOIN TB_Rol AS tbr ON tbr.id = tbu.idRole
         LEFT JOIN TB_ProductsOrganization AS tbpo ON tbpo.idUser = tbu.id
         LEFT JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct
         LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
@@ -261,6 +261,11 @@ export const getProductsPreReserved = async (idUser?: number) => {
         if (idUser) {
             query += ` AND tbpo.idUser = ${idUser}`;
         }
+
+        if (idOrganization) {
+            query += ` AND tbpo.idOrganization = ${idOrganization}`;
+        }
+
         const productsReserved: any = await db?.request().query(query);
         const totalRecords = productsReserved.recordset.length;
         return {
@@ -311,7 +316,7 @@ export const putProductReserved = async (ids: number[]): Promise<ProductReposito
     }
 };
 
-export const getProductsReserved = async (idUser?: number) => {
+export const getProductsReserved = async (idUser?: number, idOrganization?: number) => {
     try {
         const db = await connectToSqlServer();
         let query = `SELECT DISTINCT
@@ -344,6 +349,11 @@ export const getProductsReserved = async (idUser?: number) => {
         if (idUser) {
             query += ` AND tbpo.idUser = ${idUser}`;
         }
+
+        if (idOrganization) {
+            query += ` AND tbpo.idOrganization = ${idOrganization}`;
+        }
+
         const productsReserved: any = await db?.request().query(query);
         const totalRecords = productsReserved.recordset.length;
         return {

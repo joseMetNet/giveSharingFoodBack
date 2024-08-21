@@ -464,6 +464,11 @@ productsRouter.put(
  *         schema:
  *           type: integer
  *         description: User ID to filter products by.
+ *       - in: query
+ *         name: idOrganization
+ *         schema:
+ *           type: integer
+ *         description: Organization ID to filter products by.
  *     responses:
  *       200:
  *         description: A list of pre-reserved products.
@@ -667,6 +672,11 @@ productsRouter.put(
  *         schema:
  *           type: integer
  *         description: User ID to filter products by.
+ *       - in: query
+ *         name: idOrganization
+ *         schema:
+ *           type: integer
+ *         description: Organization ID to filter products by.
  *     responses:
  *       200:
  *         description: A list of reserved products.
