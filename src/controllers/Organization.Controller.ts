@@ -53,11 +53,11 @@ export const updateOrganizationById: RequestHandler = async (req, res) => {
 
 export const getListOrganizations: RequestHandler = async (req, res) => {
     try {
-        let { page = 0, size = 10 } = req.query;
-        
+        let { page = 0, size = 10, status } = req.query;
+
         page = parseInt(page as string, 10);
         size = parseInt(size as string, 10);
-        const { code, message, ...resto }: IresponseRepositoryServiceGet = await repository.getListOrganizations(page, size);
+        const { code, message, ...resto }: IresponseRepositoryServiceGet = await repository.getListOrganizations(page, size, status as string);
         res.status(code).json({message: parseMessageI18n(message, req), ...resto});
     } catch (err) {
         console.error(err);
