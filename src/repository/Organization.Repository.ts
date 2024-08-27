@@ -289,30 +289,38 @@ export const updateOrganization = async (id: number, filePath: string, data: upd
     }
 };
 
-export const getListOrganizations = async (page: number = 0, size: number = 10) => {
+export const getListOrganizations = async (page: number = 0, size: number = 10, status?: string) => {
     try {
         const db = await connectToSqlServer();
 
         const offset = page * size;
-        
-        const organizations: any = await db?.request().query(`
-        SELECT DISTINCT 
-            tbo.id, 
-            tbto.typeOrganization, 
-            tbs1.[status] AS organizationStatus, 
-            tbo.bussisnesName, 
-            tbu.phone, 
-            tbo.email, 
-            tbu.idStatus AS userIdStatus, 
-            tbs2.[status] AS userStatus 
-        FROM TB_Organizations AS tbo
-        LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
-        LEFT JOIN TB_Status AS tbs1 ON tbs1.id = tbo.idStatus
-        LEFT JOIN TB_User AS tbu ON tbu.idOrganization = tbo.id
-        LEFT JOIN TB_Status AS tbs2 ON tbs2.id = tbu.idStatus
-        ORDER BY tbo.id DESC
-        OFFSET ${offset} ROWS
-        FETCH NEXT ${size} ROWS ONLY`);
+
+        let statusFilter = "";
+        if (status) {
+            statusFilter = `WHERE tbs.[status] = '${status}'`;
+        }
+
+        const query = `
+            SELECT DISTINCT 
+                tbo.id, 
+                tbto.typeOrganization, 
+                tbs.[status] AS organizationStatus, 
+                tbo.bussisnesName, 
+                tbu.phone, 
+                tbo.email, 
+                tbu.idStatus AS userIdStatus, 
+                tbs2.[status] AS userStatus 
+            FROM TB_Organizations AS tbo
+            LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
+            LEFT JOIN TB_Status AS tbs ON tbs.id = tbo.idStatus
+            LEFT JOIN TB_User AS tbu ON tbu.idOrganization = tbo.id
+            LEFT JOIN TB_Status AS tbs2 ON tbs2.id = tbu.idStatus
+            ${statusFilter}
+            ORDER BY tbo.id DESC
+            OFFSET ${offset} ROWS
+            FETCH NEXT ${size} ROWS ONLY`;
+
+        const organizations: any = await db?.request().query(query);
 
         if (!organizations || !organizations.recordset || !organizations.recordset.length) {
             return {
@@ -320,8 +328,9 @@ export const getListOrganizations = async (page: number = 0, size: number = 10) 
                 message: { translationKey: "organizations.emptyResponse" },
             };
         }
-
-        const totalCountQuery = await db?.request().query(`SELECT COUNT(*) AS totalCount FROM TB_Organizations`);
+        console.log(statusFilter)
+        const totalCountQuery = await db?.request().query(`SELECT COUNT(*) AS totalCount FROM TB_Organizations AS tbo
+        LEFT JOIN TB_Status AS tbs ON tbs.id = tbo.idStatus ${statusFilter}`);
         const totalCount = totalCountQuery?.recordset[0].totalCount;
 
         const totalPages = Math.ceil(totalCount / size);
@@ -340,6 +349,7 @@ export const getListOrganizations = async (page: number = 0, size: number = 10) 
             }
         }
     } catch (err) {
+        console.log(err)
         return {
             code: 400,
             message: { translationKey: "organizations.error_server" },

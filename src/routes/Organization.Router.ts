@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { body, param } from "express-validator";
+import { body, param, query } from "express-validator";
 import { createOrganization, getDonationHistory, getDonationHistoryById, getDonatorTypeOrgaization, getFoundationTypeOrgaization, getListOrganizationById, getListOrganizations, getOrganizationById, getTypeOrganization, putActiveOrInactiveOrganization, updateOrganizationById } from "../controllers/Organization.Controller";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 import { validateEmailOrganizationExist } from "../middlewares/validator-custom";
@@ -285,7 +285,7 @@ organizationRouter.put(
         body("name", "organizations.required_field_text").notEmpty().isString(),
         body("phone", "organizations.required_field_text").notEmpty().isString(),
         body("email", "organizations.validate_email").notEmpty().isEmail(),
-        body("observations", "organizations.validate_email").notEmpty().isString(),
+        body("observations", "organizations.validate_email").isString(),
         validateEnpoint
     ],
     updateOrganizationById
@@ -310,6 +310,11 @@ organizationRouter.put(
  *         schema:
  *           type: string
  *         description: Page size for pagination.
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Filter by status (Activo, Inactivo).
  *     responses:
  *       200:
  *         description: Organization details retrieved successfully
@@ -361,7 +366,8 @@ organizationRouter.get(
     "/listOrders",
     [
         param("page").isString(),
-        param("size").isString()
+        param("size").isString(),
+        query("status").optional().isString().isIn(['Abierto', 'Cerrado']),
     ],
     getListOrganizations);
 
