@@ -256,7 +256,7 @@ export const getProductsPreReserved = async (idUser?: number, idOrganization?: n
         LEFT JOIN TB_Measure AS tbm ON tbm.id = tbpo.idmeasure
         LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
         WHERE
-        tbs.id = 9 AND (tbr.id != 2 OR tbr.id != 3 OR tbr.id != 1)`;
+        tbs.id = 9 `;
 
         if (idUser) {
             query += ` AND tbpo.idUser = ${idUser}`;
@@ -344,7 +344,7 @@ export const getProductsReserved = async (idUser?: number, idOrganization?: numb
         LEFT JOIN TB_Measure AS tbm ON tbm.id = tbpo.idmeasure
         LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
         WHERE
-        tbs.id = 3 AND (tbr.id != 2 OR tbr.id != 3 OR tbr.id != 1)`;
+        tbs.id = 3`;
 
         if (idUser) {
             query += ` AND tbpo.idUser = ${idUser}`;

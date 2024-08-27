@@ -285,7 +285,7 @@ organizationRouter.put(
         body("name", "organizations.required_field_text").notEmpty().isString(),
         body("phone", "organizations.required_field_text").notEmpty().isString(),
         body("email", "organizations.validate_email").notEmpty().isEmail(),
-        body("observations", "organizations.validate_email").notEmpty().isString(),
+        body("observations", "organizations.validate_email").isString(),
         validateEnpoint
     ],
     updateOrganizationById
