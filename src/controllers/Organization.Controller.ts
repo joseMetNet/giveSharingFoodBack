@@ -79,7 +79,7 @@ export const getListOrganizationById: RequestHandler = async (req, res) => {
 
 export const getDonationHistory: RequestHandler = async (req, res) => {
     try {
-        const { code, message, ...resto }: IresponseRepositoryServiceGet = await repository.getDonationHistory(req.params);
+        const { code, message, ...resto }: IresponseRepositoryServiceGet = await repository.getDonationHistory(req.query);
         res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
     } catch (err) {
         console.error(err);

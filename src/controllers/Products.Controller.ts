@@ -74,7 +74,8 @@ export const postNewProductHandler: RequestHandler = async (req, res) => {
 export const putProductPreReserved: RequestHandler = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const { code, message, ...resto}: ProductRepositoryService = await repository.putProductPreReserved(id);
+        const idOrganizationProductReserved = parseInt(req.params.idOrganizationProductReserved);
+        const { code, message, ...resto}: ProductRepositoryService = await repository.putProductPreReserved(id,idOrganizationProductReserved);
         res.status(code).json({ message: parseMessageI18n(message, req), ...resto});
     } catch (err) {
         console.log(err);
@@ -86,7 +87,8 @@ export const getProductsPreReserved: RequestHandler = async (req, res) => {
     try {
         const idUser = req.query.idUser ? parseInt(req.query.idUser as string) : undefined;
         const idOrganization = req.query.idOrganization ? parseInt(req.query.idOrganization as string) : undefined;
-        const { code, message, ... resto }: ProductRepositoryService = await repository.getProductsPreReserved(idUser,idOrganization);
+        const idOrganizationProductReserved = req.query.idOrganizationProductReserved ? parseInt(req.query.idOrganizationProductReserved as string) : undefined;
+        const { code, message, ... resto }: ProductRepositoryService = await repository.getProductsPreReserved(idUser,idOrganization,idOrganizationProductReserved);
         res.status(code).json({message: parseMessageI18n(message, req), ...resto});
     } catch (err) {
         console.error(err);
@@ -113,7 +115,8 @@ export const getProductsReserved: RequestHandler = async (req, res) => {
     try {
         const idUser = req.query.idUser ? parseInt(req.query.idUser as string) : undefined;
         const idOrganization = req.query.idOrganization ? parseInt(req.query.idOrganization as string) : undefined;
-        const { code, message, ... resto }: ProductRepositoryService = await repository.getProductsReserved(idUser,idOrganization);
+        const idOrganizationProductReserved = req.query.idOrganizationProductReserved ? parseInt(req.query.idOrganizationProductReserved as string) : undefined;
+        const { code, message, ... resto }: ProductRepositoryService = await repository.getProductsReserved(idUser,idOrganization,idOrganizationProductReserved);
         res.status(code).json({message: parseMessageI18n(message, req), ...resto});
     } catch (err) {
         console.error(err);

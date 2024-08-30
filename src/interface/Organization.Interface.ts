@@ -47,5 +47,6 @@ export interface updateOrganizationById {
 
 export interface idHistory {
     idOrganization?: number,
-    idProductOrganization?: number
+    idProductOrganization?: number,
+    idOrganizationProductReserved?: number;
 }

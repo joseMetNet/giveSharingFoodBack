@@ -383,12 +383,12 @@ productsRouter.post("/postNewProducts", postNewProductHandler);
 
 /**
  * @swagger
- * /putProductPreReserved/{id}:
+ * /putProductPreReserved/{id}/{idOrganizationProductReserved}:
  *   put:
  *     tags:
  *       - Products
  *     summary: Mark a product as reserved 
- *     description: Update the status of a origanization product by its ID for reserve.
+ *     description: Update the status of an organization product by its ID and reserve ID.
  *     parameters:
  *       - in: path
  *         name: id
@@ -397,6 +397,13 @@ productsRouter.post("/postNewProducts", postNewProductHandler);
  *         schema:
  *           type: integer
  *           example: 1
+ *       - in: path
+ *         name: idOrganizationProductReserved
+ *         required: true
+ *         description: ID of the organization product reserved
+ *         schema:
+ *           type: integer
+ *           example: 123
  *     responses:
  *       200:
  *         description: Product updated successfully
@@ -442,9 +449,10 @@ productsRouter.post("/postNewProducts", postNewProductHandler);
  *                   example: Internal server error
  */
 productsRouter.put(
-    "/putProductPreReserved/:id",
+    "/putProductPreReserved/:id/:idOrganizationProductReserved",
     [
         param("id", "product.validate_field_int").notEmpty().isInt(),
+        param("idOrganizationProductReserved", "product.validate_field_int").notEmpty().isInt(),
         validateEnpoint
     ],
     putProductPreReserved
@@ -469,6 +477,11 @@ productsRouter.put(
  *         schema:
  *           type: integer
  *         description: Organization ID to filter products by.
+ *       - in: query
+ *         name: idOrganizationProductReserved
+ *         schema:
+ *           type: integer
+ *         description: Organization ID to filter products by from foundation.
  *     responses:
  *       200:
  *         description: A list of pre-reserved products.
@@ -677,6 +690,11 @@ productsRouter.put(
  *         schema:
  *           type: integer
  *         description: Organization ID to filter products by.
+ *       - in: query
+ *         name: idOrganizationProductReserved
+ *         schema:
+ *           type: integer
+ *         description: Organization ID to filter products by from foundation.
  *     responses:
  *       200:
  *         description: A list of reserved products.

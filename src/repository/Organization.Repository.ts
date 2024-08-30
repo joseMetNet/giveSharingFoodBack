@@ -448,58 +448,74 @@ export const uploadImageToAzure = async (filePath: string): Promise<string> => {
     return blobUrl;
 };
 
-export const getDonationHistory = async(id : idHistory): Promise<IresponseRepositoryServiceGet> => {
+export const getDonationHistory = async (id: idHistory): Promise<IresponseRepositoryServiceGet> => {
     try {
-        const { idOrganization } = id;
+        const { idOrganization, idOrganizationProductReserved } = id;
         const db = await connectToSqlServer();
-        const queryHistory = `SELECT 
-                                    tbo.id AS idOrganization,
-                                    tbpo.id AS idProductOrganization,
-                                    tbo.bussisnesName,
-                                    tbpo.quantity,
-                                    tbpo.deliverDate,
-                                    tbpo.solicitDate,
-                                    tbs.[status],
-                                    ROUND(AVG(CAST(tbq.qualification AS FLOAT)), 2) AS qualification,
-                                    tbto.typeOrganization,
-                                    tbp.product,
-                                    tbp.urlImage,
-                                    tbo.logo
-                                FROM 
-                                TB_ProductsOrganization AS tbpo
-                                LEFT JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct
-                                LEFT JOIN TB_Qualification AS tbq ON tbpo.id = tbq.idProductsOrganization
-                                LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
-                                LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
-                                LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
-                                WHERE tbo.id = @idOrganization 
-                                GROUP BY tbo.id, tbpo.id, tbo.bussisnesName, tbpo.quantity, tbpo.deliverDate,
-                                tbpo.solicitDate, tbs.[status], tbto.typeOrganization, tbp.product, tbp.urlImage, tbo.logo`;
-        const result = await db?.request()
-                                .input('idOrganization', idOrganization)
-                                .query(queryHistory);
+
+        // Construir la consulta SQL dinámicamente
+        let queryHistory = `
+            SELECT 
+                tbo.id AS idOrganization,
+                tbpo.id AS idProductOrganization,
+                tbo.bussisnesName,
+                tbpo.quantity,
+                tbpo.deliverDate,
+                tbpo.solicitDate,
+                tbs.[status],
+                ROUND(AVG(CAST(tbq.qualification AS FLOAT)), 2) AS qualification,
+                tbto.typeOrganization,
+                tbp.product,
+                tbp.urlImage,
+                tbo.logo
+            FROM 
+                TB_ProductsOrganization AS tbpo
+                LEFT JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct
+                LEFT JOIN TB_Qualification AS tbq ON tbpo.id = tbq.idProductsOrganization
+                LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
+                LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
+                LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
+            WHERE 1 = 1`;
+
+        if (idOrganization) {
+            queryHistory += ` AND tbo.id = @idOrganization`;
+        }
+        if (idOrganizationProductReserved) {
+            queryHistory += ` AND tbpo.idOrganizationProductReserved = @idOrganizationProductReserved`;
+        }
+
+        queryHistory += `
+            GROUP BY tbo.id, tbpo.id, tbo.bussisnesName, tbpo.quantity, tbpo.deliverDate,
+                     tbpo.solicitDate, tbs.[status], tbto.typeOrganization, tbp.product, tbp.urlImage, tbo.logo`;
+                     
+        const request = db?.request();
+        if (idOrganization) request?.input('idOrganization', idOrganization);
+        if (idOrganizationProductReserved) request?.input('idOrganizationProductReserved', idOrganizationProductReserved);
+
+        const result = await request?.query(queryHistory);
 
         const donateHistory = result?.recordset;
-        if( donateHistory && donateHistory.length > 0 ){
+        if (donateHistory && donateHistory.length > 0) {
             return {
                 code: 200,
-                message: { translationKey : "organizations.successful"},
+                message: { translationKey: "organizations.successful" },
                 data: donateHistory
             };
         } else {
             return {
                 code: 204,
-                message: { translationKey : "organizations.emptyResponse"},
+                message: { translationKey: "organizations.emptyResponse" },
             };
         }
     } catch (err) {
         console.log("Error al traer el historial de donaciones", err);
         return {
             code: 400,
-            message: { translationKey: "organizations.error_server"},
-        }
+            message: { translationKey: "organizations.error_server" },
+        };
     }
 }
+
 
 export const getDonationHistoryById = async(ids : idHistory): Promise<IresponseRepositoryServiceGet> => {
     try {

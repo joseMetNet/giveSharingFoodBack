@@ -443,19 +443,25 @@ organizationRouter.get(
 
 /**
  * @swagger
- * /history/{idOrganization}:
+ * /history:
  *   get:
  *     tags:
  *       - Organizations
- *     summary: Get donation history by organization ID
- *     description: Gets the donation history of a specific organization by its ID.
+ *     summary: Get donation history with optional filters
+ *     description: Gets the donation history of organizations with optional filters by organization ID, product organization ID, or reserved organization product ID.
  *     parameters:
- *       - in: path
+ *       - in: query
  *         name: idOrganization
- *         required: true
+ *         required: false
  *         schema:
  *           type: integer
  *         description: ID of the organization whose donation history you want to obtain.
+ *       - in: query
+ *         name: idOrganizationProductReserved
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: ID of the reserved organization product for filtering.
  *     responses:
  *       200:
  *         description: Organization details retrieved successfully
@@ -504,9 +510,10 @@ organizationRouter.get(
  *                   example: Internal server error
  */
 organizationRouter.get(
-    "/history/:idOrganization",
+    "/history",
     [
-        param("idOrganization", "organizations.validate_field_int").notEmpty().isInt(),
+        param("idOrganization", "organizations.validate_field_int").optional().isInt(),
+        param("idOrganizationProductReserved", "organizations.validate_field_int").optional().isInt(),
         validateEnpoint
     ],
     getDonationHistory
