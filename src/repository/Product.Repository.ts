@@ -197,7 +197,7 @@ export const getProductsToDonate = async (filter: filterProduct): Promise<Produc
     }
 }
 
-export const putProductPreReserved = async (id: number): Promise<ProductRepositoryService> => {
+export const putProductPreReserved = async (id: number, idOrganizationProductReserved: number): Promise<ProductRepositoryService> => {
     try {
         const db = await connectToSqlServer();
 
@@ -211,7 +211,7 @@ export const putProductPreReserved = async (id: number): Promise<ProductReposito
             };
         }
 
-        const updateQuery = `UPDATE TB_ProductsOrganization SET idStatus = 9, solicitDate = getDate() WHERE id = ${id}`;
+        const updateQuery = `UPDATE TB_ProductsOrganization SET idStatus = 9, solicitDate = getDate(), idOrganizationProductReserved = ${idOrganizationProductReserved} WHERE id = ${id}`;
         const updateProduct: any = await db?.request().query(updateQuery);
 
         return {
@@ -228,7 +228,7 @@ export const putProductPreReserved = async (id: number): Promise<ProductReposito
     }
 };
 
-export const getProductsPreReserved = async (idUser?: number, idOrganization?: number) => {
+export const getProductsPreReserved = async (idUser?: number, idOrganization?: number, idOrganizationProductReserved?: number) => {
     try {
         const db = await connectToSqlServer();
         let query = `SELECT DISTINCT
@@ -264,6 +264,10 @@ export const getProductsPreReserved = async (idUser?: number, idOrganization?: n
 
         if (idOrganization) {
             query += ` AND tbpo.idOrganization = ${idOrganization}`;
+        }
+
+        if (idOrganizationProductReserved) {
+            query += ` AND tbpo.idOrganizationProductReserved = ${idOrganizationProductReserved}`;
         }
 
         const productsReserved: any = await db?.request().query(query);
@@ -316,7 +320,7 @@ export const putProductReserved = async (ids: number[]): Promise<ProductReposito
     }
 };
 
-export const getProductsReserved = async (idUser?: number, idOrganization?: number) => {
+export const getProductsReserved = async (idUser?: number, idOrganization?: number, idOrganizationProductReserved?: number) => {
     try {
         const db = await connectToSqlServer();
         let query = `SELECT DISTINCT
@@ -352,6 +356,10 @@ export const getProductsReserved = async (idUser?: number, idOrganization?: numb
 
         if (idOrganization) {
             query += ` AND tbpo.idOrganization = ${idOrganization}`;
+        }
+
+        if (idOrganizationProductReserved) {
+            query += ` AND tbpo.idOrganizationProductReserved = ${idOrganizationProductReserved}`;
         }
 
         const productsReserved: any = await db?.request().query(query);
