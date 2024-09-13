@@ -142,3 +142,14 @@ export const getDonatorTypeOrgaization: RequestHandler = async (req, res) => {
         res.status(500).json({ message: parseMessageI18n('error_server', req)});
     }
 }
+
+export const putBlockOrEnableOrganization: RequestHandler = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { code, message, ...resto }: IresponseRepositoryService = await repository.putBlockOrEnableOrganization(id);
+        res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: parseMessageI18n('error_server', req) });
+    }
+}

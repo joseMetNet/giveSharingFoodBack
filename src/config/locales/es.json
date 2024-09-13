@@ -49,7 +49,9 @@
 		"email_already_exists": "El correo electronico ya existe",
 		"invalid_type_organization": "El id de el tipo de organización no existe",
 		"deactivate": "La organización no tiene procesos pendientes",
-		"activate": "La organización tiene procesos pendientes"
+		"activate": "La organización tiene procesos pendientes",
+		"blocked": "La organización ha sido bloqueada",
+		"unblocked": "La organización ha sido desbloqueada"
 	},
 	"city": {
 		"field": "Este campo es de tipo entero"

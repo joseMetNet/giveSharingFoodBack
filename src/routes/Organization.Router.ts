@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { body, param, query } from "express-validator";
-import { createOrganization, getDonationHistory, getDonationHistoryById, getDonatorTypeOrgaization, getFoundationTypeOrgaization, getListOrganizationById, getListOrganizations, getOrganizationById, getTypeOrganization, putActiveOrInactiveOrganization, updateOrganizationById } from "../controllers/Organization.Controller";
+import { createOrganization, getDonationHistory, getDonationHistoryById, getDonatorTypeOrgaization, getFoundationTypeOrgaization, getListOrganizationById, getListOrganizations, getOrganizationById, getTypeOrganization, putActiveOrInactiveOrganization, putBlockOrEnableOrganization, updateOrganizationById } from "../controllers/Organization.Controller";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 import { validateEmailOrganizationExist } from "../middlewares/validator-custom";
 import { or } from "sequelize";
@@ -837,4 +837,72 @@ organizationRouter.get("/getFoundationTypeOrgaization", getFoundationTypeOrgaiza
  */
 organizationRouter.get("/getDonatorTypeOrgaization", getDonatorTypeOrgaization);
 
+/**
+ * @swagger
+ * /putBlockOrEnableOrganization/{id}:
+ *   put:
+ *     tags:
+ *       - Organizations
+ *     summary: Block or enable an organization
+ *     description: Update the status of a organization for blocking or enabling.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the organization to update
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: organization updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: organization.successful
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: organization.error_invalid_data
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+organizationRouter.put(
+    "/putBlockOrEnableOrganization/:id",
+    [
+        param("id", "organizations.validate_field_int").notEmpty().isInt(),
+        validateEnpoint
+    ],
+    putBlockOrEnableOrganization
+)
 export default organizationRouter;

@@ -453,13 +453,21 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
         const { idOrganization, idOrganizationProductReserved } = id;
         const db = await connectToSqlServer();
 
-        // Construir la consulta SQL dinámicamente
         let queryHistory = `
             SELECT 
                 tbo.id AS idOrganization,
                 tbpo.id AS idProductOrganization,
                 tbo.bussisnesName,
                 tbpo.quantity,
+                `;
+
+        if (idOrganizationProductReserved) {
+            queryHistory += ` tbpo.price * tbpo.quantity AS price, `;
+        } else {
+            queryHistory += ` tbpo.price, `;
+        }
+
+        queryHistory += `
                 tbpo.deliverDate,
                 tbpo.solicitDate,
                 tbs.[status],
@@ -485,7 +493,7 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
         }
 
         queryHistory += `
-            GROUP BY tbo.id, tbpo.id, tbo.bussisnesName, tbpo.quantity, tbpo.deliverDate,
+            GROUP BY tbo.id, tbpo.id, tbo.bussisnesName, tbpo.quantity, tbpo.price, tbpo.deliverDate,
                      tbpo.solicitDate, tbs.[status], tbto.typeOrganization, tbp.product, tbp.urlImage, tbo.logo`;
                      
         const request = db?.request();
@@ -709,6 +717,45 @@ export const getDonatorTypeOrgaization = async (page: number = 0, size: number =
             message: { translationKey: "organizations.error_server", translationParams: { name: "getDonatorTypeOrgaization" } },
         };        
     };       
+}
+
+export const putBlockOrEnableOrganization = async (id: number): Promise<IresponseRepositoryService> => {
+    try {
+        const db = await connectToSqlServer();
+
+        const selectQuery = `
+            SELECT idStatus
+            FROM TB_Organizations
+            WHERE id = @id
+        `;
+        const selectResult = await db?.request().input('id', id).query(selectQuery);
+        const currentStatus = selectResult?.recordset[0]?.idStatus;
+
+        if (currentStatus === undefined) {
+            return {
+                code: 404,
+                message: 'organizations.emptyResponse'
+            };
+        }
+        const newStatus = currentStatus === 10 ? 11 : 10;
+        const updateQuery = `
+            UPDATE TB_Organizations
+            SET idStatus = @newStatus
+            WHERE id = @id
+        `;
+        await db?.request().input('id', id).input('newStatus', newStatus).query(updateQuery);
+
+        return {
+            code: 200,
+            message: currentStatus === 10 ? 'organizations.unblocked' : 'organizations.blocked'
+        };
+    } catch (err) {
+        console.log("Error al cambiar el estado de la organización", err);
+        return {
+            code: 400,
+            message: { translationKey: "organizations.error_server", translationParams: { name: "putBlockOrEnableOrganization" } }
+        };
+    }
 }
 
 

@@ -49,7 +49,9 @@
 		"email_already_exists": "the email already exists",
 		"invalid_type_organization": "The id type of organization does not exist",
 		"deactivate": "The organization does not have pending processes",
-		"activate": "The organization has pending processes"
+		"activate": "The organization has pending processes",
+		"blocked": "The organization has been blocked",
+		"unblocked": "The organization has been unblocked"
 	},
 	"city": {
 		"field": "The field must be an integer"

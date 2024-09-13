@@ -245,9 +245,14 @@ export const getProductsPreReserved = async (idUser?: number, idOrganization?: n
         tbc.city,
         tbu.phone,
         tbpo.deliverDate,
-        tbs.[status],
-		tbpo.price
-        FROM TB_User AS tbu
+        tbs.[status],`;
+        if (idOrganizationProductReserved) {
+            query += ` tbpo.price * tbpo.quantity AS price `;
+        } else {
+            query += ` tbpo.price `;
+        }
+
+        query += ` FROM TB_User AS tbu
         LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
         LEFT JOIN TB_Rol AS tbr ON tbr.id = tbu.idRole
         LEFT JOIN TB_ProductsOrganization AS tbpo ON tbpo.idUser = tbu.id
@@ -255,8 +260,7 @@ export const getProductsPreReserved = async (idUser?: number, idOrganization?: n
         LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
         LEFT JOIN TB_Measure AS tbm ON tbm.id = tbpo.idmeasure
         LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
-        WHERE
-        tbs.id = 9 `;
+        WHERE tbs.id = 9`;
 
         if (idUser) {
             query += ` AND tbpo.idUser = ${idUser}`;
@@ -337,18 +341,24 @@ export const getProductsReserved = async (idUser?: number, idOrganization?: numb
         tbc.city,
         tbu.phone,
         tbpo.deliverDate,
-        tbs.[status],
-		tbpo.price
-        FROM TB_User AS tbu
+        tbs.[status],`;
+
+        // Si se busca por idOrganizationProductReserved, multiplicar el precio por la cantidad
+        if (idOrganizationProductReserved) {
+            query += ` tbpo.price * tbpo.quantity AS price `;
+        } else {
+            query += ` tbpo.price `;
+        }
+
+        query += ` FROM TB_User AS tbu
         LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
-        left join TB_Rol as tbr on tbr.id = tbu.idRole
+        LEFT JOIN TB_Rol AS tbr ON tbr.id = tbu.idRole
         LEFT JOIN TB_ProductsOrganization AS tbpo ON tbpo.idUser = tbu.id
         LEFT JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct
         LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
         LEFT JOIN TB_Measure AS tbm ON tbm.id = tbpo.idmeasure
         LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
-        WHERE
-        tbs.id = 3`;
+        WHERE tbs.id = 3`;
 
         if (idUser) {
             query += ` AND tbpo.idUser = ${idUser}`;
@@ -378,6 +388,7 @@ export const getProductsReserved = async (idUser?: number, idOrganization?: numb
         };
     }
 }
+
 
 export const putProductDelivered = async (id: number): Promise<ProductRepositoryService> => {
     try {
