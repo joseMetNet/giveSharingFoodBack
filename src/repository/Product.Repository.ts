@@ -43,7 +43,7 @@ export const getProducts = async (filter: filterProduct): Promise<ProductReposit
 
 export const postProducts = async(data: postProduct): Promise<postProductRepositoryService> => {
     try {
-        const { idProduct, idOrganization, idMeasure, quantity, expirationDate, idUser, price } = data;
+        const { idProduct, idOrganization, idMeasure, quantity, expirationDate, idUser, price, attendantName, attendantPhone, attendantEmail, attendantAddres } = data;
         const db = await connectToSqlServer();
 
         const checkOrgQuery = `SELECT id FROM TB_Organizations WHERE id = @idOrganization`;
@@ -59,9 +59,9 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
         }
 
         const insertQuery = `
-        INSERT INTO TB_ProductsOrganization (idProduct, idOrganization, idMeasure, quantity, expirationDate, idStatus, idUser, price)
+        INSERT INTO TB_ProductsOrganization (idProduct, idOrganization, idMeasure, quantity, expirationDate, idStatus, idUser, price, attendantName, attendantPhone, attendantEmail, attendantAddres)
         OUTPUT INSERTED.*
-        VALUES (@idProduct, @idOrganization, @idMeasure, @quantity, @expirationDate, @idStatus, @idUser, @price)`;
+        VALUES (@idProduct, @idOrganization, @idMeasure, @quantity, @expirationDate, @idStatus, @idUser, @price, @attendantName, @attendantPhone, @attendantEmail, @attendantAddres)`;
 
         const insertResult = await db?.request()
             .input('idProduct', idProduct)
@@ -72,6 +72,10 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
             .input('idStatus', 4)
             .input('idUser', idUser)
             .input('price', price)
+            .input('attendantName', attendantName || null)
+            .input('attendantPhone', attendantPhone || null)
+            .input('attendantEmail', attendantEmail || null)
+            .input('attendantAddres', attendantAddres || null)
             .query(insertQuery);
 
         return {
@@ -161,7 +165,11 @@ export const getProductsToDonate = async (filter: filterProduct): Promise<Produc
                     tbu.idCity,
                     tbc.city,
                     tbs.[status],
-                    tbpo.price
+                    tbpo.price,
+                    tbpo.attendantName,
+                    tbpo.attendantEmail,
+                    tbpo.attendantPhone,
+                    tbpo.attendantAddres
                     FROM TB_ProductsOrganization AS tbpo
                     LEFT JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct
                     LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
@@ -238,6 +246,10 @@ export const getProductsPreReserved = async (idUser?: number, idOrganization?: n
         tbo.bussisnesName,
         tbpo.quantity,
         tbm.measure,
+        tbpo.attendantName,
+        tbpo.attendantEmail,
+        tbpo.attendantPhone,
+        tbpo.attendantAddres,
         tbpo.expirationDate,
         tbpo.idUser,
         tbu.idCity,
@@ -334,6 +346,10 @@ export const getProductsReserved = async (idUser?: number, idOrganization?: numb
         tbo.bussisnesName,
         tbpo.quantity,
         tbm.measure,
+        tbpo.attendantName,
+        tbpo.attendantEmail,
+        tbpo.attendantPhone,
+        tbpo.attendantAddres,
         tbpo.expirationDate,
         tbpo.idUser,
         tbu.idCity,
@@ -424,7 +440,8 @@ export const putProductDelivered = async (id: number): Promise<ProductRepository
 export const getProductsDeliveredByOrganization = async(idOrganization?: number): Promise<ProductRepositoryService> => {
     try {
         const db = await connectToSqlServer();
-        const queryHistory = `SELECT tbpo.id AS idProductOrganization, tbo.id AS idOrganization, tbo.logo, tbpo.quantity, tbpo.deliverDate, tbpo.expirationDate, tbs.[status], tbto.typeOrganization
+        const queryHistory = `SELECT tbpo.id AS idProductOrganization, tbo.id AS idOrganization, tbo.logo, tbpo.quantity, tbpo.attendantName, tbpo.attendantEmail,
+                                tbpo.attendantPhone, tbpo.attendantAddres, tbpo.deliverDate, tbpo.expirationDate, tbs.[status], tbto.typeOrganization
                                 FROM TB_ProductsOrganization AS tbpo
                                 LEFT JOIN TB_Organizations  AS tbo ON tbpo.idOrganization = tbo.id
                                 LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus

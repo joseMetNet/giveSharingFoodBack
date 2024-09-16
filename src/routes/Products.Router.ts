@@ -215,6 +215,19 @@ productsRouter.get(
  *                 type: integer
  *               price:
  *                 type: number
+ *               attendantName:
+ *                 type: string
+ *                 description: Optional attendant's name
+ *               attendantPhone:
+ *                 type: string
+ *                 description: Optional attendant's phone number
+ *               attendantEmail:
+ *                 type: string
+ *                 format: email
+ *                 description: Optional attendant's email
+ *               attendantAddres:
+ *                 type: string
+ *                 description: Optional attendant's address
  *     responses:
  *       200:
  *         description: Product added successfully
@@ -269,6 +282,10 @@ productsRouter.post(
         body("expirationDate").notEmpty(),
         body("idUser", "product.validate_field_int").isInt().notEmpty(),
         body("price", "product.validate_field_int").notEmpty(),
+        body("attendantName", "product.required_field_text").optional().isString(),
+        body("attendantPhone", "product.required_field_text").optional().isString(),
+        body("attendantEmail", "product.required_field_text").optional().isEmail(),
+        body("attendantAddres", "product.required_field_text").optional().isString(),
         validateEnpoint
     ],
     postProduct);

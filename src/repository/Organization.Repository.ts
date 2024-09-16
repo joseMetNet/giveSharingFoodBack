@@ -459,6 +459,10 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
                 tbpo.id AS idProductOrganization,
                 tbo.bussisnesName,
                 tbpo.quantity,
+                tbpo.attendantName,
+                tbpo.attendantEmail,
+                tbpo.attendantPhone,
+                tbpo.attendantAddres,
                 `;
 
         if (idOrganizationProductReserved) {
@@ -493,7 +497,8 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
         }
 
         queryHistory += `
-            GROUP BY tbo.id, tbpo.id, tbo.bussisnesName, tbpo.quantity, tbpo.price, tbpo.deliverDate,
+            GROUP BY tbo.id, tbpo.id, tbo.bussisnesName, tbpo.quantity,tbpo.attendantName, tbpo.attendantEmail, tbpo.attendantPhone,
+                     tbpo.attendantAddres, tbpo.price, tbpo.deliverDate,
                      tbpo.solicitDate, tbs.[status], tbto.typeOrganization, tbp.product, tbp.urlImage, tbo.logo`;
                      
         const request = db?.request();
@@ -530,7 +535,8 @@ export const getDonationHistoryById = async(ids : idHistory): Promise<IresponseR
         const { idOrganization, idProductOrganization } = ids;
         
         const db = await connectToSqlServer();
-        const queryHistory = `SELECT tbpo.id AS idProductOrganization, tbo.id AS idOrganization, tbo.logo, tbpo.quantity, tbpo.deliverDate, tbpo.expirationDate, tbs.[status], tbto.typeOrganization
+        const queryHistory = `SELECT tbpo.id AS idProductOrganization, tbo.id AS idOrganization, tbo.logo, tbpo.quantity, tbpo.attendantName, tbpo.attendantEmail,tbpo.attendantPhone,
+                                tbpo.attendantAddres, tbpo.deliverDate, tbpo.expirationDate, tbs.[status], tbto.typeOrganization
                                 FROM TB_ProductsOrganization AS tbpo
                                 LEFT JOIN TB_Organizations  AS tbo ON tbpo.idOrganization = tbo.id
                                 LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
