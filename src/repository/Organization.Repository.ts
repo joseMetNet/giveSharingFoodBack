@@ -535,12 +535,13 @@ export const getDonationHistoryById = async(ids : idHistory): Promise<IresponseR
         const { idOrganization, idProductOrganization } = ids;
         
         const db = await connectToSqlServer();
-        const queryHistory = `SELECT tbpo.id AS idProductOrganization, tbo.id AS idOrganization, tbo.logo, tbpo.quantity, tbpo.attendantName, tbpo.attendantEmail,tbpo.attendantPhone,
+        const queryHistory = `SELECT tbpo.id AS idProductOrganization, tbo.id AS idOrganization, tbo.logo, tbp.product, tbp.urlImage, tbpo.quantity, tbpo.attendantName, tbpo.attendantEmail,tbpo.attendantPhone,
                                 tbpo.attendantAddres, tbpo.deliverDate, tbpo.expirationDate, tbs.[status], tbto.typeOrganization
                                 FROM TB_ProductsOrganization AS tbpo
                                 LEFT JOIN TB_Organizations  AS tbo ON tbpo.idOrganization = tbo.id
                                 LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
                                 LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
+                                LEFT JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct 
                                  WHERE tbo.id = @idOrganization AND tbpo.id = @idProductOrganization`;
         const result = await db?.request()
                                 .input('idOrganization', idOrganization)
