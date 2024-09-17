@@ -23,7 +23,11 @@ export interface postProduct {
     expirationDate: Date,
     deliverDate: Date,
     idUser: number,
-    price: number
+    price: number,
+    attendantName?: string,
+    attendantPhone?: string,
+    attendantEmail?: string,
+    attendantAddres?: string
 }
 
 export interface PostNewProductData {
