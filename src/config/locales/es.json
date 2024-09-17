@@ -15,6 +15,11 @@
 		"emptyResponse": "No se encontró información",
 		"error_server": "Ocurrió un error en el servidor"
 	},
+	"status": {
+		"succesfull": "OK",
+		"emptyResponse": "No se encontró información",
+		"error_server": "Ocurrió un error en el servidor"
+	},
 	"user": {
 		"succesfull": "OK",
 		"emailExists": "El correo electronico ya existe",

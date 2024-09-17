@@ -15,6 +15,11 @@
 		"emptyResponse": "No information found",
 		"error_server": "An error occurred on the server"
 	},
+	"status": {
+		"succesfull": "OK",
+		"emptyResponse": "No information found",
+		"error_server": "An error occurred on the server"
+	},
 	"user": {
 		"succesfull": "OK",
 		"emailExists": "the email already exists in user",

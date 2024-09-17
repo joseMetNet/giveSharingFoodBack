@@ -18,6 +18,7 @@ import documentsRouter from "../routes/Documents.Router";
 import loginRouter from "../routes/Login.Router";
 import measureRouter from "../routes/Measure.Router";
 import qualificationRouter from "../routes/Qualification.Router";
+import statusRouter from "../routes/Status.Router";
 
 class Server {
   private app: Application;
@@ -93,6 +94,7 @@ class Server {
     this.app.use(this.path.example, loginRouter);
     this.app.use(this.path.example, measureRouter);
     this.app.use(this.path.example, qualificationRouter);
+    this.app.use(this.path.example, statusRouter);
   }
   
   listen() {
