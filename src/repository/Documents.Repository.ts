@@ -4,8 +4,37 @@ import { v4 as uuidv4 } from 'uuid';
 import { BlobServiceClient } from '@azure/storage-blob';
 import mime from 'mime-types';
 import { connectToSqlServer } from '../DB/config';
+import { streamToBuffer } from '../helpers/documents.Helper';
+import { DocumentsRepositoryService } from '../interface/Documents.Interface';
 
-export const uploadFile = async (filePath: string, originalBlobName: string, idOrganization: number) => {
+export const getDocumentType = async () => {
+    try {
+        const db = await connectToSqlServer();
+        const typeDocuments: any = await db?.request()
+            .query(`SELECT * FROM TB_TypeDocuments`);
+        
+        if (!typeDocuments || !typeDocuments.recordset || !typeDocuments.recordset.length) {
+            return {
+                code: 204,
+                message: { translationKey: "documents.emptyResponse" },
+            };
+        }
+
+        return {
+            code: 200,
+            message: { translationKey: "documents.succesfull" },
+            data: typeDocuments.recordset
+        }
+    } catch (err) {
+        console.log("Error al traer departamentos", err)
+        return {
+            code: 400,
+            message: { translationKey: "documents.error_server", translationParams: { name: "getDocumentType" } },
+        };        
+    };
+}
+
+export const uploadFile = async (filePath: string, originalBlobName: string, idOrganization: number, idTypeDocument: number) => {
     try {
         const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING!);
         const containerName = process.env.CONTAINERNAME || 'filesgivesharingfood'
@@ -32,7 +61,8 @@ export const uploadFile = async (filePath: string, originalBlobName: string, idO
             .input('document', originalBlobName)
             .input('url', blobUrl)
             .input('idOrganitation', idOrganization)
-            .query('INSERT INTO TB_Documents (document, url, idOrganitation) VALUES (@document, @url, @idOrganitation)');
+            .input('idTypeDocument', idTypeDocument)
+            .query('INSERT INTO TB_Documents (document, url, idOrganitation, idTypeDocument) VALUES (@document, @url, @idOrganitation, @idTypeDocument)');
 
         return {
             code: 200,
@@ -115,3 +145,99 @@ export const updateFileRepository = async (filePath: string, newOriginalBlobName
         };
     }
 };
+
+export const downloadFile = async (idDocument: number) => {
+    try {
+        const db = await connectToSqlServer();
+
+        const result = await db?.request()
+            .input('idDocument', idDocument)
+            .query('SELECT url, document FROM TB_Documents WHERE id = @idDocument');
+
+        if (!result || result.recordset.length === 0) {
+            return {
+                code: 404,
+                message: { translationKey: "documents.emptyResponse" }
+            };
+        }
+
+        const fileUrl = result.recordset[0].url;
+        let fileName = result.recordset[0].document;
+        const blobUrl = new URL(fileUrl);
+        const blobName = decodeURIComponent(blobUrl.pathname.split('/').pop() ?? '');
+        const extension = blobUrl.pathname.split('.').pop();
+
+        if (!fileName.includes('.')) {
+            fileName += `.${extension}`;
+        }
+
+        const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING!);
+        const containerName = process.env.CONTAINERNAME || 'filesgivesharingfood';
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+        const downloadBlockBlobResponse = await blockBlobClient.download(0);
+
+        if (!downloadBlockBlobResponse.readableStreamBody) {
+            return {
+                code: 500,
+                message: { translationKey: "documents.download_error" }
+            };
+        }
+
+        const downloadedFile = await streamToBuffer(downloadBlockBlobResponse.readableStreamBody);
+
+        return {
+            code: 200,
+            message: { translationKey: "documents.download_successful" },
+            data: downloadedFile,
+            fileName
+        };
+    } catch (err) {
+        console.log("Error al descargar el archivo", err);
+        return {
+            code: 400,
+            message: { translationKey: "documents.error_server" },
+        };
+    }
+};
+
+export const getDocumentsByIdOrganization = async (idOrganization: number): Promise<DocumentsRepositoryService> => {
+    try {
+        const db = await connectToSqlServer();
+
+        // Consulta que mapea el parámetro idOrganization al campo idOrganitation de la base de datos
+        let queryDocuments = `SELECT tbd.id AS idDocument, tbd.document, tbd.url, tbd.idOrganitation AS idOrganization, tbd.idTypeDocument, tbtd.documentType  
+                              FROM TB_Documents AS tbd
+                              LEFT JOIN TB_TypeDocuments AS tbtd ON tbtd.id = tbd.idTypeDocument
+                              WHERE tbd.idOrganitation = @idOrganization`;  // Uso del parámetro
+
+        // Pasar idOrganization como parámetro para el query
+        const result = await db?.request()
+                               .input('idOrganization', idOrganization) // Recibe idOrganization del frontend
+                               .query(queryDocuments);  // Mapea correctamente a la columna idOrganitation en la base de datos
+
+        const documents = result?.recordset;
+
+        if (documents && documents.length > 0) {
+            return {
+                code: 200,
+                message: { translationKey: "documents.succesfull" },
+                data: documents
+            };
+        } else {
+            return {
+                code: 204,
+                message: { translationKey: "documents.emptyResponse" }
+            };
+        }
+    } catch (err) {
+        console.log("Error al traer documentos", err);
+        return {
+            code: 400,
+            message: { translationKey: "documents.error_server" },
+        };
+    }
+};
+
+

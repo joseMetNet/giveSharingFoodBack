@@ -38,7 +38,8 @@
 		"file_required": "This is a required text field",
 		"updated": "document updated",
 		"update_error": "An error ocurred on the updated document",
-		"update_success": "document updated"
+		"update_success": "document updated",
+		"download_successful": "document downloaded successfully"
 	},
 	"organizations": {
 		"error_server": "An error occurred on the server",

@@ -6,5 +6,6 @@ export interface IFile {
   export interface DocumentsRepositoryService {
     code: number,
     message: string| { translationKey: string },
-    data?: any
+    data?: any,
+    fileName?: string
 }
