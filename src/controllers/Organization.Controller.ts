@@ -153,3 +153,18 @@ export const putBlockOrEnableOrganization: RequestHandler = async (req, res) => 
         res.status(500).json({ message: parseMessageI18n('error_server', req) });
     }
 }
+
+export const getListOrganizationsByIdStatus: RequestHandler = async (req, res) => {
+    try {
+        let { page = 0, size = 10, idStatus } = req.query;
+
+        page = parseInt(page as string, 10);
+        size = parseInt(size as string, 10);
+        const parsedIdStatus  = idStatus ? parseInt(idStatus as string, 10) : undefined;
+        const { code, message, ...resto }: IresponseRepositoryServiceGet = await repository.getListOrganizationsByIdStatus(page, size, parsedIdStatus); 
+        res.status(code).json({message: parseMessageI18n(message, req), ...resto});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: parseMessageI18n('error_server', req)});
+    }
+}

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { body, param, query } from "express-validator";
-import { createOrganization, getDonationHistory, getDonationHistoryById, getDonatorTypeOrgaization, getFoundationTypeOrgaization, getListOrganizationById, getListOrganizations, getOrganizationById, getTypeOrganization, putActiveOrInactiveOrganization, putBlockOrEnableOrganization, updateOrganizationById } from "../controllers/Organization.Controller";
+import { createOrganization, getDonationHistory, getDonationHistoryById, getDonatorTypeOrgaization, getFoundationTypeOrgaization, getListOrganizationById, getListOrganizations, getListOrganizationsByIdStatus, getOrganizationById, getTypeOrganization, putActiveOrInactiveOrganization, putBlockOrEnableOrganization, updateOrganizationById } from "../controllers/Organization.Controller";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 import { validateEmailOrganizationExist } from "../middlewares/validator-custom";
 import { or } from "sequelize";
@@ -370,6 +370,86 @@ organizationRouter.get(
         query("status").optional().isString().isIn(['Abierto', 'Cerrado']),
     ],
     getListOrganizations);
+
+/**
+ * @swagger
+ * /getListOrganizationsByIdStatus:
+ *   get:
+ *     tags:
+ *       - Organizations
+ *     summary: Get order list By status
+ *     description: Gets the list of orders for paged organizations.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: string
+ *         description: Page number for pagination.
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: string
+ *         description: Page size for pagination.
+ *       - in: query
+ *         name: idStatus
+ *         schema:
+ *           type: string
+ *         description: Filter by status.
+ *     responses:
+ *       200:
+ *         description: Organization details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 representativaName:
+ *                   type: string
+ *                 bussisnesName:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                 representativePhone:
+ *                   type: string
+ *                 idTypeOrganitation:
+ *                   type: integer
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: organizations.error_invalid_data
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+organizationRouter.get(
+    "/getListOrganizationsByIdStatus",
+    [
+        param("page").isString(),
+        param("size").isString(),
+        query("Idstatus").optional().isString(),
+    ],
+    getListOrganizationsByIdStatus);
 
 /**
  * @swagger

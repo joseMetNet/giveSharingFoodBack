@@ -765,5 +765,73 @@ export const putBlockOrEnableOrganization = async (id: number): Promise<Irespons
     }
 }
 
+export const getListOrganizationsByIdStatus = async (page: number = 0, size: number = 10, idStatus?: number) => {
+    try {
+        const db = await connectToSqlServer();
+
+        const offset = page * size;
+
+        let statusFilter = "";
+        if (idStatus) {
+            statusFilter = `WHERE tbs.id = ${idStatus}`;
+        }
+
+        const query = `
+            SELECT DISTINCT 
+                tbo.id, 
+                tbto.typeOrganization, 
+                tbs.[status] AS organizationStatus, 
+                tbo.bussisnesName, 
+                tbu.phone, 
+                tbo.email, 
+                tbu.idStatus AS userIdStatus, 
+                tbs2.[status] AS userStatus 
+            FROM TB_Organizations AS tbo
+            LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
+            LEFT JOIN TB_Status AS tbs ON tbs.id = tbo.idStatus
+            LEFT JOIN TB_User AS tbu ON tbu.idOrganization = tbo.id
+            LEFT JOIN TB_Status AS tbs2 ON tbs2.id = tbu.idStatus
+            ${statusFilter}
+            ORDER BY tbo.id DESC
+            OFFSET ${offset} ROWS
+            FETCH NEXT ${size} ROWS ONLY`;
+
+        const organizations: any = await db?.request().query(query);
+
+        if (!organizations || !organizations.recordset || !organizations.recordset.length) {
+            return {
+                code: 204,
+                message: { translationKey: "organizations.emptyResponse" },
+            };
+        }
+        console.log(statusFilter)
+        const totalCountQuery = await db?.request().query(`SELECT COUNT(*) AS totalCount FROM TB_Organizations AS tbo
+        LEFT JOIN TB_Status AS tbs ON tbs.id = tbo.idStatus ${statusFilter}`);
+        const totalCount = totalCountQuery?.recordset[0].totalCount;
+
+        const totalPages = Math.ceil(totalCount / size);
+
+        return {
+            code: 200,
+            message: { translationKey: "organizations.successful" },
+            data: {
+                organizations: organizations.recordset,
+                pagination: {
+                    totalCount,
+                    totalPages,
+                    currentPage: page,
+                    size,
+                }
+            }
+        }
+    } catch (err) {
+        console.log(err)
+        return {
+            code: 400,
+            message: { translationKey: "organizations.error_server" },
+        };
+    }
+}
+
 
 
