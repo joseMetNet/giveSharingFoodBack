@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { body, param, query } from "express-validator";
-import { createOrganization, getDonationHistory, getDonationHistoryById, getDonatorTypeOrgaization, getFoundationTypeOrgaization, getListOrganizationById, getListOrganizations, getListOrganizationsByIdStatus, getOrganizationById, getTypeOrganization, putActiveOrInactiveOrganization, putBlockOrEnableOrganization, updateOrganizationById } from "../controllers/Organization.Controller";
+import { createOrganization, getDonationHistory, getDonationHistoryById, getDonatorTypeOrgaization, getFoundationTypeOrgaization, getListByTypeOrganizationAndStatus, getListOrganizationById, getListOrganizations, getListOrganizationsByIdStatus, getOrganizationById, getTypeOrganization, putActiveOrInactiveOrganization, putBlockOrEnableOrganization, updateOrganizationById } from "../controllers/Organization.Controller";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 import { validateEmailOrganizationExist } from "../middlewares/validator-custom";
 import { or } from "sequelize";
@@ -984,5 +984,132 @@ organizationRouter.put(
         validateEnpoint
     ],
     putBlockOrEnableOrganization
+);
+
+/**
+ * @swagger
+ * /getListByTypeOrganizationAndStatus:
+ *   get:
+ *     tags:
+ *       - Organizations
+ *     summary: Get organization list by type and status
+ *     description: Gets the list of paginated organizations filtered by type of organization and status, both are optional filters.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: string
+ *         description: Page number for pagination.
+ *         example: "0"
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: string
+ *         description: Page size for pagination.
+ *         example: "10"
+ *       - in: query
+ *         name: idTypeOrganization
+ *         schema:
+ *           type: string
+ *         description: Optional filter by type of organization.
+ *         example: "1"
+ *       - in: query
+ *         name: idStatus
+ *         schema:
+ *           type: string
+ *         description: Optional filter by status.
+ *         example: "11"
+ *     responses:
+ *       200:
+ *         description: Organization details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 organizations:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       representativaName:
+ *                         type: string
+ *                         example: "John Doe"
+ *                       bussisnesName:
+ *                         type: string
+ *                         example: "Business Corp"
+ *                       email:
+ *                         type: string
+ *                         example: "contact@business.com"
+ *                       representativePhone:
+ *                         type: string
+ *                         example: "+123456789"
+ *                       idTypeOrganization:
+ *                         type: integer
+ *                         example: 1
+ *                       typeOrganization:
+ *                         type: string
+ *                         example: "Technology"
+ *                       idStatus:
+ *                         type: integer
+ *                         example: 11
+ *                       status:
+ *                         type: string
+ *                         example: "Active"
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     totalCount:
+ *                       type: integer
+ *                       example: 100
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 10
+ *                     currentPage:
+ *                       type: integer
+ *                       example: 0
+ *                     size:
+ *                       type: integer
+ *                       example: 10
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: organizations.error_invalid_data
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+organizationRouter.get(
+    "/getListByTypeOrganizationAndStatus",
+    [
+        query("page", "organizations.validate_field_int").optional().isInt(),
+        query("size", "organizations.validate_field_int").optional().isInt(),
+        query("idTypeOrganization", "organizations.validate_field_int").optional().isInt(),
+        query("idStatus", "organizations.validate_field_int").optional().isInt(),
+        validateEnpoint
+    ],
+    getListByTypeOrganizationAndStatus
 )
 export default organizationRouter;

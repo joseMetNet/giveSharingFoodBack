@@ -43,7 +43,7 @@ export const getProducts = async (filter: filterProduct): Promise<ProductReposit
 
 export const postProducts = async(data: postProduct): Promise<postProductRepositoryService> => {
     try {
-        const { idProduct, idOrganization, idMeasure, quantity, expirationDate, idUser, price, attendantName, attendantPhone, attendantEmail, attendantAddres } = data;
+        const { idProduct, idOrganization, idMeasure, quantity, expirationDate, idUser, price, attendantName, attendantPhone, attendantEmail, attendantAddres, idCity, idDepartment } = data;
         const db = await connectToSqlServer();
 
         const checkOrgQuery = `SELECT id FROM TB_Organizations WHERE id = @idOrganization`;
@@ -59,9 +59,9 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
         }
 
         const insertQuery = `
-        INSERT INTO TB_ProductsOrganization (idProduct, idOrganization, idMeasure, quantity, expirationDate, idStatus, idUser, price, attendantName, attendantPhone, attendantEmail, attendantAddres)
+        INSERT INTO TB_ProductsOrganization (idProduct, idOrganization, idMeasure, quantity, expirationDate, idStatus, idUser, price, attendantName, attendantPhone, attendantEmail, attendantAddres, idCity, idDepartment)
         OUTPUT INSERTED.*
-        VALUES (@idProduct, @idOrganization, @idMeasure, @quantity, @expirationDate, @idStatus, @idUser, @price, @attendantName, @attendantPhone, @attendantEmail, @attendantAddres)`;
+        VALUES (@idProduct, @idOrganization, @idMeasure, @quantity, @expirationDate, @idStatus, @idUser, @price, @attendantName, @attendantPhone, @attendantEmail, @attendantAddres, @idCity, @idDepartment)`;
 
         const insertResult = await db?.request()
             .input('idProduct', idProduct)
@@ -76,6 +76,8 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
             .input('attendantPhone', attendantPhone || null)
             .input('attendantEmail', attendantEmail || null)
             .input('attendantAddres', attendantAddres || null)
+            .input('idCity', idCity || null)
+            .input('idDepartment', idDepartment || null)
             .query(insertQuery);
 
         return {
@@ -251,6 +253,8 @@ export const getProductsPreReserved = async (idUser?: number, idOrganization?: n
         tbpo.attendantPhone,
         tbpo.attendantAddres,
         tbpo.expirationDate,
+        tbpc.city AS attendantCity,
+        tbpd.department AS attendantDepartment,
         tbpo.idUser,
         tbu.idCity,
         tbu.googleAddress,
@@ -272,6 +276,8 @@ export const getProductsPreReserved = async (idUser?: number, idOrganization?: n
         LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
         LEFT JOIN TB_Measure AS tbm ON tbm.id = tbpo.idmeasure
         LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
+        LEFT JOIN TB_City AS tbpc ON tbpc.id = tbpo.idCity
+        LEFT JOIN TB_Departments AS tbpd ON tbpd.id = tbpo.idDepartment
         WHERE tbs.id = 9`;
 
         if (idUser) {
@@ -351,6 +357,8 @@ export const getProductsReserved = async (idUser?: number, idOrganization?: numb
         tbpo.attendantPhone,
         tbpo.attendantAddres,
         tbpo.expirationDate,
+        tbpc.city AS attendantCity,
+        tbpd.department AS attendantDepartment,
         tbpo.idUser,
         tbu.idCity,
         tbu.googleAddress,
@@ -374,6 +382,8 @@ export const getProductsReserved = async (idUser?: number, idOrganization?: numb
         LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
         LEFT JOIN TB_Measure AS tbm ON tbm.id = tbpo.idmeasure
         LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
+        LEFT JOIN TB_City AS tbpc ON tbpc.id = tbpo.idCity
+        LEFT JOIN TB_Departments AS tbpd ON tbpd.id = tbpo.idDepartment
         WHERE tbs.id = 3`;
 
         if (idUser) {
@@ -441,11 +451,13 @@ export const getProductsDeliveredByOrganization = async(idOrganization?: number)
     try {
         const db = await connectToSqlServer();
         const queryHistory = `SELECT tbpo.id AS idProductOrganization, tbo.id AS idOrganization, tbo.logo, tbpo.quantity, tbpo.attendantName, tbpo.attendantEmail,
-                                tbpo.attendantPhone, tbpo.attendantAddres, tbpo.deliverDate, tbpo.expirationDate, tbs.[status], tbto.typeOrganization
+                                tbpo.attendantPhone, tbpo.attendantAddres, tbpc.city AS attendantCity, tbpd.department AS attendantDepartment, tbpo.deliverDate, tbpo.expirationDate, tbs.[status], tbto.typeOrganization
                                 FROM TB_ProductsOrganization AS tbpo
                                 LEFT JOIN TB_Organizations  AS tbo ON tbpo.idOrganization = tbo.id
                                 LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
                                 LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
+                                LEFT JOIN TB_City AS tbpc ON tbpc.id = tbpo.idCity
+                                LEFT JOIN TB_Departments AS tbpd ON tbpd.id = tbpo.idDepartment
                                  WHERE tbpo.idStatus = 5 AND tbo.id = @idOrganization`;
         const result = await db?.request()
                                 .input('idOrganization', idOrganization)

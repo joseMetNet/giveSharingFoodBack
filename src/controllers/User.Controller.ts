@@ -33,3 +33,18 @@ export const putActiveOrInactiveUser: RequestHandler = async (req, res) => {
         res.status(500).json({ message: parseMessageI18n('error_server', req) });
     }
 }
+
+export const getUsersByIdStatus: RequestHandler = async (req, res) => {
+    try {
+        let { page = 0, size = 10, idStatus } = req.query;
+
+        page = parseInt(page as string, 10);
+        size = parseInt(size as string, 10);
+        const parsedIdStatus  = idStatus ? parseInt(idStatus as string, 10) : undefined;
+        const { code, message, ...resto }: UserRepositoryService = await repository.getUsersByIdStatus(page, size, parsedIdStatus); 
+        res.status(code).json({message: parseMessageI18n(message, req), ...resto});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: parseMessageI18n('error_server', req)});
+    }
+}
