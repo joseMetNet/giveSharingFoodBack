@@ -168,3 +168,22 @@ export const getListOrganizationsByIdStatus: RequestHandler = async (req, res) =
         res.status(500).json({ message: parseMessageI18n('error_server', req)});
     }
 }
+
+export const getListByTypeOrganizationAndStatus: RequestHandler = async (req, res) => {
+    try {
+        let { page = 0, size = 10, idTypeOrganization, idStatus } = req.query;
+
+        page = parseInt(page as string, 10);
+        size = parseInt(size as string, 10);
+
+        const parsedIdTypeOrganization = idTypeOrganization ? parseInt(idTypeOrganization as string, 10) : undefined;
+        const parsedIdStatus = idStatus ? parseInt(idStatus as string, 10) : undefined;
+
+        const { code, message, ...resto }: IresponseRepositoryServiceGet = await repository.getListByTypeOrganizationAndStatus(page, size, parsedIdTypeOrganization, parsedIdStatus); 
+
+        res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: parseMessageI18n('error_server', req) });
+    }
+}

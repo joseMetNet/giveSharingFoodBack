@@ -157,3 +157,88 @@ const checkOrganizationExists = async (idOrganization: string): Promise<boolean>
         return false;
     }
 }
+
+export const getUsersByIdStatus = async (page: number = 0, size: number = 10, idStatus?: number) => {
+    try {
+        const db = await connectToSqlServer();
+        const offset = page * size;
+
+        let filters: string[] = [];
+        if (typeof idStatus !== 'undefined') {
+            filters.push(`tbu.idStatus = ${idStatus}`);
+        }
+
+        const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : '';
+
+        const query = `
+            SELECT 
+                tbu.id,
+                tbu.idAuth,
+                tbu.phone,
+                tbu.email,
+                tbu.idRole,
+                tbr.role,
+                tbu.idCity,
+                tbc.city,
+                tbu.idDepartmen,
+                tbd.department,
+                tbu.googleAddress,
+                tbu.idOrganization,
+                tbo.bussisnesName,
+                tbu.idStatus,
+                tbs.status
+            FROM TB_User AS tbu
+            LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbu.idOrganization
+            LEFT JOIN TB_Status AS tbs ON tbs.id = tbu.idStatus
+            LEFT JOIN TB_Rol AS tbr ON tbr.id = tbu.idRole
+            LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
+            LEFT JOIN TB_Departments AS tbd ON tbd.id = tbu.idDepartmen
+            ${whereClause}
+            ORDER BY tbu.id DESC
+            OFFSET ${offset} ROWS
+            FETCH NEXT ${size} ROWS ONLY`;
+
+        const users: any = await db?.request().query(query);
+
+        if (!users || !users.recordset || !users.recordset.length) {
+            return {
+                code: 204,
+                message: { translationKey: "user.emptyResponse" },
+            };
+        }
+
+        // Query para contar el total de registros
+        const totalCountQuery = await db?.request().query(`
+            SELECT COUNT(*) AS totalCount 
+            FROM TB_User AS tbu
+            LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbu.idOrganization
+            LEFT JOIN TB_Status AS tbs ON tbs.id = tbu.idStatus
+            LEFT JOIN TB_Rol AS tbr ON tbr.id = tbu.idRole
+            LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
+            LEFT JOIN TB_Departments AS tbd ON tbd.id = tbu.idDepartmen
+            ${whereClause}`);
+
+        const totalCount = totalCountQuery?.recordset[0]?.totalCount || 0;
+        const totalPages = Math.ceil(totalCount / size);
+
+        return {
+            code: 200,
+            message: { translationKey: "user.succesfull" },
+            data: {
+                users: users.recordset,
+                pagination: {
+                    totalCount,
+                    totalPages,
+                    currentPage: page,
+                    size,
+                }
+            }
+        };
+    } catch (err) {
+        console.error(err);
+        return {
+            code: 400,
+            message: { translationKey: "user.error_server" },
+        };
+    }
+};

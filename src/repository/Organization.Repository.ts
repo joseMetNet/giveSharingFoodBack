@@ -463,6 +463,8 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
                 tbpo.attendantEmail,
                 tbpo.attendantPhone,
                 tbpo.attendantAddres,
+                tbpc.city AS attendantCity,
+                tbpd.department AS attendantDepartment,
                 `;
 
         if (idOrganizationProductReserved) {
@@ -479,7 +481,8 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
                 tbto.typeOrganization,
                 tbp.product,
                 tbp.urlImage,
-                tbo.logo
+                tbo.logo,
+                tbd.url
             FROM 
                 TB_ProductsOrganization AS tbpo
                 LEFT JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct
@@ -487,6 +490,9 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
                 LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
                 LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
                 LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
+                LEFT JOIN TB_City AS tbpc ON tbpc.id = tbpo.idCity
+                LEFT JOIN TB_Departments AS tbpd ON tbpd.id = tbpo.idDepartment
+                LEFT JOIN TB_Documents AS tbd ON tbd.idOrganitation = tbo.id AND tbd.idTypeDocument = 5
             WHERE 1 = 1`;
 
         if (idOrganization) {
@@ -498,8 +504,8 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
 
         queryHistory += `
             GROUP BY tbo.id, tbpo.id, tbo.bussisnesName, tbpo.quantity,tbpo.attendantName, tbpo.attendantEmail, tbpo.attendantPhone,
-                     tbpo.attendantAddres, tbpo.price, tbpo.deliverDate,
-                     tbpo.solicitDate, tbs.[status], tbto.typeOrganization, tbp.product, tbp.urlImage, tbo.logo`;
+                     tbpo.attendantAddres, tbpc.city, tbpd.department, tbpo.price, tbpo.deliverDate,
+                     tbpo.solicitDate, tbs.[status], tbto.typeOrganization, tbp.product, tbp.urlImage, tbo.logo, tbd.url`;
                      
         const request = db?.request();
         if (idOrganization) request?.input('idOrganization', idOrganization);
@@ -536,12 +542,15 @@ export const getDonationHistoryById = async(ids : idHistory): Promise<IresponseR
         
         const db = await connectToSqlServer();
         const queryHistory = `SELECT tbpo.id AS idProductOrganization, tbo.id AS idOrganization, tbo.logo, tbp.product, tbp.urlImage, tbpo.quantity, tbpo.attendantName, tbpo.attendantEmail,tbpo.attendantPhone,
-                                tbpo.attendantAddres, tbpo.deliverDate, tbpo.expirationDate, tbs.[status], tbto.typeOrganization
+                                tbpo.attendantAddres, tbpc.city AS attendantCity, tbpd.department AS attendantDepartment, tbpo.deliverDate, tbpo.expirationDate, tbs.[status], tbto.typeOrganization, tbd.url
                                 FROM TB_ProductsOrganization AS tbpo
                                 LEFT JOIN TB_Organizations  AS tbo ON tbpo.idOrganization = tbo.id
                                 LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
                                 LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
                                 LEFT JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct 
+                                LEFT JOIN TB_City AS tbpc ON tbpc.id = tbpo.idCity
+                                LEFT JOIN TB_Departments AS tbpd ON tbpd.id = tbpo.idDepartment
+                                LEFT JOIN TB_Documents AS tbd ON tbd.idOrganitation = tbo.id AND tbd.idTypeDocument = 5
                                  WHERE tbo.id = @idOrganization AND tbpo.id = @idProductOrganization`;
         const result = await db?.request()
                                 .input('idOrganization', idOrganization)
@@ -833,5 +842,93 @@ export const getListOrganizationsByIdStatus = async (page: number = 0, size: num
     }
 }
 
+export const getListByTypeOrganizationAndStatus = async (page: number = 0, size: number = 10, idTypeOrganization?: number, idStatus?: number) => {
+    try {
+        const db = await connectToSqlServer();
+
+        const offset = page * size;
+
+        let filters = [];
+        
+        if (idTypeOrganization) {
+            filters.push(`tbto.id = ${idTypeOrganization}`);
+        }
+
+        if (idStatus) {
+            filters.push(`tbs.id = ${idStatus}`);
+        }
+
+        let whereClause = "";
+        if (filters.length > 0) {
+            whereClause = `WHERE ${filters.join(" AND ")}`;
+        }
+
+        const query = `
+            SELECT 
+                tbo.id,
+                tbo.bussisnesName,
+                tbo.idTypeIdentification,
+                tbti.typeIdentification,
+                tbo.identification,
+                tbo.dv,
+                tbo.representativaName,
+                tbo.representativePhone,
+                tbo.email,
+                tbo.logo,
+                tbo.idStatus,
+                tbs.[status],
+                tbto.id AS idTypeOrganization,
+                tbto.typeOrganization,
+                tbo.observations
+            FROM TB_Organizations AS tbo
+            LEFT JOIN TB_Status AS tbs ON tbs.id = tbo.idStatus
+            LEFT JOIN TB_TypeIdentification AS tbti ON tbti.id = tbo.idTypeIdentification
+            LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
+            ${whereClause}
+            ORDER BY tbo.id DESC
+            OFFSET ${offset} ROWS
+            FETCH NEXT ${size} ROWS ONLY`;
+
+        const organizations: any = await db?.request().query(query);
+
+        if (!organizations || !organizations.recordset || !organizations.recordset.length) {
+            return {
+                code: 204,
+                message: { translationKey: "organizations.emptyResponse" },
+            };
+        }
+
+        const totalCountQuery = await db?.request().query(`
+            SELECT COUNT(*) AS totalCount 
+            FROM TB_Organizations AS tbo
+            LEFT JOIN TB_Status AS tbs ON tbs.id = tbo.idStatus
+            LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
+            ${whereClause}`);
+
+        const totalCount = totalCountQuery?.recordset[0].totalCount;
+
+        const totalPages = Math.ceil(totalCount / size);
+
+        return {
+            code: 200,
+            message: { translationKey: "organizations.successful" },
+            data: {
+                organizations: organizations.recordset,
+                pagination: {
+                    totalCount,
+                    totalPages,
+                    currentPage: page,
+                    size,
+                }
+            }
+        }
+    } catch (err) {
+        console.log(err);
+        return {
+            code: 400,
+            message: { translationKey: "organizations.error_server" },
+        };
+    }
+}
 
 

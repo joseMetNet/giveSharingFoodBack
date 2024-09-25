@@ -228,6 +228,12 @@ productsRouter.get(
  *               attendantAddres:
  *                 type: string
  *                 description: Optional attendant's address
+ *               idCity:
+ *                 type: number
+ *                 description: Optional idCity
+ *               idDepartment:
+ *                 type: number
+ *                 description: Optional idDepartment
  *     responses:
  *       200:
  *         description: Product added successfully

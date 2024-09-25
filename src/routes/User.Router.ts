@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { createUser, getUserByOrganization, putActiveOrInactiveUser } from "../controllers/User.Controller";
-import { body, param } from "express-validator";
+import { createUser, getUserByOrganization, getUsersByIdStatus, putActiveOrInactiveUser } from "../controllers/User.Controller";
+import { body, param, query } from "express-validator";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 import { validateEmailUserExist } from "../middlewares/validator-custom";
 
@@ -245,5 +245,126 @@ userRouter.put(
         validateEnpoint
     ],
     putActiveOrInactiveUser
+);
+
+/**
+ * @swagger
+ * /getUsersByIdStatus:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Get users list by status
+ *     description: Gets the list of paginated users filtered by status, is optional filters.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: string
+ *         description: Page number for pagination.
+ *         example: "0"
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: string
+ *         description: Page size for pagination.
+ *         example: "10"
+ *       - in: query
+ *         name: idStatus
+ *         schema:
+ *           type: string
+ *         description: Optional filter by status.
+ *         example: "11"
+ *     responses:
+ *       200:
+ *         description: Users details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 organizations:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       idAuth:
+ *                         type: string
+ *                       phone:
+ *                         type: string
+ *                       email:
+ *                         type: string
+ *                       idRol:
+ *                         type: number
+ *                       role:
+ *                         type: string
+ *                       idCity:
+ *                         type: number
+ *                       city:
+ *                         type: string
+ *                       idDepartmen:
+ *                         type: number
+ *                       departmen:
+ *                         type: string
+ *                       googleAddress:
+ *                         type: string
+ *                       idOrganization:
+ *                         type: number
+ *                       bussisnesName:
+ *                         type: string
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     totalCount:
+ *                       type: integer
+ *                       example: 100
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 10
+ *                     currentPage:
+ *                       type: integer
+ *                       example: 0
+ *                     size:
+ *                       type: integer
+ *                       example: 10
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: user.error_invalid_data
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+userRouter.get(
+    "/getUsersByIdStatus",
+    [
+        query("page", "organizations.validate_field_int").optional().isInt(),
+        query("size", "organizations.validate_field_int").optional().isInt(),
+        query("idTypeOrganization", "organizations.validate_field_int").optional().isInt(),
+        query("idStatus", "organizations.validate_field_int").optional().isInt(),
+        validateEnpoint
+    ],
+    getUsersByIdStatus
 )
 export default userRouter;

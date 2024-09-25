@@ -27,7 +27,9 @@ export interface postProduct {
     attendantName?: string,
     attendantPhone?: string,
     attendantEmail?: string,
-    attendantAddres?: string
+    attendantAddres?: string,
+    idCity?: number,
+    idDepartment?: number
 }
 
 export interface PostNewProductData {
