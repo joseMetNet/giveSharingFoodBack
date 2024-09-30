@@ -482,7 +482,7 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
                 tbp.product,
                 tbp.urlImage,
                 tbo.logo,
-                tbd.url
+                tbdp.url
             FROM 
                 TB_ProductsOrganization AS tbpo
                 LEFT JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct
@@ -492,7 +492,7 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
                 LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
                 LEFT JOIN TB_City AS tbpc ON tbpc.id = tbpo.idCity
                 LEFT JOIN TB_Departments AS tbpd ON tbpd.id = tbpo.idDepartment
-                LEFT JOIN TB_Documents AS tbd ON tbd.idOrganitation = tbo.id AND tbd.idTypeDocument = 5
+                LEFT JOIN TB_ProductDocuments AS tbdp ON tbdp.idProductOrganization = tbpo.id
             WHERE 1 = 1`;
 
         if (idOrganization) {
@@ -505,7 +505,7 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
         queryHistory += `
             GROUP BY tbo.id, tbpo.id, tbo.bussisnesName, tbpo.quantity,tbpo.attendantName, tbpo.attendantEmail, tbpo.attendantPhone,
                      tbpo.attendantAddres, tbpc.city, tbpd.department, tbpo.price, tbpo.deliverDate,
-                     tbpo.solicitDate, tbs.[status], tbto.typeOrganization, tbp.product, tbp.urlImage, tbo.logo, tbd.url`;
+                     tbpo.solicitDate, tbs.[status], tbto.typeOrganization, tbp.product, tbp.urlImage, tbo.logo, tbdp.url`;
                      
         const request = db?.request();
         if (idOrganization) request?.input('idOrganization', idOrganization);
@@ -542,7 +542,7 @@ export const getDonationHistoryById = async(ids : idHistory): Promise<IresponseR
         
         const db = await connectToSqlServer();
         const queryHistory = `SELECT tbpo.id AS idProductOrganization, tbo.id AS idOrganization, tbo.logo, tbp.product, tbp.urlImage, tbpo.quantity, tbpo.attendantName, tbpo.attendantEmail,tbpo.attendantPhone,
-                                tbpo.attendantAddres, tbpc.city AS attendantCity, tbpd.department AS attendantDepartment, tbpo.deliverDate, tbpo.expirationDate, tbs.[status], tbto.typeOrganization, tbd.url
+                                tbpo.attendantAddres, tbpc.city AS attendantCity, tbpd.department AS attendantDepartment, tbpo.deliverDate, tbpo.expirationDate, tbs.[status], tbto.typeOrganization, tbdp.url
                                 FROM TB_ProductsOrganization AS tbpo
                                 LEFT JOIN TB_Organizations  AS tbo ON tbpo.idOrganization = tbo.id
                                 LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
@@ -550,7 +550,7 @@ export const getDonationHistoryById = async(ids : idHistory): Promise<IresponseR
                                 LEFT JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct 
                                 LEFT JOIN TB_City AS tbpc ON tbpc.id = tbpo.idCity
                                 LEFT JOIN TB_Departments AS tbpd ON tbpd.id = tbpo.idDepartment
-                                LEFT JOIN TB_Documents AS tbd ON tbd.idOrganitation = tbo.id AND tbd.idTypeDocument = 5
+                                LEFT JOIN TB_ProductDocuments AS tbdp ON tbdp.idProductOrganization = tbpo.id
                                  WHERE tbo.id = @idOrganization AND tbpo.id = @idProductOrganization`;
         const result = await db?.request()
                                 .input('idOrganization', idOrganization)
