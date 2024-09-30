@@ -30,6 +30,32 @@ export const uploadFile: RequestHandler = async(req, res) => {
     }
 }
 
+export const uploadProductFile: RequestHandler = async(req, res) => {
+  try {
+      const { blobName, idProductOrganization, idTypeDocument } = req.body;
+      if (!req.files || Object.keys(req.files).length === 0) {
+          res.status(400).send("No files were uploaded.");
+          return;
+        }
+        if (!req.files.filePath) {
+          res.status(400).send("No files were uploaded.");
+          return;
+        }
+        const filePath = req.files.filePath as UploadedFile
+        filePath.mv('./tmp/' + filePath.name, function(err) {
+          if (err)
+
+            return res.status(500).send(err);
+        });
+
+      const { code, message, ...resto }: DocumentsRepositoryService = await repository.uploadProductFile(`./tmp/${filePath.name}`, blobName, idProductOrganization, idTypeDocument);
+      res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: parseMessageI18n('error_server', req) });  
+  }
+}
+
 export const updateFileController: RequestHandler = async(req, res) => {
   try {
       const { blobName, idDocument } = req.body;

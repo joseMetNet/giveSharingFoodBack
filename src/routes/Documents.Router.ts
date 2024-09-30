@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { body, param } from "express-validator";
-import { downloadFile, getDocumentsByIdOrganization, getDocumentType, updateFileController, uploadFile } from "../controllers/Documents.controller";
+import { downloadFile, getDocumentsByIdOrganization, getDocumentType, updateFileController, uploadFile, uploadProductFile } from "../controllers/Documents.controller";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 
 const documentsRouter = Router();
@@ -317,4 +317,81 @@ documentsRouter.get(
         validateEnpoint
     ],
     getDocumentsByIdOrganization);
+
+/**
+ * @swagger
+ * /uploadProductFile:
+ *   post:
+ *     tags:
+ *       - Documents
+ *     summary: Upload a file
+ *     description: Upload a file with the provided details.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               filePath:
+ *                 type: string
+ *                 format: binary
+ *                 description: The path of the file to be uploaded
+ *               blobName:
+ *                 type: string
+ *                 description: The name of the blob
+ *               idProductOrganization:
+ *                 type: integer
+ *                 description: The ID of the product organization
+ *               idTypeDocument:
+ *                 type: integer
+ *                 description: The ID of the document type
+ *     responses:
+ *       200:
+ *         description: File uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: File uploaded successfully
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: documents.error_invalid_data
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+documentsRouter.post(
+    '/uploadProductFile',
+    [
+        body("filePath"),
+        body("blobName","documents.file_required").isString().notEmpty(),
+        body("idProductOrganization").isInt().notEmpty(),
+        body("idTypeDocument").isInt().notEmpty(),
+        validateEnpoint
+    ],
+    uploadProductFile);
 export default documentsRouter;
