@@ -141,6 +141,54 @@ export const putActiveOrInactiveUser = async (id: number): Promise<IresponseRepo
     }
 }
 
+export const putStatusUser = async (id: number, idStatus: number): Promise<IresponseRepositoryService> => {
+    try {
+        const db = await connectToSqlServer();
+
+        const selectQuery = `
+            SELECT idStatus
+            FROM TB_User
+            WHERE id = @id
+        `;
+        const selectResult = await db?.request().input('id', id).query(selectQuery);
+        const currentStatus = selectResult?.recordset[0]?.idStatus;
+
+        if (currentStatus === undefined) {
+            return {
+                code: 404,
+                message: 'user.not_found'
+            };
+        }
+
+        await db?.request()
+            .input('id', id)
+            .input('newStatus', idStatus)
+            .query(`
+                UPDATE TB_User
+                SET idStatus = @newStatus
+                WHERE id = @id
+            `);
+
+        let message = '';
+        if ((currentStatus === 6 && idStatus === 7) || (currentStatus === 7 && idStatus === 6)) {
+            message = currentStatus === 6 ? 'user.deactivate' : 'user.activate';
+        } else {
+            message = 'user.status';
+        }
+
+        return {
+            code: 200,
+            message: message
+        };
+    } catch (err) {
+        console.log("Error al cambiar el estado del usuario", err);
+        return {
+            code: 400,
+            message: { translationKey: "user.error_server", translationParams: { name: "putStatusUser" }}
+        };
+    }
+};
+
 const checkOrganizationExists = async (idOrganization: string): Promise<boolean> => {
     try {
         const db = await connectToSqlServer();

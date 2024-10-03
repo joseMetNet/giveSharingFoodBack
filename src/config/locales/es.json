@@ -29,7 +29,8 @@
 		"validate_field_int": "Este campo es requerido de tipo entero",
 		"emptyResponse": "No se encontró información",
 		"activate": "El usuario ha sido activado",
-		"deactivate": "El usuario ha sido desactivado"
+		"deactivate": "El usuario ha sido desactivado",
+		"status":"Estado del usuario actualizado"
 	},
 	"documents": {
 		"succesfull": "OK",
@@ -39,7 +40,9 @@
 		"updated": "Documento actualizado",
 		"update_error": "Error al atualizar el documento",
 		"update_success": "Documento actualizado",
-		"download_successful": "Documento descargado con exito"
+		"download_successful": "Documento descargado con exito",
+		"rejected": "Documento rechazado",
+		"accepted": "Documento aceptado"
 	},
 	"organizations": {
 		"error_server": "Ocurrió un error en el servidor",
@@ -57,7 +60,8 @@
 		"deactivate": "La organización no tiene procesos pendientes",
 		"activate": "La organización tiene procesos pendientes",
 		"blocked": "La organización ha sido bloqueada",
-		"unblocked": "La organización ha sido desbloqueada"
+		"unblocked": "La organización ha sido desbloqueada",
+		"status": "estado de la organizacion actualizado"
 	},
 	"city": {
 		"field": "Este campo es de tipo entero"
@@ -91,5 +95,6 @@
 		"emptyResponse": "No se encontró información",
 		"error_server": "Ocurrió un error en el servidor",
 		"invalid_organization": "El id de la organización no existe"
-	}
+	},
+	"": ""
 }

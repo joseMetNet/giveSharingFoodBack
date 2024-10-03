@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { body, param, query } from "express-validator";
-import { createOrganization, getDonationHistory, getDonationHistoryById, getDonatorTypeOrgaization, getFoundationTypeOrgaization, getListByTypeOrganizationAndStatus, getListOrganizationById, getListOrganizations, getListOrganizationsByIdStatus, getOrganizationById, getTypeOrganization, putActiveOrInactiveOrganization, putBlockOrEnableOrganization, updateOrganizationById } from "../controllers/Organization.Controller";
+import { createOrganization, getDonationHistory, getDonationHistoryById, getDonatorTypeOrgaization, getFoundationTypeOrgaization, getListByTypeOrganizationAndStatus, getListOrganizationById, getListOrganizations, getListOrganizationsByIdStatus, getOrganizationById, getTypeOrganization, putActiveOrInactiveOrganization, putBlockOrEnableOrganization, putStatusOrganization, updateOrganizationById } from "../controllers/Organization.Controller";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 import { validateEmailOrganizationExist } from "../middlewares/validator-custom";
 import { or } from "sequelize";
@@ -779,6 +779,86 @@ organizationRouter.put(
         validateEnpoint
     ],
     putActiveOrInactiveOrganization
+);
+
+/**
+ * @swagger
+ * /putStatusOrganization/{id}:
+ *   put:
+ *     tags:
+ *       - Organizations
+ *     summary: update the status of a organization
+ *     description: Update the status of a organization
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the organization to update
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               idStatus:
+ *                 type: integer
+ *                 description: New status ID for the organization.
+ *     responses:
+ *       200:
+ *         description: Organization updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: organization.successful
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: organization.error_invalid_data
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+organizationRouter.put(
+    "/putStatusOrganization/:id",
+    [
+        param("id", "organizations.validate_field_int").notEmpty().isInt(),
+        body("idStatus", "organizations.validate_field_int").isInt().notEmpty(),
+        validateEnpoint
+    ],
+    putStatusOrganization
 );
 
 /**

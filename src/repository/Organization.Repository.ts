@@ -456,6 +456,7 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
         let queryHistory = `
             SELECT 
                 tbo.id AS idOrganization,
+                tbo.identification AS NIT,
                 tbpo.id AS idProductOrganization,
                 tbo.bussisnesName,
                 tbpo.quantity,
@@ -465,15 +466,8 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
                 tbpo.attendantAddres,
                 tbpc.city AS attendantCity,
                 tbpd.department AS attendantDepartment,
-                `;
-
-        if (idOrganizationProductReserved) {
-            queryHistory += ` tbpo.price * tbpo.quantity AS price, `;
-        } else {
-            queryHistory += ` tbpo.price, `;
-        }
-
-        queryHistory += `
+                tbpo.price, 
+                tbpo.price * tbpo.quantity AS totalPrice,
                 tbpo.deliverDate,
                 tbpo.solicitDate,
                 tbs.[status],
@@ -482,6 +476,9 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
                 tbp.product,
                 tbp.urlImage,
                 tbo.logo,
+                tbdp.id AS idProductDocument,
+                tbdp.idStatus AS idProductDocumentStatus,
+                tbsd.[status] AS productDocumentStatus,
                 tbdp.url
             FROM 
                 TB_ProductsOrganization AS tbpo
@@ -493,6 +490,7 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
                 LEFT JOIN TB_City AS tbpc ON tbpc.id = tbpo.idCity
                 LEFT JOIN TB_Departments AS tbpd ON tbpd.id = tbpo.idDepartment
                 LEFT JOIN TB_ProductDocuments AS tbdp ON tbdp.idProductOrganization = tbpo.id
+                LEFT JOIN TB_Status AS tbsd ON tbsd.id = tbdp.idStatus
             WHERE 1 = 1`;
 
         if (idOrganization) {
@@ -503,9 +501,9 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
         }
 
         queryHistory += `
-            GROUP BY tbo.id, tbpo.id, tbo.bussisnesName, tbpo.quantity,tbpo.attendantName, tbpo.attendantEmail, tbpo.attendantPhone,
-                     tbpo.attendantAddres, tbpc.city, tbpd.department, tbpo.price, tbpo.deliverDate,
-                     tbpo.solicitDate, tbs.[status], tbto.typeOrganization, tbp.product, tbp.urlImage, tbo.logo, tbdp.url`;
+            GROUP BY tbo.id, tbo.identification, tbpo.id, tbo.bussisnesName, tbpo.quantity, tbpo.attendantName, tbpo.attendantEmail, 
+                     tbpo.attendantPhone, tbpo.attendantAddres, tbpc.city, tbpd.department, tbpo.price, tbpo.deliverDate,
+                     tbpo.solicitDate, tbs.[status], tbto.typeOrganization, tbp.product, tbp.urlImage, tbo.logo, tbdp.id, tbdp.idStatus, tbsd.[status], tbdp.url`;
                      
         const request = db?.request();
         if (idOrganization) request?.input('idOrganization', idOrganization);
@@ -541,8 +539,11 @@ export const getDonationHistoryById = async(ids : idHistory): Promise<IresponseR
         const { idOrganization, idProductOrganization } = ids;
         
         const db = await connectToSqlServer();
-        const queryHistory = `SELECT tbpo.id AS idProductOrganization, tbo.id AS idOrganization, tbo.logo, tbp.product, tbp.urlImage, tbpo.quantity, tbpo.attendantName, tbpo.attendantEmail,tbpo.attendantPhone,
-                                tbpo.attendantAddres, tbpc.city AS attendantCity, tbpd.department AS attendantDepartment, tbpo.deliverDate, tbpo.expirationDate, tbs.[status], tbto.typeOrganization, tbdp.url
+        const queryHistory = `SELECT tbpo.id AS idProductOrganization, tbo.id AS idOrganization, tbo.logo, tbp.product, tbp.urlImage, tbpo.quantity,
+                                tbpo.price, tbpo.price*tbpo.quantity AS totalPrice, tbpo.attendantName, tbpo.attendantEmail,tbpo.attendantPhone,
+                                tbpo.attendantAddres, tbpc.city AS attendantCity, tbpd.department AS attendantDepartment, tbpo.deliverDate,
+                                tbpo.expirationDate, tbs.[status], tbto.typeOrganization, tbdp.id AS idProductDocument,
+                                tbdp.idStatus AS idProductDocumentStatus, tbsd.[status] AS productDocumentStatus, tbdp.url
                                 FROM TB_ProductsOrganization AS tbpo
                                 LEFT JOIN TB_Organizations  AS tbo ON tbpo.idOrganization = tbo.id
                                 LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
@@ -551,6 +552,7 @@ export const getDonationHistoryById = async(ids : idHistory): Promise<IresponseR
                                 LEFT JOIN TB_City AS tbpc ON tbpc.id = tbpo.idCity
                                 LEFT JOIN TB_Departments AS tbpd ON tbpd.id = tbpo.idDepartment
                                 LEFT JOIN TB_ProductDocuments AS tbdp ON tbdp.idProductOrganization = tbpo.id
+                                LEFT JOIN TB_Status AS tbsd ON tbsd.id = tbdp.idStatus
                                  WHERE tbo.id = @idOrganization AND tbpo.id = @idProductOrganization`;
         const result = await db?.request()
                                 .input('idOrganization', idOrganization)
@@ -642,6 +644,56 @@ export const putActiveOrInactiveOrganization = async (id: number): Promise<Iresp
         };
     }
 }
+
+export const putStatusOrganization = async (id: number, idStatus: number): Promise<IresponseRepositoryService> => {
+    try {
+        const db = await connectToSqlServer();
+
+        const selectQuery = `
+            SELECT idStatus
+            FROM TB_Organizations
+            WHERE id = @id
+        `;
+        const selectResult = await db?.request().input('id', id).query(selectQuery);
+        const currentStatus = selectResult?.recordset[0]?.idStatus;
+
+        if (currentStatus === undefined) {
+            return {
+                code: 404,
+                message: 'organizations.emptyResponse'
+            };
+        }
+
+        await db?.request()
+            .input('id', id)
+            .input('newStatus', idStatus)
+            .query(`
+                UPDATE TB_Organizations
+                SET idStatus = @newStatus
+                WHERE id = @id
+            `);
+
+        let message = '';
+        if ((currentStatus === 1 && idStatus === 8) || (currentStatus === 8 && idStatus === 1)) {
+            message = currentStatus === 1 ? 'organizations.deactivate' : 'organizations.activate';
+        } else if ((currentStatus === 10 && idStatus === 11) || (currentStatus === 11 && idStatus === 10)) {
+            message = currentStatus === 10 ? 'organizations.unblocked' : 'organizations.blocked';
+        } else {
+            message = 'organizations.status';
+        }
+
+        return {
+            code: 200,
+            message: message
+        };
+    } catch (err) {
+        console.log("Error al cambiar el estado de la organización", err);
+        return {
+            code: 400,
+            message: { translationKey: "organizations.error_server", translationParams: { name: "putStatusOrganization" }}
+        };
+    }
+};
 
 export const getFoundationTypeOrgaization = async (page: number = 0, size: number = 10) => {
     try {
