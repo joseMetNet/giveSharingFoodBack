@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createUser, getUserByOrganization, getUsersByIdStatus, putActiveOrInactiveUser } from "../controllers/User.Controller";
+import { createUser, getUserByOrganization, getUsersByIdStatus, putActiveOrInactiveUser, putStatusUser } from "../controllers/User.Controller";
 import { body, param, query } from "express-validator";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 import { validateEmailUserExist } from "../middlewares/validator-custom";
@@ -245,6 +245,86 @@ userRouter.put(
         validateEnpoint
     ],
     putActiveOrInactiveUser
+);
+
+/**
+ * @swagger
+ * /putStatusUser/{id}:
+ *   put:
+ *     tags:
+ *       - Users
+ *     summary: update the status of a user
+ *     description: Update the status of a user
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the user to update
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               idStatus:
+ *                 type: integer
+ *                 description: New status ID for the user.
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: user.successful
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: user.error_invalid_data
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+userRouter.put(
+    "/putStatusUser/:id",
+    [
+        param("id", "organizations.validate_field_int").notEmpty().isInt(),
+        body("idStatus", "organizations.validate_field_int").isInt().notEmpty(),
+        validateEnpoint
+    ],
+    putStatusUser
 );
 
 /**

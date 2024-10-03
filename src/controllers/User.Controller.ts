@@ -34,6 +34,18 @@ export const putActiveOrInactiveUser: RequestHandler = async (req, res) => {
     }
 }
 
+export const putStatusUser: RequestHandler = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { idStatus } = req.body;
+        const { code, message, ...resto }: UserRepositoryService = await repository.putStatusUser(id, idStatus);
+        res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: parseMessageI18n('error_server', req) });
+    }
+  }
+
 export const getUsersByIdStatus: RequestHandler = async (req, res) => {
     try {
         let { page = 0, size = 10, idStatus } = req.query;

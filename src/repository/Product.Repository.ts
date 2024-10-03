@@ -261,14 +261,10 @@ export const getProductsPreReserved = async (idUser?: number, idOrganization?: n
         tbc.city,
         tbu.phone,
         tbpo.deliverDate,
-        tbs.[status],`;
-        if (idOrganizationProductReserved) {
-            query += ` tbpo.price * tbpo.quantity AS price `;
-        } else {
-            query += ` tbpo.price `;
-        }
-
-        query += ` FROM TB_User AS tbu
+        tbs.[status],
+        tbpo.price,
+        tbpo.price * tbpo.quantity AS totalPrice
+        FROM TB_User AS tbu
         LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
         LEFT JOIN TB_Rol AS tbr ON tbr.id = tbu.idRole
         LEFT JOIN TB_ProductsOrganization AS tbpo ON tbpo.idUser = tbu.id
@@ -365,16 +361,10 @@ export const getProductsReserved = async (idUser?: number, idOrganization?: numb
         tbc.city,
         tbu.phone,
         tbpo.deliverDate,
-        tbs.[status],`;
-
-        // Si se busca por idOrganizationProductReserved, multiplicar el precio por la cantidad
-        if (idOrganizationProductReserved) {
-            query += ` tbpo.price * tbpo.quantity AS price `;
-        } else {
-            query += ` tbpo.price `;
-        }
-
-        query += ` FROM TB_User AS tbu
+        tbs.[status],
+        tbpo.price,
+        tbpo.price * tbpo.quantity AS totalPrice
+        FROM TB_User AS tbu
         LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
         LEFT JOIN TB_Rol AS tbr ON tbr.id = tbu.idRole
         LEFT JOIN TB_ProductsOrganization AS tbpo ON tbpo.idUser = tbu.id
@@ -451,7 +441,8 @@ export const getProductsDeliveredByOrganization = async(idOrganization?: number)
     try {
         const db = await connectToSqlServer();
         const queryHistory = `SELECT tbpo.id AS idProductOrganization, tbo.id AS idOrganization, tbo.logo, tbpo.quantity, tbpo.attendantName, tbpo.attendantEmail,
-                                tbpo.attendantPhone, tbpo.attendantAddres, tbpc.city AS attendantCity, tbpd.department AS attendantDepartment, tbpo.deliverDate, tbpo.expirationDate, tbs.[status], tbto.typeOrganization
+                                tbpo.attendantPhone, tbpo.attendantAddres, tbpc.city AS attendantCity, tbpd.department AS attendantDepartment, tbpo.deliverDate, tbpo.expirationDate, tbs.[status],
+                                tbto.typeOrganization, tbpo.price, tbpo.price * tbpo.quantity AS totalPrice
                                 FROM TB_ProductsOrganization AS tbpo
                                 LEFT JOIN TB_Organizations  AS tbo ON tbpo.idOrganization = tbo.id
                                 LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus

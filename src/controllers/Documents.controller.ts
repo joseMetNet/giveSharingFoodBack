@@ -123,3 +123,52 @@ export const getDocumentsByIdOrganization: RequestHandler = async (req, res) => 
       res.status(500).json({ message: parseMessageI18n('error_server', req) });
   }
 };
+
+export const getStatusDocument: RequestHandler = async (req, res) => {
+  try {
+      const { code, message, ...resto }: DocumentsRepositoryService = await repository.getStatusDocuments();
+      res.status(code).json({message: parseMessageI18n(message, req), ...resto});
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: parseMessageI18n('error_server', req)});
+  }
+}
+
+export const putAcceptedOrRejectedDocument: RequestHandler = async (req, res) => {
+  try {
+      const id = parseInt(req.params.id);
+      const { idStatus, observations } = req.body;
+      const { code, message, ...resto }: DocumentsRepositoryService = await repository.putAcceptedOrRejectedDocument(id, idStatus, observations);
+      res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: parseMessageI18n('error_server', req) });
+  }
+}
+
+export const updateProductFile: RequestHandler = async(req, res) => {
+  try {
+      const { blobName, idDocument } = req.body;
+      if (!req.files || Object.keys(req.files).length === 0) {
+          res.status(400).send("No files were uploaded.");
+          return;
+        }
+        if (!req.files.filePath) {
+          res.status(400).send("No files were uploaded.");
+          return;
+        }
+        const filePath = req.files.filePath as UploadedFile
+        filePath.mv('./tmp/' + filePath.name, function(err) {
+          if (err)
+            return res.status(500).send(err);
+        });
+
+        const { code, message, ...resto }: DocumentsRepositoryService = await repository.updateProductFile(`./tmp/${filePath.name}`, blobName, idDocument);
+
+
+        res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: parseMessageI18n('error_server', req) });  
+  }
+}

@@ -29,7 +29,8 @@
 		"validate_field_int": "This is a required field of type integer",
 		"emptyResponse": "No information found",
 		"activate": "The user was successfully activated",
-		"deactivate": "The user was successfully deactivated"
+		"deactivate": "The user was successfully deactivated",
+		"status": "User status updated"
 	},
 	"documents": {
 		"succesfull": "OK",
@@ -39,7 +40,9 @@
 		"updated": "document updated",
 		"update_error": "An error ocurred on the updated document",
 		"update_success": "document updated",
-		"download_successful": "document downloaded successfully"
+		"download_successful": "document downloaded successfully",
+		"accepted": "document accepted",
+		"rejected": "document rejected"
 	},
 	"organizations": {
 		"error_server": "An error occurred on the server",
@@ -57,7 +60,8 @@
 		"deactivate": "The organization does not have pending processes",
 		"activate": "The organization has pending processes",
 		"blocked": "The organization has been blocked",
-		"unblocked": "The organization has been unblocked"
+		"unblocked": "The organization has been unblocked",
+		"status": "Orginization status updated"
 	},
 	"city": {
 		"field": "The field must be an integer"

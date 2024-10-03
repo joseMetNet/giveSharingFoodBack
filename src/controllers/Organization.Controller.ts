@@ -110,7 +110,6 @@ export const getTypeOrganization: RequestHandler = async (req, res) => {
 export const putActiveOrInactiveOrganization: RequestHandler = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        console.log("llego...")
         const { code, message, ...resto }: IresponseRepositoryServiceGet = await repository.putActiveOrInactiveOrganization(id);
         res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
     } catch (err) {
@@ -118,6 +117,18 @@ export const putActiveOrInactiveOrganization: RequestHandler = async (req, res) 
         res.status(500).json({ message: parseMessageI18n('error_server', req) });
     }
 }
+
+export const putStatusOrganization: RequestHandler = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { idStatus } = req.body;
+        const { code, message, ...resto }: IresponseRepositoryServiceGet = await repository.putStatusOrganization(id, idStatus);
+        res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: parseMessageI18n('error_server', req) });
+    }
+  }
 
 export const getFoundationTypeOrgaization: RequestHandler = async (req, res) => {
     try {
