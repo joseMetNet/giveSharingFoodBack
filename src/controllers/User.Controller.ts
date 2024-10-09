@@ -13,6 +13,28 @@ export const createUser: RequestHandler = async(req, res) => {
     }
 }
 
+export const updateUser: RequestHandler = async (req, res) => {
+    try {
+        const idUser = parseInt(req.params.id);
+        const { code, message, ...resto }: IresponseRepositoryService = await repository.updateContacts(idUser, req.body);
+        res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: parseMessageI18n("error_server", req) });
+    }
+}
+
+export const deleteUser: RequestHandler = async (req, res) => {
+    try {
+        const idUser = parseInt(req.params.id);
+        const { code, message, ...resto }: UserRepositoryService = await repository.deleteUser(idUser);
+        res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: parseMessageI18n("error_server", req) });
+    }
+};
+
 export const getUserByOrganization: RequestHandler = async (req, res) => {
     try {
         const {code, message, ...resto }: UserRepositoryService = await repository.getUserByOrganization(req.params);

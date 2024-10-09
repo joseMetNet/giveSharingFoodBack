@@ -1,5 +1,5 @@
 import { connectToSqlServer } from "../DB/config";
-import { createUserInUserManagement } from "../helpers/UserManagment.Helper";
+import { createUserInUserManagement, updateUserInUserManagement } from "../helpers/UserManagment.Helper";
 import { IresponseRepositoryService, UserRepositoryService, dataUser, idOrganization } from "../interface/User.Insterface";
 
 export const postContacts = async (data: dataUser): Promise<IresponseRepositoryService> => {
@@ -57,6 +57,106 @@ export const postContacts = async (data: dataUser): Promise<IresponseRepositoryS
     }
 }
 
+export const updateContacts = async (idUser: number, data: dataUser): Promise<IresponseRepositoryService> => {
+    try {
+        const { name, phone, googleAddress, idCity, idDepartmen, email, password } = data;
+        const db = await connectToSqlServer();
+
+        // Actualizar password  del servicio de gestión de usuarios 
+        if (email && password) {
+            await updateUserInUserManagement(email, password);
+        }
+
+        const updateQuery = `
+            UPDATE TB_User
+            SET name = @name,
+                phone = @phone,
+                googleAddress = @googleAddress,
+                idCity = @idCity,
+                idDepartmen = @idDepartmen
+            WHERE id = @idUser
+        `;
+
+        const updateResult = await db?.request()
+            .input('idUser', idUser)
+            .input('name', name || null)
+            .input('phone', phone || null)
+            .input('googleAddress', googleAddress || null)
+            .input('idCity', idCity || null)
+            .input('idDepartmen', idDepartmen || null)
+            .query(updateQuery);
+
+        return {
+            code: 200,
+            message: 'user.succesfull',
+            data: updateResult?.recordset
+        };
+    } catch (err) {
+        console.log("Error updating user", err);
+        return {
+            code: 400,
+            message: { translationKey: "user.error_server", translationParams: { name: "updateContacts" } },
+        };
+    }
+}
+
+export const deleteUser = async (idUser: number): Promise<UserRepositoryService> => {
+    try {
+        const db = await connectToSqlServer();
+
+        const checkRelationsQuery = `
+        SELECT COUNT(*) as count
+        FROM TB_ProductsOrganization
+        WHERE idUser = @idUser
+    `;
+    const checkRelationsResult = await db?.request()
+        .input('idUser', idUser)
+        .query(checkRelationsQuery);
+
+    if (checkRelationsResult?.recordset[0].count > 0) {
+        return {
+            code: 400,
+            message: { translationKey: "user.cannot_delete" },
+        };
+    }
+
+        const checkUserQuery = `
+            SELECT id 
+            FROM TB_User 
+            WHERE id = @IdUser
+        `;
+        const checkUserResult = await db?.request()
+            .input('IdUser', idUser)
+            .query(checkUserQuery);
+
+        if (!checkUserResult?.recordset.length) {
+            return {
+                code: 404,
+                message: { translationKey: "user.emptyResponse" },
+            };
+        }
+        const deleteQuery = `
+            DELETE FROM TB_User 
+            WHERE id = @IdUser
+        `;
+        await db?.request()
+            .input('IdUser', idUser)
+            .query(deleteQuery);
+
+        return {
+            code: 200,
+            message: 'user.succesfull',
+        };
+    } catch (err) {
+        console.log("Error deleting user", err);
+        return {
+            code: 400,
+            message: { translationKey: "user.error_server" },
+        };
+    }
+};
+
+
 export const getUserByOrganization = async (data: idOrganization): Promise<UserRepositoryService> => {
     try {
         const idOrganization: string = data.idOrganization ? String(data.idOrganization) : '';
@@ -70,11 +170,12 @@ export const getUserByOrganization = async (data: idOrganization): Promise<UserR
         }
 
         const db = await connectToSqlServer();
-        let query = `SELECT tbu.id, tbu.idAuth, tbu.[name], tbu.phone, tbu.email, tbr.[role], tbc.city, tbd.department, tbo.bussisnesName FROM TB_User AS tbu
+        let query = `SELECT tbu.id, tbu.idAuth, tbu.[name], tbu.idStatus, tbs.status, tbu.phone, tbu.email, tbr.[role], tbc.city, tbd.department, tbo.bussisnesName FROM TB_User AS tbu
         LEFT JOIN TB_Rol AS tbr ON tbu.idRole = tbr.id
         LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
         LEFT JOIN TB_Departments AS tbd ON tbd.id = tbu.idDepartmen
         LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbu.idOrganization
+        LEFT JOIN TB_Status AS tbs ON tbs.id = tbu.idStatus
         WHERE tbu.idOrganization = @idOrganization AND idRole NOT IN (1,2,3)`;
         const result = await db?.request()
                             .input('idOrganization', idOrganization)

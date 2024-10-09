@@ -7,9 +7,28 @@ import { generateJWT, parseJwt } from "../helpers/generateJWT";
 export const loginUser = async (data: dataLogin): Promise<IresponseRepositoryService> => {
     try {
         const { email, password } = data;
+        const db = await connectToSqlServer();
+
+        const checkUserQuery = `
+        SELECT * 
+        FROM TB_User 
+        WHERE email = @Email
+        `;
+
+        const checkUserResult = await db?.request()
+            .input('Email', email)
+            .query(checkUserQuery);
+
+        if (!checkUserResult?.recordset.length) {
+            return {
+                code: 404,
+                message: { translationKey: "login.error_user_not_found" },
+            };
+        }
+
         const userManagementResponse = await authenticateUser(email, password);
 
-        const db = await connectToSqlServer();
+        
         const user = `
         SELECT tbu.id, tbu.idOrganization, tbo.idStatus AS idStatusOrganization, tbso.status AS statusOrganization, 
         [name], tbu.email, idRole, tbr.[role], tbs.id AS idStatus, tbs.[status]
@@ -29,7 +48,6 @@ export const loginUser = async (data: dataLogin): Promise<IresponseRepositorySer
         return {
             code: 200,
             message: { translationKey: "login.successful" },
-            // data: result?.recordset
             data: {
                 "user": result?.recordset,
                 token,

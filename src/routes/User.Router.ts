@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createUser, getUserByOrganization, getUsersByIdStatus, putActiveOrInactiveUser, putStatusUser } from "../controllers/User.Controller";
+import { createUser, deleteUser, getUserByOrganization, getUsersByIdStatus, putActiveOrInactiveUser, putStatusUser, updateUser } from "../controllers/User.Controller";
 import { body, param, query } from "express-validator";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 import { validateEmailUserExist } from "../middlewares/validator-custom";
@@ -97,6 +97,162 @@ userRouter.post(
     ],
     createUser
 );
+
+/**
+ * @swagger
+ * /users/{id}:
+ *   put:
+ *     tags:
+ *       - Users
+ *     summary: Update an existing user
+ *     description: Update user information such as name, phone, Google address, city, and department.
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID of the user to update
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string 
+ *               password:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               googleAddress:
+ *                 type: string
+ *               idCity:
+ *                 type: number
+ *               idDepartmen:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: user.update_successful
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: user.error_invalid_data
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+userRouter.put(
+    "/users/:id",
+    [   
+        body("email", "user.required_field_text").optional().isString(),
+        body("password", "user.required_field_text").optional().isString(),
+        body("name", "user.required_field_text").optional().isString(),
+        body("phone", "user.required_field_text").optional().isString(),
+        body("googleAddress", "user.required_field_text").optional().isString(),
+        body("idCity", "user.validate_field_int").optional().isInt(),
+        body("idDepartmen", "user.validate_field_int").optional().isInt(),
+        validateEnpoint
+    ],
+    updateUser
+);
+
+/**
+ * @swagger
+ * /users/{id}:
+ *   delete:
+ *     tags:
+ *       - Users
+ *     summary: Delete a user
+ *     description: Remove a user from the system by their ID.
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID of the user to delete
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: user.delete_successful
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: user.not_found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+userRouter.delete('/users/:id', deleteUser);
 
 /**
  * @swagger

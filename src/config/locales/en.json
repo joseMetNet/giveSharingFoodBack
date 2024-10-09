@@ -30,7 +30,8 @@
 		"emptyResponse": "No information found",
 		"activate": "The user was successfully activated",
 		"deactivate": "The user was successfully deactivated",
-		"status": "User status updated"
+		"status": "User status updated",
+		"cannot_delete": "The user cannot be deleted, it has products attached"
 	},
 	"documents": {
 		"succesfull": "OK",
@@ -72,7 +73,8 @@
 		"error_invalid_credentials": "the email or password is incorrect",
 		"file_required": "this is a required field",
 		"file_required_password": "this is a required field",
-		"file_required_tex": "this is a required field as string"
+		"file_required_tex": "this is a required field as string",
+		"error_user_not_found": "The user does not exist"
 	},
 	"product": {
 		"successful": "OK",
