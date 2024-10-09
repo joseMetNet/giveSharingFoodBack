@@ -30,3 +30,14 @@ export const createUserInUserManagement = async (email: String, password: String
         throw new Error("Error creating user in user management service");
     }
 };
+
+export const updateUserInUserManagement = async (email: String, password: String) => {
+    const userManagementUrl = process.env.USER_MANAGEMENT_URL_PUT || 'https://usermanagementservicemetnet.azurewebsites.net/UserManagement/recoverPassword';
+    const userManagementData = {
+        userGroup: process.env.USER_GROUP || 'guivesharingfood',
+        userName: email,
+        password: password
+    };
+    const userManagementResponse = await axios.put(userManagementUrl, userManagementData);
+    return userManagementResponse;
+}

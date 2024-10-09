@@ -30,7 +30,8 @@
 		"emptyResponse": "No se encontró información",
 		"activate": "El usuario ha sido activado",
 		"deactivate": "El usuario ha sido desactivado",
-		"status":"Estado del usuario actualizado"
+		"status": "Estado del usuario actualizado",
+		"cannot_delete": "No se puede eliminar el usuario, tiene productos relacionados"
 	},
 	"documents": {
 		"succesfull": "OK",
@@ -72,7 +73,8 @@
 		"error_invalid_credentials": "El correo o contraseña son incorrectos",
 		"file_required": "Este campo es requerido",
 		"file_required_password": "Este campo es requerido",
-		"file_required_tex": "Este campo es requerio de tipo string"
+		"file_required_tex": "Este campo es requerio de tipo string",
+		"error_user_not_found": "El usuario no existe"
 	},
 	"product": {
 		"successful": "OK",
