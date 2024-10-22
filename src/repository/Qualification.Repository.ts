@@ -106,7 +106,7 @@ export const getCommentsQuailification = async(id: idOrganizationQualification):
     try {
         const { idOrganization } = id;
         const db = await connectToSqlServer();
-        let comments = `SELECT tbo.bussisnesName, max(tba.avarage) as max_average, tbq.observations 
+        let comments = `SELECT tbo.bussisnesName, AVG(tba.avarage) as max_average, tbq.observations 
         FROM TB_Avarage AS tba
         LEFT JOIN TB_Qualification AS tbq ON tbq.idOrganization = tba.idOrganization
         LEFT JOIN TB_Organizations AS tbo ON tbo.id = tba.idOrganization
@@ -156,13 +156,14 @@ export const getQualification = async(id: idOrganizationQualification): Promise<
 
         // Consultar las calificaciones
         const qualificationsQuery = `
-            SELECT tbptg.description, tbq.qualification, MAX(tba.avarage) AS max_average 
-            FROM TB_PointsToGrade AS tbptg
-            LEFT JOIN TB_Qualification AS tbq ON tbq.idPointsToGrade = tbptg.id
-            LEFT JOIN TB_Avarage AS tba ON tba.idOrganization = tbq.idOrganization
-            WHERE tbq.idOrganization = @idOrganization
-            GROUP BY tbptg.description, tbq.qualification
-        `;
+            SELECT 
+            tbptg.description, 
+            tbq.qualification,
+            AVG(tbq.qualification) OVER (PARTITION BY tbptg.description) AS max_average
+            FROM TB_Qualification AS tbq
+            LEFT JOIN TB_PointsToGrade AS tbptg ON tbq.idPointsToGrade = tbptg.id
+            WHERE tbq.idOrganization = @idOrganization`;
+
         const resultQualifications = await db?.request()
             .input('idOrganization', idOrganization)
             .query(qualificationsQuery);
@@ -172,7 +173,7 @@ export const getQualification = async(id: idOrganizationQualification): Promise<
         if (qualification && qualification.length > 0) {
             return {
                 code: 200,
-                message: { translationKey: "qualification.successful" },
+                message: { translationKey: "qualification.succesfull" },
                 data: qualification
             };
         } else {
