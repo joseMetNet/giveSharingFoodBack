@@ -362,17 +362,21 @@ export const getListOrganizationById = async (filter: { id: number }): Promise<I
         const { id } = filter;
         const db = await connectToSqlServer();
         const organizationId = `
-        SELECT
-        tbo.id, logo, bussisnesName AS razonSocial, tbti.typeIdentification, identification, dv, 
-        representativaName, representativePhone, tbo.email AS representativeEmail, tbs.[status], tbu.googleAddress, tbc.city,td.department,
-        tbu.[name], tbu.phone, tbu.email
-        FROM TB_Organizations AS tbo
-        LEFT JOIN TB_TypeIdentification AS tbti ON tbti.id = tbo.idTypeIdentification
-        LEFT JOIN TB_User AS tbu ON tbu.idOrganization = tbo.id
-        LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
-        LEFT JOIN TB_Departments AS td ON td.id = tbc.idDepartment
-        LEFT JOIN TB_Status AS tbs ON tbs.id = tbo.idStatus
-            WHERE tbo.id = @id AND tbu.idRole NOT IN (4,5)`;
+                SELECT
+                tbo.id, logo, bussisnesName AS razonSocial, tbti.typeIdentification, identification, dv, representativaName, 
+                representativePhone, tbo.email AS representativeEmail, tbs.[status], tbu.googleAddress, tbc.city, td.department, tbu.[name], 
+                tbu.phone, tbu.email, tbo.observations, AVG(tbq.qualification) AS avgQualification
+                FROM TB_Organizations AS tbo
+                LEFT JOIN TB_TypeIdentification AS tbti ON tbti.id = tbo.idTypeIdentification
+                LEFT JOIN TB_User AS tbu ON tbu.idOrganization = tbo.id
+                LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
+                LEFT JOIN TB_Departments AS td ON td.id = tbc.idDepartment
+                LEFT JOIN TB_Status AS tbs ON tbs.id = tbo.idStatus
+                LEFT JOIN TB_Qualification AS tbq ON tbq.idOrganization = tbo.id
+                WHERE tbo.id = @id AND tbu.idRole NOT IN (4,5)
+                GROUP BY
+                tbo.id, logo, bussisnesName, tbti.typeIdentification,  identification, dv, representativaName, representativePhone, 
+                tbo.email,  tbs.[status], tbu.googleAddress, tbc.city, td.department, tbu.[name], tbu.phone, tbu.email, tbo.observations`;
 
         const usersQuery = `
         SELECT tbu.idAuth, tbu.[name], tbu.phone, tbu.email, tbr.[role], tbc.city, tbu.googleAddress, tbd.department, tbu.idStatus, tbs.[status]
