@@ -447,7 +447,6 @@ export const putAcceptedOrRejectedDocument = async (
             };
         }
 
-        // Obtener email y bussisnesName de TB_Organizations
         const organizationQuery = `
             SELECT email, bussisnesName
             FROM TB_Organizations
