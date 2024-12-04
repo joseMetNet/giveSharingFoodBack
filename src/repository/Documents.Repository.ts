@@ -458,7 +458,7 @@ export const putAcceptedOrRejectedDocument = async (
         const organizationEmail = organizationResult?.recordset[0]?.email;
         const organizationName = organizationResult?.recordset[0]?.bussisnesName || "Organización desconocida";
 
-        // Enviar notificación si se encuentra un correo
+        
         if (organizationEmail) {
             await NotificationFoundation.cnf05({
                 email: organizationEmail,
