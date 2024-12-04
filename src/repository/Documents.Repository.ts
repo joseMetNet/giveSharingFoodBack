@@ -6,6 +6,8 @@ import mime from 'mime-types';
 import { connectToSqlServer } from '../DB/config';
 import { streamToBuffer } from '../helpers/documents.Helper';
 import { DocumentsRepositoryService } from '../interface/Documents.Interface';
+import { NotificationDonor } from '../../templates/notificationsDonor';
+import { NotificationFoundation } from '../../templates/notificationFoundation';
 
 export const getDocumentType = async () => {
     try {
@@ -91,32 +93,110 @@ export const uploadProductFile = async (filePath: string, originalBlobName: stri
         const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
         const fileBuffer = fs.readFileSync(filePath);
-
         const fileMimeType = mime.lookup(filePath) || 'application/octet-stream';
 
         const uploadBlobResponse = await blockBlobClient.uploadData(fileBuffer, {
             blobHTTPHeaders: { blobContentType: fileMimeType },
-            metadata: { originalFileName: originalBlobName }
+            metadata: { originalFileName: originalBlobName },
         });
 
         const blobUrl = `https://${blobServiceClient.accountName}.blob.core.windows.net/${containerName}/${blockBlobClient.name}`;
 
-
+        // Conexión a la base de datos
         const db = await connectToSqlServer();
-        const result = await db?.request()
+
+        // Obtener idProduct, idOrganization y idOrganizationProductReserved desde TB_ProductsOrganization
+        const productOrganizationQuery = `
+            SELECT idProduct, idOrganization, idOrganizationProductReserved
+            FROM TB_ProductsOrganization
+            WHERE id = @idProductOrganization
+        `;
+        const productOrganizationResult: any = await db?.request()
+            .input('idProductOrganization', idProductOrganization)
+            .query(productOrganizationQuery);
+
+        const { idProduct, idOrganization, idOrganizationProductReserved } = productOrganizationResult.recordset[0] || {};
+
+        if (!idProduct || !idOrganization) {
+            return {
+                code: 404,
+                message: { translationKey: "organization_or_product.not_found" },
+            };
+        }
+
+        // Obtener el nombre del producto desde TB_Products
+        const productQuery = `
+            SELECT product
+            FROM TB_Products
+            WHERE id = @idProduct
+        `;
+        const productResult: any = await db?.request()
+            .input('idProduct', idProduct)
+            .query(productQuery);
+
+        const productName = productResult.recordset[0]?.product || "Producto desconocido";
+
+        // Obtener el email y nombre de la organización principal
+        const organizationQuery = `
+            SELECT email, bussisnesName
+            FROM TB_Organizations
+            WHERE id = @idOrganization
+        `;
+        const organizationResult: any = await db?.request()
+            .input('idOrganization', idOrganization)
+            .query(organizationQuery);
+
+        const organizationEmail = organizationResult.recordset[0]?.email;
+        const organizationName = organizationResult.recordset[0]?.bussisnesName || "Organización desconocida";
+
+        if (!organizationEmail) {
+            console.log(`No se encontró email para la organización con ID ${idOrganization}`);
+        }
+
+        // Obtener bussisnesName de idOrganizationProductReserved
+        const reservedOrganizationQuery = `
+            SELECT bussisnesName
+            FROM TB_Organizations
+            WHERE id = @idOrganizationProductReserved
+        `;
+        const reservedOrganizationResult: any = await db?.request()
+            .input('idOrganizationProductReserved', idOrganizationProductReserved)
+            .query(reservedOrganizationQuery);
+
+        const reservedOrganizationName = reservedOrganizationResult.recordset[0]?.bussisnesName || "Organización reservada desconocida";
+
+        // Insertar el registro en TB_ProductDocuments
+        await db?.request()
             .input('document', originalBlobName)
             .input('url', blobUrl)
             .input('idProductOrganization', idProductOrganization)
             .input('idTypeDocument', idTypeDocument)
-            .query('INSERT INTO TB_ProductDocuments (document, url, idProductOrganization, idTypeDocument) VALUES (@document, @url, @idProductOrganization, @idTypeDocument)');
-
+            .query(`
+                INSERT INTO TB_ProductDocuments (document, url, idProductOrganization, idTypeDocument)
+                VALUES (@document, @url, @idProductOrganization, @idTypeDocument)
+            `);
+            console.log("email",organizationEmail);
+            console.log("bussisnesName",organizationName);
+            console.log("productName",productName);
+            console.log("reservedOrganizationName",reservedOrganizationName);
+        // Enviar notificación a la organización principal
+        if (organizationEmail) {
+            await NotificationDonor.cnd05({
+                email: organizationEmail,
+                bussisnesName: organizationName,
+                productName,
+                reservedOrganizationName,
+            });
+            
+        }
+        
         return {
             code: 200,
-            message: { translationKey: "documents.succesfull" },
-            data: uploadBlobResponse
+            message: { translationKey: "documents.successful" },
+            data: uploadBlobResponse,
         };
     } catch (err) {
-        console.log("Error al subir el archivo", err);
+        console.error("Error al subir el archivo", err);
         return {
             code: 400,
             message: { translationKey: "documents.error_server" },
@@ -311,46 +391,90 @@ export const getStatusDocuments = async () => {
     };
 }
 
-export const putAcceptedOrRejectedDocument = async (id: number, idStatus: number, observations: string | null): Promise<DocumentsRepositoryService> => {
+export const putAcceptedOrRejectedDocument = async (
+    id: number,
+    idStatus: number,
+    observations: string | null
+): Promise<DocumentsRepositoryService> => {
     try {
         const db = await connectToSqlServer();
 
-        const selectQuery = `
-            SELECT idStatus
+        // Obtener el estado actual y el idProductOrganization del documento
+        const documentQuery = `
+            SELECT idStatus, idProductOrganization
             FROM TB_ProductDocuments
             WHERE id = @id
         `;
-        const selectResult = await db?.request().input('id', id).query(selectQuery);
-        const currentStatus = selectResult?.recordset[0]?.idStatus;
+        const documentResult: any = await db?.request().input('id', id).query(documentQuery);
+        const currentStatus = documentResult?.recordset[0]?.idStatus;
+        const idProductOrganization = documentResult?.recordset[0]?.idProductOrganization;
 
-        if (currentStatus === undefined) {
+        if (!currentStatus || !idProductOrganization) {
             return {
                 code: 404,
-                message: 'documents.emptyResponse'
+                message: 'documents.emptyResponse',
             };
         }
 
+        // Actualizar el estado y las observaciones del documento
         const updateQuery = `
             UPDATE TB_ProductDocuments
             SET idStatus = @newStatus, observations = @observations
             WHERE id = @id
         `;
-
         await db?.request()
             .input('id', id)
             .input('newStatus', idStatus)
             .input('observations', observations || null)
             .query(updateQuery);
 
+        // Obtener idOrganizationProductReserved de TB_ProductsOrganization
+        const organizationProductQuery = `
+            SELECT idOrganizationProductReserved
+            FROM TB_ProductsOrganization
+            WHERE id = @idProductOrganization
+        `;
+        const organizationProductResult: any = await db?.request()
+            .input('idProductOrganization', idProductOrganization)
+            .query(organizationProductQuery);
+        const idOrganizationProductReserved = organizationProductResult?.recordset[0]?.idOrganizationProductReserved;
+
+        if (!idOrganizationProductReserved) {
+            console.log("No se encontró idOrganizationProductReserved.");
+            return {
+                code: 200,
+                message: idStatus === 13 ? 'documents.rejected' : 'documents.accepted',
+            };
+        }
+
+        const organizationQuery = `
+            SELECT email, bussisnesName
+            FROM TB_Organizations
+            WHERE id = @idOrganizationProductReserved
+        `;
+        const organizationResult: any = await db?.request()
+            .input('idOrganizationProductReserved', idOrganizationProductReserved)
+            .query(organizationQuery);
+        const organizationEmail = organizationResult?.recordset[0]?.email;
+        const organizationName = organizationResult?.recordset[0]?.bussisnesName || "Organización desconocida";
+
+        // Enviar notificación si se encuentra un correo
+        if (organizationEmail) {
+            await NotificationFoundation.cnf05({
+                email: organizationEmail,
+                bussisnesName: organizationName,
+            });
+        }
+
         return {
             code: 200,
-            message: idStatus === 13 ? 'documents.rejected' : 'documents.accepted'
+            message: idStatus === 13 ? 'documents.rejected' : 'documents.accepted',
         };
     } catch (err) {
-        console.log("Error al cambiar el estado del documento", err);
+        console.error("Error al cambiar el estado del documento", err);
         return {
             code: 400,
-            message: { translationKey: "documents.error_server"}
+            message: { translationKey: "documents.error_server" },
         };
     }
 };

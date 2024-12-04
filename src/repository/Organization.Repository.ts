@@ -6,6 +6,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import mime from 'mime-types';
 import { createUserInUserManagement } from "../helpers/UserManagment.Helper";
+import { NotificationDonor } from "../../templates/notificationsDonor";
+import { NotificationAdministrator } from "../../templates/notificationsAdministrator";
+import { NotificationFoundation } from "../../templates/notificationFoundation";
 
 export const postOrganization = async (data: dataOrganization): Promise<IresponseRepositoryService> => {
     try {
@@ -74,6 +77,21 @@ export const postOrganization = async (data: dataOrganization): Promise<Irespons
             .input('idAuth', idAuth)
             .input('idStatus', 7)
             .query(insertUser);
+
+    
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0];
+
+        // Agregar la fecha al objeto de organización
+        insertedOrganization.createdDate = formattedDate;
+
+            if (idTypeOrganitation === 2) {
+                await NotificationDonor.cnd01(insertedOrganization); 
+            }
+    
+            if (idTypeOrganitation === 1 || idTypeOrganitation === 2) {
+                await NotificationAdministrator.cna01(insertedOrganization);
+            }
 
         return {
             code: 200,
@@ -615,12 +633,14 @@ export const putActiveOrInactiveOrganization = async (id: number): Promise<Iresp
         const db = await connectToSqlServer();
 
         const selectQuery = `
-            SELECT idStatus
+            SELECT idStatus, bussisnesName, email
             FROM TB_Organizations
             WHERE id = @id
         `;
         const selectResult = await db?.request().input('id', id).query(selectQuery);
         const currentStatus = selectResult?.recordset[0]?.idStatus;
+        const businessName = selectResult?.recordset[0]?.bussisnesName;
+        const email = selectResult?.recordset[0]?.email;
 
         if (currentStatus === undefined) {
             return {
@@ -635,7 +655,12 @@ export const putActiveOrInactiveOrganization = async (id: number): Promise<Iresp
             WHERE id = @id
         `;
         await db?.request().input('id', id).input('newStatus', newStatus).query(updateQuery);
-
+        if (newStatus === 1) {
+            await NotificationFoundation.cnf01({
+                email,
+                bussisnesName: businessName,
+            });
+        }    
         return {
             code: 200,
             message: currentStatus === 1 ? 'organizations.deactivate' : 'organizations.activate'
@@ -654,12 +679,17 @@ export const putStatusOrganization = async (id: number, idStatus: number): Promi
         const db = await connectToSqlServer();
 
         const selectQuery = `
-            SELECT idStatus
+            SELECT idStatus, bussisnesName, email
             FROM TB_Organizations
             WHERE id = @id
         `;
-        const selectResult = await db?.request().input('id', id).query(selectQuery);
+        const selectResult = await db?.request()
+            .input('id', id)
+            .query(selectQuery);
+
         const currentStatus = selectResult?.recordset[0]?.idStatus;
+        const businessName = selectResult?.recordset[0]?.bussisnesName;
+        const email = selectResult?.recordset[0]?.email;
 
         if (currentStatus === undefined) {
             return {
@@ -667,7 +697,6 @@ export const putStatusOrganization = async (id: number, idStatus: number): Promi
                 message: 'organizations.emptyResponse'
             };
         }
-
         await db?.request()
             .input('id', id)
             .input('newStatus', idStatus)
@@ -685,7 +714,12 @@ export const putStatusOrganization = async (id: number, idStatus: number): Promi
         } else {
             message = 'organizations.status';
         }
-
+        if (idStatus === 1 || idStatus === 11) {
+            await NotificationFoundation.cnf01({
+                email,
+                bussisnesName: businessName,
+            });
+        }    
         return {
             code: 200,
             message: message
@@ -796,12 +830,14 @@ export const putBlockOrEnableOrganization = async (id: number): Promise<Irespons
         const db = await connectToSqlServer();
 
         const selectQuery = `
-            SELECT idStatus
+            SELECT idStatus, bussisnesName, email
             FROM TB_Organizations
             WHERE id = @id
         `;
         const selectResult = await db?.request().input('id', id).query(selectQuery);
         const currentStatus = selectResult?.recordset[0]?.idStatus;
+        const businessName = selectResult?.recordset[0]?.bussisnesName;
+        const email = selectResult?.recordset[0]?.email;
 
         if (currentStatus === undefined) {
             return {
@@ -816,7 +852,12 @@ export const putBlockOrEnableOrganization = async (id: number): Promise<Irespons
             WHERE id = @id
         `;
         await db?.request().input('id', id).input('newStatus', newStatus).query(updateQuery);
-
+        if (newStatus === 11) {
+            await NotificationFoundation.cnf01({
+                email,
+                bussisnesName: businessName,
+            });
+        }    
         return {
             code: 200,
             message: currentStatus === 10 ? 'organizations.unblocked' : 'organizations.blocked'

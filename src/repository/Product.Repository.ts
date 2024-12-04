@@ -5,7 +5,9 @@ import * as path from 'path';
 import mime from 'mime-types';
 import { connectToSqlServer } from "../DB/config"
 import { ImageField, PostNewProductData, ProductRepositoryService, filterProduct, postProduct, postProductRepositoryService } from "../interface/Product.Interface";
-import { UploadedFile } from "express-fileupload";
+import { NotificationDonor } from "../../templates/notificationsDonor";
+import { NotificationFoundation } from "../../templates/notificationFoundation";
+import { NotificationAdministrator } from "../../templates/notificationsAdministrator";
 
 
 export const getProducts = async (filter: filterProduct): Promise<ProductRepositoryService> => {
@@ -46,6 +48,7 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
         const { idProduct, idOrganization, idMeasure, quantity, expirationDate, idUser, price, attendantName, attendantPhone, attendantEmail, attendantAddres, idCity, idDepartment } = data;
         const db = await connectToSqlServer();
 
+        // Verificar si la organización existe
         const checkOrgQuery = `SELECT id FROM TB_Organizations WHERE id = @idOrganization`;
         const orgResult = await db?.request()
             .input('idOrganization', idOrganization)
@@ -58,6 +61,7 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
             };
         }
 
+        // Insertar el producto en TB_ProductsOrganization
         const insertQuery = `
         INSERT INTO TB_ProductsOrganization (idProduct, idOrganization, idMeasure, quantity, expirationDate, idStatus, idUser, price, attendantName, attendantPhone, attendantEmail, attendantAddres, idCity, idDepartment)
         OUTPUT INSERTED.*
@@ -79,6 +83,64 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
             .input('idCity', idCity || null)
             .input('idDepartment', idDepartment || null)
             .query(insertQuery);
+
+        if (!insertResult?.recordset || insertResult.recordset.length === 0) {
+            throw new Error("Error al insertar el producto en la base de datos.");
+        }
+
+        // Obtener datos para la notificación
+        const selectOrgQuery = `
+            SELECT bussisnesName
+            FROM TB_Organizations
+            WHERE id = @idOrganization
+        `;
+        const productQuery = `
+            SELECT tbp.product
+            FROM TB_ProductsOrganization AS tbpo
+            JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct
+            WHERE tbpo.idProduct = @idProduct
+        `;
+        const orgResultName = await db?.request()
+            .input('idOrganization', idOrganization)
+            .query(selectOrgQuery);
+        const productResult = await db?.request()
+            .input('idProduct', idProduct)
+            .query(productQuery);
+
+        const bussisnesName = orgResultName?.recordset[0]?.bussisnesName || "Organización desconocida";
+        const productName = productResult?.recordset[0]?.product || "Producto desconocido";
+
+        await NotificationDonor.cnd02({
+            productName,
+            attendantEmail,
+            bussisnesName,
+            attendantName,
+        });
+        // Nueva consulta para obtener correos electrónicos
+        const emailQuery = `
+            SELECT DISTINCT tbu.email
+            FROM TB_User AS tbu
+            LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbu.idOrganization
+            WHERE tbo.idTypeOrganitation = 1 AND tbu.id != 33 
+        `;
+        const emailResult = await db?.request().query(emailQuery);
+
+        const emails = emailResult?.recordset.map((row: { email: string }) => row.email) || [];
+
+        for (const email of emails) {
+            await NotificationFoundation.cnf02({
+                email,
+                bussisnesName,
+                attendantName,
+            });
+        }
+
+        await NotificationAdministrator.cna02({
+            productName,
+            attendantName,
+            quantity,
+            expirationDate,
+        });
 
         return {
             code: 200,
@@ -309,28 +371,102 @@ export const putProductReserved = async (ids: number[]): Promise<ProductReposito
     try {
         const db = await connectToSqlServer();
 
-        const checkProductQuery = `SELECT id FROM TB_ProductsOrganization WHERE id IN (${ids.join(",")})`;
+        // Verificar los productos en la base de datos
+        const checkProductQuery = `
+            SELECT id, idOrganization, attendantEmail, idProduct, attendantName 
+            FROM TB_ProductsOrganization 
+            WHERE id IN (${ids.join(",")})
+        `;
         const checkProductResult: any = await db?.request().query(checkProductQuery);
 
-        const foundIds = checkProductResult.recordset.map((row: any) => row.id);
+        const foundProducts = checkProductResult.recordset;
+        const foundIds = foundProducts.map((row: any) => row.id);
 
         if (foundIds.length !== ids.length) {
             return {
                 code: 404,
                 message: { translationKey: "product.not_found" },
-                data: { foundIds, missingIds: ids.filter(id => !foundIds.includes(id)) },
+                data: { foundIds, missingIds: ids.filter((id) => !foundIds.includes(id)) },
             };
         }
 
-        const updateQuery = `UPDATE TB_ProductsOrganization SET idStatus = 3, solicitDate = getDate() WHERE id IN (${ids.join(",")})`;
+        // Obtener los idProduct únicos para consultar en TB_Products
+        const productIds = [...new Set(foundProducts.map((p: any) => p.idProduct))];
+        const productQuery = `
+            SELECT id, product AS productName 
+            FROM TB_Products 
+            WHERE id IN (${productIds.join(",")})
+        `;
+        const productResult: any = await db?.request().query(productQuery);
+        const productData = productResult.recordset;
+
+        // Actualizar el estado de los productos
+        const updateQuery = `
+            UPDATE TB_ProductsOrganization 
+            SET idStatus = 3, solicitDate = getDate() 
+            WHERE id IN (${ids.join(",")})
+        `;
         await db?.request().query(updateQuery);
+
+        // Obtener información de las organizaciones relacionadas
+        const organizationIds = [...new Set(foundProducts.map((p: any) => p.idOrganization))];
+        const organizationQuery = `
+            SELECT id, email, bussisnesName 
+            FROM TB_Organizations 
+            WHERE id IN (${organizationIds.join(",")})
+        `;
+        const organizationResult: any = await db?.request().query(organizationQuery);
+        const organizationEmails = organizationResult.recordset;
+
+        // Procesar y enviar notificaciones
+        await Promise.all(
+            foundProducts.map(async (product: any) => {
+                const organization = organizationEmails.find((org: any) => org.id === product.idOrganization);
+                const productName = productData.find((p: any) => p.idProduct === product.idProduct)?.productName || "Producto";
+                //const date = product.solicitDate || new Date().toISOString();
+                const today = new Date();
+                const date = today.toISOString().split('T')[0];
+                // Validar datos necesarios para las notificaciones
+                if (!organization) {
+                    console.log(`No se encontró organización para el producto ID ${product.id}`);
+                    return;
+                }
+
+                const productDetails = {
+                    attendantName: product.attendantName,
+                    bussisnesName: organization.bussisnesName,
+                    productName,
+                    attendantEmail: product.attendantEmail,
+                };
+                // Notificación al asistente
+                if (product.attendantEmail) {
+                    await NotificationDonor.cnd03(productDetails);
+                }
+
+                // Notificación a la organización
+                if (organization.email) {
+                    await NotificationFoundation.cnf03({
+                        email: organization.email,
+                        bussisnesName: organization.bussisnesName,
+                        productName,
+                        attendantName: product.attendantName,
+                    });
+                }
+                await NotificationAdministrator.cna03({
+                    productName,
+                    bussisnesName: organization.bussisnesName,
+                    attendantName: product.attendantName,
+                    date
+                });
+            })
+        );
 
         return {
             code: 200,
             message: { translationKey: "product.successful" },
         };
     } catch (err) {
-        console.log("Error al actualizar los productos", err);
+        console.error("Error al actualizar los productos", err);
         return {
             code: 500,
             message: { translationKey: "product.error_server" },
@@ -410,7 +546,12 @@ export const putProductDelivered = async (id: number): Promise<ProductRepository
     try {
         const db = await connectToSqlServer();
 
-        const checkProductQuery = `SELECT * FROM TB_ProductsOrganization WHERE id = ${id}`;
+        // Verificar si el producto existe
+        const checkProductQuery = `
+            SELECT id, idOrganization, idProduct, attendantEmail, attendantName
+            FROM TB_ProductsOrganization 
+            WHERE id = ${id}
+        `;
         const checkProductResult: any = await db?.request().query(checkProductQuery);
 
         if (!checkProductResult.recordset || checkProductResult.recordset.length === 0) {
@@ -420,22 +561,62 @@ export const putProductDelivered = async (id: number): Promise<ProductRepository
             };
         }
 
-        const updateQuery = `UPDATE TB_ProductsOrganization SET idStatus = 5, deliverDate = getDate() WHERE id = ${id}`;
-        const updateProduct: any = await db?.request().query(updateQuery);
+        const product = checkProductResult.recordset[0];
+
+
+        // Actualizar el estado del producto
+        const updateQuery = `
+            UPDATE TB_ProductsOrganization 
+            SET idStatus = 5, deliverDate = getDate() 
+            WHERE id = ${id}
+        `;
+        await db?.request().query(updateQuery);
+
+        // Obtener información de la organización
+        const organizationQuery = `
+            SELECT email, bussisnesName 
+            FROM TB_Organizations 
+            WHERE id = ${product.idOrganization}
+        `;
+        const organizationResult: any = await db?.request().query(organizationQuery);
+        const organization = organizationResult.recordset[0];
+
+        if (!organization) {
+            console.log(`No se encontró información de la organización para el producto ID ${id}`);
+        }
+
+        const productDetails = {
+            attendantName: product.attendantName,
+            bussisnesName: organization?.bussisnesName,
+            attendantEmail: product.attendantEmail,
+        };
+        // Enviar notificación al asistente
+        if (product.attendantEmail) {
+            await NotificationDonor.cnd04(productDetails);
+        }
+
+        // Enviar notificación a la organización
+        if (organization?.email) {
+            await NotificationFoundation.cnf04({
+                email: organization.email,
+                bussisnesName: organization.bussisnesName,
+                productId: product.id,
+                attendantName: product.attendantName,
+            });
+        }
 
         return {
             code: 200,
             message: { translationKey: "product.successful" },
-            data: updateProduct.recordset,
         };
     } catch (err) {
-        console.log("Error al actualizar el producto", err);
+        console.error("Error al actualizar el producto", err);
         return {
             code: 500,
             message: { translationKey: "product.error_server" },
         };
     }
-} 
+};
 
 export const getProductsDeliveredByOrganization = async(idOrganization?: number): Promise<ProductRepositoryService> => {
     try {
