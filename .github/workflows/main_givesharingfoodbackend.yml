@@ -31,7 +31,7 @@ jobs:
         run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: node-app
           path: release.zip
@@ -47,7 +47,7 @@ jobs:
 
     steps:
       - name: Download artifact from build job
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: node-app
 
@@ -55,15 +55,15 @@ jobs:
         run: unzip release.zip
       
       - name: Login to Azure
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_A1621E7D355640CB843C400F755397B5 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_8A6121B8B1314293B072DD75B3EBF704 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3FDA0354C8224E6D8DEEEBE71D4F43BB }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_C8C8F2CDD3B14828AF025DBF53EEC063 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A36876E2DA384422A15EAE2D97D4E16F }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C799948DC2A448AC859AA32FFFB7ECF5 }}
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@v3
         with:
           app-name: 'giveSharingFoodBackend'
           slot-name: 'Production'
