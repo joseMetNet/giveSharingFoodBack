@@ -428,7 +428,6 @@ export const putAcceptedOrRejectedDocument = async (
             .input('observations', observations || null)
             .query(updateQuery);
 
-        // Obtener idOrganizationProductReserved de TB_ProductsOrganization
         const organizationProductQuery = `
             SELECT idOrganizationProductReserved
             FROM TB_ProductsOrganization
