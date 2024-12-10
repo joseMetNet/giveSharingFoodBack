@@ -218,7 +218,7 @@ export const postNewProduct = async (data: PostNewProductData): Promise<ProductR
 
 export const getProductsToDonate = async (filter: filterProduct): Promise<ProductRepositoryService> => {
     try {
-        const { productName } = filter;
+        const { productName, idUser } = filter;
         const db = await connectToSqlServer();
         let query = `SELECT DISTINCT tbpo.id, tbp.product, tbp.urlImage,
                     tbo.bussisnesName,
@@ -241,13 +241,17 @@ export const getProductsToDonate = async (filter: filterProduct): Promise<Produc
                     LEFT JOIN TB_Measure AS tbm ON tbm.id = tbpo.idmeasure
                     LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
                     LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
-                    WHERE tbs.id = 4 AND tbu.idCity = (SELECT idCity FROM TB_User WHERE id = tbpo.idUser)`;
+                    WHERE tbs.id = 4 `;
+            
+        if (idUser) {
+            query += ` AND tbu.idCity = (SELECT idCity FROM TB_User WHERE id = @idUser)`;
+        }
             
         if (productName) {
             query += ` AND tbp.product LIKE '%${productName}%'`;
         }
 
-        const products: any = await db?.request().query(query);
+        const products: any = await db?.request().input("idUser", idUser).query(query);
 
         if (!products || !products.recordset || !products.recordset.length) {
             return {

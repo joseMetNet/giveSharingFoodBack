@@ -1,3 +1,5 @@
+import { NotificationFoundation } from "../../templates/notificationFoundation";
+import { NotificationDonor } from "../../templates/notificationsDonor";
 import { connectToSqlServer } from "../DB/config";
 import { createUserInUserManagement, updateUserInUserManagement } from "../helpers/UserManagment.Helper";
 import { IresponseRepositoryService, UserRepositoryService, dataUser, idOrganization } from "../interface/User.Insterface";
@@ -8,7 +10,7 @@ export const postContacts = async (data: dataUser): Promise<IresponseRepositoryS
         const db = await connectToSqlServer();
 
         const organizationQuery = `
-            SELECT idTypeOrganitation
+            SELECT idTypeOrganitation, bussisnesName
             FROM TB_Organizations
             WHERE id = @IdOrganization
         `;
@@ -19,11 +21,11 @@ export const postContacts = async (data: dataUser): Promise<IresponseRepositoryS
         let idRol: number = 4;
         if (organizationResult?.recordset.length) {
             const idTypeOrganization = organizationResult.recordset[0].idTypeOrganitation;
-
             if (idTypeOrganization === 1) {
                 idRol = 5;
             }
         }
+        const bussisnesName = organizationResult?.recordset[0].bussisnesName;
         const idAuth = await createUserInUserManagement(email, password);
         const insertQuery = `
             INSERT INTO TB_User (idAuth, Name, Phone, Email, GoogleAddress, IdOrganization, idRole, IdCity, idDepartmen, idStatus)
@@ -42,7 +44,7 @@ export const postContacts = async (data: dataUser): Promise<IresponseRepositoryS
             .input('idDepartmen', idDepartmen)
             .input('idStatus', 7)
             .query(insertQuery);
-
+        await NotificationDonor.cnd01({ email,bussisnesName,representativaName: name });
         return {
             code: 200,
             message: 'user.succesfull',
@@ -208,58 +210,71 @@ export const putActiveOrInactiveUser = async (id: number): Promise<IresponseRepo
 
         // Consultar el estado actual del usuario
         const selectQuery = `
-            SELECT idStatus
+            SELECT idStatus, name, email
             FROM TB_User
             WHERE id = @id
         `;
         const selectResult = await db?.request().input('id', id).query(selectQuery);
-        const currentStatus = selectResult?.recordset[0]?.idStatus;
 
-        if (currentStatus === undefined) {
+        if (!selectResult?.recordset.length) {
             return {
                 code: 404,
-                message: 'user.not_found'
+                message: 'user.emptyResponse'
             };
         }
+
+        const { idStatus: currentStatus, name, email } = selectResult.recordset[0];
+
         const newStatus = currentStatus === 6 ? 7 : 6;
+
         const updateQuery = `
             UPDATE TB_User
             SET idStatus = @newStatus
             WHERE id = @id
         `;
-        await db?.request().input('id', id).input('newStatus', newStatus).query(updateQuery);
+        await db?.request()
+            .input('id', id)
+            .input('newStatus', newStatus)
+            .query(updateQuery);
+
+        // Enviar notificación
+        await NotificationFoundation.cnf01({ email, bussisnesName: name });
 
         return {
             code: 200,
             message: currentStatus === 6 ? 'user.deactivate' : 'user.activate'
         };
     } catch (err) {
-        console.log("Error al cambiar el estado del usuario", err);
+        console.error("Error al cambiar el estado del usuario", err);
         return {
             code: 400,
             message: { translationKey: "user.error_server", translationParams: { name: "toggleUserStatus" } }
         };
     }
-}
+};
 
 export const putStatusUser = async (id: number, idStatus: number): Promise<IresponseRepositoryService> => {
     try {
         const db = await connectToSqlServer();
 
         const selectQuery = `
-            SELECT idStatus
+            SELECT idStatus, email, name
             FROM TB_User
             WHERE id = @id
         `;
         const selectResult = await db?.request().input('id', id).query(selectQuery);
-        const currentStatus = selectResult?.recordset[0]?.idStatus;
+        const user = selectResult?.recordset[0];
 
-        if (currentStatus === undefined) {
+        if (!user) {
             return {
                 code: 404,
-                message: 'user.not_found'
+                message: 'user.emptyResponse'
             };
         }
+
+        const currentStatus = user.idStatus;
+        const email = user.email;
+        const bussisnesName = user.name;
 
         await db?.request()
             .input('id', id)
@@ -269,6 +284,10 @@ export const putStatusUser = async (id: number, idStatus: number): Promise<Iresp
                 SET idStatus = @newStatus
                 WHERE id = @id
             `);
+
+        if (idStatus === 6 && email && bussisnesName) {
+            await NotificationFoundation.cnf01({ email, bussisnesName });
+        }
 
         let message = '';
         if ((currentStatus === 6 && idStatus === 7) || (currentStatus === 7 && idStatus === 6)) {

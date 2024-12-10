@@ -19,8 +19,9 @@ export const getProducts: RequestHandler = async (req, res) => {
 
 export const getProductsToDonate: RequestHandler = async (req, res) => {
     try {
-        const productName: string = req.query.productName as string; 
-        const filter: filterProduct = { productName };
+        const productName: string = req.query.productName as string;
+        const idUser: number = parseInt(req.query.idUser as string, 10);
+        const filter: filterProduct = { productName, idUser };
         const { code, message, ... resto }: ProductRepositoryService = await repository.getProductsToDonate(filter);
         res.status(code).json({message: parseMessageI18n(message, req), ...resto});
     } catch (err) {

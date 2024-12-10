@@ -45,6 +45,7 @@ export interface PostNewProductData {
 
 export interface filterProduct{
     productName?: string;
+    idUser?: number;
 }
 
 export type ImageField = 'urlImage' | 'urlImagen2' | 'urlImagen3' | 'urlImagen4' | 'urlImagen5' | 'urlImagen6';
