@@ -102,6 +102,12 @@ productsRouter.get(
  *           type: string
  *         required: false
  *         description: The name of the product to filter by
+  *       - in: query
+ *         name: idUser
+ *         schema:
+ *           type: number
+ *         required: false
+ *         description: The idUser of the product to filter by city
  *     responses:
  *       200:
  *         description: A list of products.
@@ -180,6 +186,7 @@ productsRouter.get(
     "/donateproducts",
     [
         query('productName').optional(),
+        query('idUser').optional(),
         validateEnpoint
     ],
     getProductsToDonate

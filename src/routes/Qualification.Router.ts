@@ -146,7 +146,7 @@ qualificationRouter.post(
         body("idOrganization", "qualification.validate_field_int").notEmpty().isInt(),
         body("idProductsOrganization", "qualification.validate_field_int").notEmpty().isInt(),
         body("idPointsToGrade", "qualification.validate_field_int").notEmpty().isInt(),
-        body("qualification", "qualification.validate_field_int").notEmpty().isInt(),
+        body("qualification", "qualification.validate_field_int").notEmpty(),
         body("observations", "qualification.validate_field_text").notEmpty().isString(),
         validateEnpoint
     ],
