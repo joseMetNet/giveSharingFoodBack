@@ -84,7 +84,8 @@
 		"validate_field_int": "Este campo es requerido de tipo entero",
 		"not_found": "No se encontro el id",
 		"error_uploading_image": "Error al subir la imagen",
-		"error_invalid_organization": "El id de la organización no existe"
+		"error_invalid_organization": "El id de la organización no existe",
+		"cannot_delete_qualified": "No se puede eliminar el producto, tiene calificaciones relacionadas"
 	},
 	"measure": {
 		"succesfull": "OK",
@@ -96,7 +97,8 @@
 		"validate_field_int": "Este campo es requerido de tipo entero",
 		"emptyResponse": "No se encontró información",
 		"error_server": "Ocurrió un error en el servidor",
-		"invalid_organization": "El id de la organización no existe"
+		"invalid_organization": "El id de la organización no existe",
+		"successful": "qualification.successful"
 	},
 	"": ""
 }

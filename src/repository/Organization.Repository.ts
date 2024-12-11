@@ -481,6 +481,9 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
                 tbo.identification AS NIT,
                 tbpo.id AS idProductOrganization,
                 tbo.bussisnesName,
+                tbo_reserved.identification AS fReservationNit,
+                tbpo.idOrganizationProductReserved,
+                tbo_reserved.bussisnesName AS reservedBussisnesName,
                 tbpo.quantity,
                 tbpo.attendantName,
                 tbpo.attendantEmail,
@@ -507,6 +510,7 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
                 LEFT JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct
                 LEFT JOIN TB_Qualification AS tbq ON tbpo.id = tbq.idProductsOrganization
                 LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
+                LEFT JOIN TB_Organizations AS tbo_reserved ON tbo_reserved.id = tbpo.idOrganizationProductReserved
                 LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
                 LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation
                 LEFT JOIN TB_City AS tbpc ON tbpc.id = tbpo.idCity
@@ -523,7 +527,8 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
         }
 
         queryHistory += `
-            GROUP BY tbo.id, tbo.identification, tbpo.id, tbo.bussisnesName, tbpo.quantity, tbpo.attendantName, tbpo.attendantEmail, 
+            GROUP BY tbo.id, tbo.identification, tbpo.id, tbo.bussisnesName, tbo_reserved.identification, tbpo.idOrganizationProductReserved, 
+                     tbo_reserved.bussisnesName, tbpo.quantity, tbpo.attendantName, tbpo.attendantEmail, 
                      tbpo.attendantPhone, tbpo.attendantAddres, tbpc.city, tbpd.department, tbpo.price, tbpo.deliverDate,
                      tbpo.solicitDate, tbs.[status], tbto.typeOrganization, tbp.product, tbp.urlImage, tbo.logo, tbdp.id, tbdp.idStatus, tbsd.[status], tbdp.url`;
                      
@@ -714,7 +719,7 @@ export const putStatusOrganization = async (id: number, idStatus: number): Promi
         } else {
             message = 'organizations.status';
         }
-        if (idStatus === 1 || idStatus === 11) {
+        if (idStatus === 1 || idStatus === 11 || idStatus === 6) {
             await NotificationFoundation.cnf01({
                 email,
                 bussisnesName: businessName,

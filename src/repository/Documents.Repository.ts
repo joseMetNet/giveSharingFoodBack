@@ -409,7 +409,7 @@ export const putAcceptedOrRejectedDocument = async (
         const currentStatus = documentResult?.recordset[0]?.idStatus;
         const idProductOrganization = documentResult?.recordset[0]?.idProductOrganization;
 
-        if (!currentStatus || !idProductOrganization) {
+        if (currentStatus === undefined || idProductOrganization === undefined) {
             return {
                 code: 404,
                 message: 'documents.emptyResponse',
