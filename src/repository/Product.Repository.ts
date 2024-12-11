@@ -226,8 +226,10 @@ export const getProductsToDonate = async (filter: filterProduct): Promise<Produc
                     tbm.measure,
                     tbpo.expirationDate,
                     tbpo.idUser,
-                    tbu.idCity,
-                    tbc.city,
+                    (SELECT TOP 1 tbu.idCity FROM TB_User tbu WHERE tbu.idOrganization = tbo.id) AS idCity,
+                    (SELECT TOP 1 tbc.city FROM TB_City tbc WHERE tbc.id IN 
+                        (SELECT idCity FROM TB_User WHERE idOrganization = tbo.id)
+                    ) AS city,
                     tbs.[status],
                     tbpo.price,
                     tbpo.attendantName,
@@ -377,7 +379,7 @@ export const putProductReserved = async (ids: number[]): Promise<ProductReposito
 
         // Verificar los productos en la base de datos
         const checkProductQuery = `
-            SELECT id, idOrganization, attendantEmail, idProduct, attendantName 
+            SELECT id, idOrganizationProductReserved, attendantEmail, idProduct, attendantName 
             FROM TB_ProductsOrganization 
             WHERE id IN (${ids.join(",")})
         `;
@@ -413,7 +415,7 @@ export const putProductReserved = async (ids: number[]): Promise<ProductReposito
         await db?.request().query(updateQuery);
 
         // Obtener información de las organizaciones relacionadas
-        const organizationIds = [...new Set(foundProducts.map((p: any) => p.idOrganization))];
+        const organizationIds = [...new Set(foundProducts.map((p: any) => p.idOrganizationProductReserved))];
         const organizationQuery = `
             SELECT id, email, bussisnesName 
             FROM TB_Organizations 
@@ -425,7 +427,7 @@ export const putProductReserved = async (ids: number[]): Promise<ProductReposito
         // Procesar y enviar notificaciones
         await Promise.all(
             foundProducts.map(async (product: any) => {
-                const organization = organizationEmails.find((org: any) => org.id === product.idOrganization);
+                const organization = organizationEmails.find((org: any) => org.id === product.idOrganizationProductReserved);
                 const productName = productData.find((p: any) => p.idProduct === product.idProduct)?.productName || "Producto";
                 //const date = product.solicitDate || new Date().toISOString();
                 const today = new Date();
@@ -660,7 +662,7 @@ export const getProductsDeliveredByOrganization = async(idOrganization?: number)
     }
 }
 
-export const deleteProductOrganization = async (id:number): Promise<ProductRepositoryService> => {
+export const deleteProductOrganization = async (id: number): Promise<ProductRepositoryService> => {
     try {
         const db = await connectToSqlServer();
         const checkProductQuery = `SELECT * FROM TB_ProductsOrganization WHERE id = ${id}`;
@@ -673,22 +675,32 @@ export const deleteProductOrganization = async (id:number): Promise<ProductRepos
             };
         }
 
-        const deleteQuery = `DELETE TB_ProductsOrganization WHERE id = ${id}`;
-        const deleteProduct: any = await db?.request().query(deleteQuery);
+        const checkQualificationQuery = `SELECT * FROM TB_Qualification WHERE idProductsOrganization = ${id}`;
+        const checkQualificationResult: any = await db?.request().query(checkQualificationQuery);
+
+        if (checkQualificationResult.recordset && checkQualificationResult.recordset.length > 0) {
+            return {
+                code: 400,
+                message: { translationKey: "product.cannot_delete_qualified" }
+            };
+        }
+
+        const deleteQuery = `DELETE FROM TB_ProductsOrganization WHERE id = ${id}`;
+        await db?.request().query(deleteQuery);
 
         return {
             code: 200,
-            message: {translationKey: "product.successful" },
-            data: deleteProduct.recordset,
+            message: { translationKey: "product.successful" }
         }
     } catch (err) {
-        console.log("Error al eliminar producto")
+        console.log("Error al eliminar producto", err);
         return {
             code: 500,
-            message: { translationKey: "product.error_server" }
-        }
+            message: { translationKey: "product.error_server" },
+        };
     }
-}
+};
+
 
 export const putProductNotReserved = async (id: number): Promise<ProductRepositoryService> => {
     try {

@@ -137,44 +137,133 @@ export const getCommentsQuailification = async(id: idOrganizationQualification):
     }
 }
 
-export const getQualification = async(id: idOrganizationQualification): Promise<QualificationRepositoryService> => {
+// export const getQualification = async(id: idOrganizationQualification): Promise<QualificationRepositoryService> => {
+//     try {
+//         const { idOrganization } = id;
+//         const db = await connectToSqlServer();
+
+//         const organizationCheckQuery = `SELECT id FROM TB_Organizations WHERE id = @idOrganization`;
+//         const organizationCheckResult = await db?.request()
+//             .input('idOrganization', idOrganization)
+//             .query(organizationCheckQuery);
+
+//         if (organizationCheckResult?.recordset.length === 0) {
+//             return {
+//                 code: 400,
+//                 message: { translationKey: "qualification.invalid_organization" }
+//             };
+//         }
+
+//         // Consultar las calificaciones
+//         const qualificationsQuery = `
+//             SELECT 
+//             tbptg.description, 
+//             tbq.qualification,
+//             AVG(tbq.qualification) OVER (PARTITION BY tbptg.description) AS max_average
+//             FROM TB_Qualification AS tbq
+//             LEFT JOIN TB_PointsToGrade AS tbptg ON tbq.idPointsToGrade = tbptg.id
+//             WHERE tbq.idOrganization = @idOrganization`;
+
+//         const resultQualifications = await db?.request()
+//             .input('idOrganization', idOrganization)
+//             .query(qualificationsQuery);
+
+//         const qualification = resultQualifications?.recordset;
+
+//         if (qualification && qualification.length > 0) {
+//             return {
+//                 code: 200,
+//                 message: { translationKey: "qualification.succesfull" },
+//                 data: qualification
+//             };
+//         } else {
+//             return {
+//                 code: 400,
+//                 message: { translationKey: "qualification.emptyResponse" }
+//             };
+//         }
+//     } catch (err) {
+//         console.log("Error al traer las calificaciones", err);
+//         return {
+//             code: 400,
+//             message: { translationKey: "qualification.error_server" }
+//         };
+//     }
+// };
+
+export const getQualification = async (id: idOrganizationQualification): Promise<QualificationRepositoryService> => {
     try {
         const { idOrganization } = id;
         const db = await connectToSqlServer();
 
-        const organizationCheckQuery = `SELECT id FROM TB_Organizations WHERE id = @idOrganization`;
+        // Verificar si la organización existe y obtener el idRol del usuario relacionado
+        const organizationCheckQuery = `
+            SELECT org.id AS organizationId, usr.idRole 
+            FROM TB_Organizations AS org
+            INNER JOIN TB_User AS usr ON org.id = usr.idOrganization
+            WHERE org.id = @idOrganization
+        `;
         const organizationCheckResult = await db?.request()
             .input('idOrganization', idOrganization)
             .query(organizationCheckQuery);
 
-        if (organizationCheckResult?.recordset.length === 0) {
+        if (!organizationCheckResult || organizationCheckResult.recordset.length === 0) {
             return {
                 code: 400,
                 message: { translationKey: "qualification.invalid_organization" }
             };
         }
 
-        // Consultar las calificaciones
+        const { idRole } = organizationCheckResult.recordset[0];
+
+        // Si el idRol es 1, devolver calificaciones de todas las organizaciones
+        if (idRole === 1) {
+            const allQualificationsQuery = `
+                SELECT 
+                    org.id AS organizationId,
+                    org.bussisnesName,
+                    org.identification,
+                    org.representativaName,
+                    tbptg.description,
+                    tbq.qualification,
+                    AVG(tbq.qualification) OVER (PARTITION BY tbptg.description) AS max_average
+                FROM TB_Qualification AS tbq
+                LEFT JOIN TB_PointsToGrade AS tbptg ON tbq.idPointsToGrade = tbptg.id
+                LEFT JOIN TB_Organizations AS org ON tbq.idOrganization = org.id
+            `;
+
+            const resultAllQualifications = await db?.request().query(allQualificationsQuery);
+            const qualifications = resultAllQualifications?.recordset;
+
+            return {
+                code: 200,
+                message: { translationKey: "qualification.successful" },
+                data: qualifications
+            };
+        }
+
+        // Si el idRol no es 1, devolver solo las calificaciones de la organización
         const qualificationsQuery = `
             SELECT 
-            tbptg.description, 
-            tbq.qualification,
-            AVG(tbq.qualification) OVER (PARTITION BY tbptg.description) AS max_average
+                tbptg.description, 
+                tbq.qualification,
+                AVG(tbq.qualification) OVER (PARTITION BY tbptg.description) AS max_average
             FROM TB_Qualification AS tbq
             LEFT JOIN TB_PointsToGrade AS tbptg ON tbq.idPointsToGrade = tbptg.id
-            WHERE tbq.idOrganization = @idOrganization`;
+            WHERE tbq.idOrganization = @idOrganization
+        `;
 
         const resultQualifications = await db?.request()
             .input('idOrganization', idOrganization)
             .query(qualificationsQuery);
 
-        const qualification = resultQualifications?.recordset;
+        const qualifications = resultQualifications?.recordset;
 
-        if (qualification && qualification.length > 0) {
+        if (qualifications && qualifications.length > 0) {
             return {
                 code: 200,
-                message: { translationKey: "qualification.succesfull" },
-                data: qualification
+                message: { translationKey: "qualification.successful" },
+                data: qualifications
             };
         } else {
             return {

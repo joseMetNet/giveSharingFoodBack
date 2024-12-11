@@ -84,7 +84,8 @@
 		"validate_field_int": "This is a required field of type integer",
 		"not_found": "id not found",
 		"error_uploading_image": "Error uploading image",
-		"error_invalid_organization": "The id of the organization does not exist"
+		"error_invalid_organization": "The id of the organization does not exist",
+		"cannot_delete_qualified": "The product cannot be deleted, it has qualifications attached"
 	},
 	"measure": {
 		"succesfull": "OK",
