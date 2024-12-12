@@ -85,7 +85,8 @@
 		"not_found": "No se encontro el id",
 		"error_uploading_image": "Error al subir la imagen",
 		"error_invalid_organization": "El id de la organización no existe",
-		"cannot_delete_qualified": "No se puede eliminar el producto, tiene calificaciones relacionadas"
+		"cannot_delete_qualified": "No se puede eliminar el producto, tiene calificaciones relacionadas",
+		"nothing_to_update": "No se encontró información para actualizar"
 	},
 	"measure": {
 		"succesfull": "OK",

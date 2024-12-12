@@ -530,7 +530,8 @@ export const getDonationHistory = async (id: idHistory): Promise<IresponseReposi
             GROUP BY tbo.id, tbo.identification, tbpo.id, tbo.bussisnesName, tbo_reserved.identification, tbpo.idOrganizationProductReserved, 
                      tbo_reserved.bussisnesName, tbpo.quantity, tbpo.attendantName, tbpo.attendantEmail, 
                      tbpo.attendantPhone, tbpo.attendantAddres, tbpc.city, tbpd.department, tbpo.price, tbpo.deliverDate,
-                     tbpo.solicitDate, tbs.[status], tbto.typeOrganization, tbp.product, tbp.urlImage, tbo.logo, tbdp.id, tbdp.idStatus, tbsd.[status], tbdp.url`;
+                     tbpo.solicitDate, tbs.[status], tbto.typeOrganization, tbp.product, tbp.urlImage, tbo.logo, tbdp.id, tbdp.idStatus, tbsd.[status], tbdp.url
+            ORDER BY tbpo.id DESC`;
                      
         const request = db?.request();
         if (idOrganization) request?.input('idOrganization', idOrganization);
