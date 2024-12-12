@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { deleteProductOrganization, getProducts, getProductsDeliveredByOrganization, getProductsPreReserved, getProductsReserved, getProductsToDonate, postNewProductHandler, postProduct, putProductDelivered, putProductNotReserved, putProductPreReserved, putProductReserved } from "../controllers/Products.Controller";
+import { deleteProductOrganization, getProducts, getProductsDeliveredByOrganization, getProductsPreReserved, getProductsReserved, getProductsSuport, getProductsToDonate, postNewProductHandler, postProduct, putProductDelivered, putProductNotReserved, putProductPreReserved, putProductReserved, putProductsSuport, updateProductOrganization } from "../controllers/Products.Controller";
 import { body, param, query } from "express-validator";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
 
@@ -194,6 +194,111 @@ productsRouter.get(
 
 /**
  * @swagger
+ * /getProductsSuport:
+ *   get:
+ *     tags:
+ *       - Products
+ *     summary: Get products
+ *     description: Retrieve a list of products. You can optionally filter by product name.
+ *     parameters:
+ *       - in: query
+ *         name: productName
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: The name of the product to filter by
+  *       - in: query
+ *         name: idUser
+ *         schema:
+ *           type: number
+ *         required: false
+ *         description: The idUser of the product to filter by city
+ *     responses:
+ *       200:
+ *         description: A list of products.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: product.successful
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       product:
+ *                         type: string
+ *                       urlImage:
+ *                         type: string
+ *                       bussisnesName:
+ *                         type: string
+ *                       quantity:
+ *                         type: number
+ *                       measure:
+ *                         type: string
+ *                       expirationDate:
+ *                         type: string
+ *                         format: date 
+ *                       idUser:
+ *                         type: number
+ *                       idCity:
+ *                         type: number
+ *                       city:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                       price:
+ *                         type: string   
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: product.error_server
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+productsRouter.get(
+    "/getProductsSuport",
+    [
+        query('productName').optional(),
+        query('idUser').optional(),
+        validateEnpoint
+    ],
+    getProductsSuport
+);
+
+/**
+ * @swagger
  * /postProduct:
  *   post:
  *     tags:
@@ -302,6 +407,211 @@ productsRouter.post(
         validateEnpoint
     ],
     postProduct);
+
+/**
+ * @swagger
+ * /updateProductOrganization/{id}:
+ *   put:
+ *     tags:
+ *       - Products
+ *     summary: Update a product
+ *     description: Updates the specified fields of a product. Fields that are not sent will remain unchanged.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: The ID of the product to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               quantity:
+ *                 type: number
+ *               attendantName:
+ *                 type: string
+ *               attendantPhone:
+ *                 type: string
+ *               attendantEmail:
+ *                 type: string
+ *               attendantAddres:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: The product was successfully updated.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     quantity:
+ *                       type: number
+ *                     attendantName:
+ *                       type: string
+ *                     attendantPhone:
+ *                       type: string
+ *                     attendantEmail:
+ *                       type: string
+ *                     attendantAddres:
+ *                       type: string
+ *       400:
+ *         description: Bad request. The input data is invalid.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *       404:
+ *         description: The product with the specified ID was not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ */
+productsRouter.put("/updateProductOrganization/:id",
+ updateProductOrganization);
+
+/**
+ * @swagger
+ * /putProductsSuport:
+ *   put:
+ *     tags:
+ *       - Products
+ *     summary: Mark products as available
+ *     description: Update the status of one or more organization products by their IDs for available.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               ids:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 example: [1, 2, 3]
+ *     responses:
+ *       200:
+ *         description: Products updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: product.successful
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: product.error_invalid_data
+ *       404:
+ *         description: Not all products found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     translationKey:
+ *                       type: string
+ *                       example: product.not_all_found
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     foundIds:
+ *                       type: array
+ *                       items:
+ *                         type: integer
+ *                     missingIds:
+ *                       type: array
+ *                       items:
+ *                         type: integer
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+productsRouter.put(
+    "/putProductsSuport",
+    [
+        body("ids", "product.validate_field_array").isArray({ min: 1 }),
+        body("ids.*", "product.validate_field_int").isInt(),
+        validateEnpoint
+    ],
+    putProductsSuport
+);
 
 /**
  * @swagger

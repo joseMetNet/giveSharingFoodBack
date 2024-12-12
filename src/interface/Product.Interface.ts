@@ -48,4 +48,17 @@ export interface filterProduct{
     idUser?: number;
 }
 
+export interface ProductUpdate {
+    quantity?: number;
+    attendantName?: string;
+    attendantPhone?: string;
+    attendantEmail?: string;
+    attendantAddres?: string;
+}
+
+export interface UpdateProductParams {
+    id: number;
+    updates: ProductUpdate;
+}
+
 export type ImageField = 'urlImage' | 'urlImagen2' | 'urlImagen3' | 'urlImagen4' | 'urlImagen5' | 'urlImagen6';

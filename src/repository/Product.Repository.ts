@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import mime from 'mime-types';
 import { connectToSqlServer } from "../DB/config"
-import { ImageField, PostNewProductData, ProductRepositoryService, filterProduct, postProduct, postProductRepositoryService } from "../interface/Product.Interface";
+import { ImageField, PostNewProductData, ProductRepositoryService, UpdateProductParams, filterProduct, postProduct, postProductRepositoryService } from "../interface/Product.Interface";
 import { NotificationDonor } from "../../templates/notificationsDonor";
 import { NotificationFoundation } from "../../templates/notificationFoundation";
 import { NotificationAdministrator } from "../../templates/notificationsAdministrator";
@@ -73,7 +73,7 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
             .input('idMeasure', idMeasure || null)
             .input('quantity', quantity || null)
             .input('expirationDate', expirationDate || null)
-            .input('idStatus', 4)
+            .input('idStatus', 14)
             .input('idUser', idUser)
             .input('price', price)
             .input('attendantName', attendantName || null)
@@ -152,6 +152,175 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
         return {
             code: 400,
             message: { translationKey: "product.error_server", translationParams: { name: "postProducts" } },
+        };
+    }
+};
+
+export const putProductsSuport = async (ids: number[]): Promise<ProductRepositoryService> => {
+    try {
+        const db = await connectToSqlServer();
+
+        const checkProductQuery = `
+            SELECT id, idOrganizationProductReserved, attendantEmail, idProduct, attendantName 
+            FROM TB_ProductsOrganization 
+            WHERE id IN (${ids.join(",")})
+        `;
+        const checkProductResult: any = await db?.request().query(checkProductQuery);
+
+        const foundProducts = checkProductResult.recordset;
+        const foundIds = foundProducts.map((row: any) => row.id);
+
+        if (foundIds.length !== ids.length) {
+            return {
+                code: 404,
+                message: { translationKey: "product.not_found" },
+                data: { foundIds, missingIds: ids.filter((id) => !foundIds.includes(id)) },
+            };
+        }
+
+        const productIds = [...new Set(foundProducts.map((p: any) => p.idProduct))];
+        const productQuery = `
+            SELECT id, product AS productName 
+            FROM TB_Products 
+            WHERE id IN (${productIds.join(",")})
+        `;
+        const productResult: any = await db?.request().query(productQuery);
+        const productData = productResult.recordset;
+
+        const updateQuery = `
+            UPDATE TB_ProductsOrganization 
+            SET idStatus = 4 
+            WHERE id IN (${ids.join(",")})
+        `;
+        await db?.request().query(updateQuery);
+
+        return {
+            code: 200,
+            message: { translationKey: "product.successful" },
+        };
+    } catch (err) {
+        console.error("Error al actualizar los productos", err);
+        return {
+            code: 500,
+            message: { translationKey: "product.error_server" },
+        };
+    }
+};
+
+export const getProductsSuport = async (filter: filterProduct): Promise<ProductRepositoryService> => {
+    try {
+        const { productName, idUser } = filter;
+        const db = await connectToSqlServer();
+        let query = `SELECT DISTINCT tbpo.id, tbp.product, tbp.urlImage,
+                    tbo.bussisnesName,
+                    tbpo.quantity,
+                    tbm.measure,
+                    tbpo.expirationDate,
+                    tbpo.idUser,
+                    (SELECT TOP 1 tbu.idCity FROM TB_User tbu WHERE tbu.idOrganization = tbo.id) AS idCity,
+                    (SELECT TOP 1 tbc.city FROM TB_City tbc WHERE tbc.id IN 
+                        (SELECT idCity FROM TB_User WHERE idOrganization = tbo.id)
+                    ) AS city,
+                    tbs.[status],
+                    tbpo.price,
+                    tbpo.attendantName,
+                    tbpo.attendantEmail,
+                    tbpo.attendantPhone,
+                    tbpo.attendantAddres
+                    FROM TB_ProductsOrganization AS tbpo
+                    LEFT JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct
+                    LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
+                    LEFT JOIN TB_User AS tbu ON tbu.idOrganization = tbo.id
+                    LEFT JOIN TB_Measure AS tbm ON tbm.id = tbpo.idmeasure
+                    LEFT JOIN TB_Status AS tbs ON tbs.id = tbpo.idStatus
+                    LEFT JOIN TB_City AS tbc ON tbc.id = tbu.idCity
+                    WHERE tbs.id = 14 `;
+            
+        if (idUser) {
+            query += ` AND tbu.idCity = (SELECT idCity FROM TB_User WHERE id = @idUser)`;
+        }
+            
+        if (productName) {
+            query += ` AND tbp.product LIKE '%${productName}%'`;
+        }
+
+        const products: any = await db?.request().input("idUser", idUser).query(query);
+
+        if (!products || !products.recordset || !products.recordset.length) {
+            return {
+                code: 204,
+                message: { translationKey: "product.emptyResponse" },
+            };
+        }
+        return {
+            code: 200,
+            message: { translationKey: "product.successful" },
+            data: products.recordset,
+        };
+    } catch (err) {
+        console.log("Error al traer los productos", err);
+        return {
+            code: 400,
+            message: { translationKey: "product.error_server" },
+        };
+    }
+}
+
+export const updateProductOrganization = async (params: UpdateProductParams): Promise<ProductRepositoryService> => {
+    const { id, updates } = params;
+
+    try {
+        const db = await connectToSqlServer();
+
+        const checkProductQuery = `SELECT * FROM TB_ProductsOrganization WHERE id = @id`;
+        const checkProductResult: any = await db?.request().input("id", id).query(checkProductQuery);
+
+        if (!checkProductResult.recordset || checkProductResult.recordset.length === 0) {
+            return {
+                code: 404,
+                message: { translationKey: "product.not_found" },
+            };
+        }
+
+        const updateFields: string[] = [];
+        const updateValues: Record<string, any> = { id }; 
+
+        for (const [key, value] of Object.entries(updates)) {
+            if (value !== undefined && value !== null) {
+                updateFields.push(`${key} = @${key}`);
+                updateValues[key] = value;
+            }
+        }
+
+        if (updateFields.length === 0) {
+            return {
+                code: 400,
+                message: { translationKey: "product.nothing_to_update" },
+            };
+        }
+
+        const updateQuery = `
+            UPDATE TB_ProductsOrganization
+            SET ${updateFields.join(", ")}
+            WHERE id = @id
+        `;
+
+        const request = db?.request();
+        for (const [key, value] of Object.entries(updateValues)) {
+            request?.input(key, value);
+        }
+
+        await request?.query(updateQuery);
+
+        return {
+            code: 200,
+            message: { translationKey: "product.successful" },
+        };
+    } catch (err) {
+        console.error("Error al actualizar el producto", err);
+        return {
+            code: 500,
+            message: { translationKey: "product.error_server" },
         };
     }
 };

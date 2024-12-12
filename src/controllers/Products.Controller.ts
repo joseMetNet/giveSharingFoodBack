@@ -30,6 +30,19 @@ export const getProductsToDonate: RequestHandler = async (req, res) => {
     }
 }
 
+export const getProductsSuport: RequestHandler = async (req, res) => {
+    try {
+        const productName: string = req.query.productName as string;
+        const idUser: number = parseInt(req.query.idUser as string, 10);
+        const filter: filterProduct = { productName, idUser };
+        const { code, message, ... resto }: ProductRepositoryService = await repository.getProductsSuport(filter);
+        res.status(code).json({message: parseMessageI18n(message, req), ...resto});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({message: parseMessageI18n('error_server', req)});        
+    }
+}
+
 export const postProduct: RequestHandler = async (req, res) => {
     try {
         const { code, message, ...resto}: postProductRepositoryService = await repository.postProducts(req.body);
@@ -39,6 +52,35 @@ export const postProduct: RequestHandler = async (req, res) => {
         res.status(500).json({ message: parseMessageI18n("error_server", req) })
     }
 }
+
+export const updateProductOrganization: RequestHandler = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const updates = req.body;
+
+        const { code, message, ...resto }: ProductRepositoryService = await repository.updateProductOrganization({ id, updates });
+        res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
+    } catch (err) {
+        console.error("Error en el controlador updateProduct:", err);
+        res.status(500).json({ message: parseMessageI18n("error_server", req) });
+    }
+};
+
+export const putProductsSuport: RequestHandler = async (req, res) => {
+    try {
+        const ids = req.body.ids; 
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ message: parseMessageI18n({ translationKey: "product.error_invalid_data" }, req) });
+        }
+
+        const { code, message, ...resto }: ProductRepositoryService = await repository.putProductsSuport(ids);
+        res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: parseMessageI18n("error_server", req) });
+    }
+};
+
 export const postNewProductHandler: RequestHandler = async (req, res) => {
     try {
         const productData: PostNewProductData = {

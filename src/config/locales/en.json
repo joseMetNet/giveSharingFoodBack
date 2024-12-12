@@ -85,7 +85,8 @@
 		"not_found": "id not found",
 		"error_uploading_image": "Error uploading image",
 		"error_invalid_organization": "The id of the organization does not exist",
-		"cannot_delete_qualified": "The product cannot be deleted, it has qualifications attached"
+		"cannot_delete_qualified": "The product cannot be deleted, it has qualifications attached",
+		"nothing_to_update": "There is nothing to update"
 	},
 	"measure": {
 		"succesfull": "OK",
