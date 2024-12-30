@@ -285,26 +285,29 @@ export const getQualificationGeneral = async () => {
         const db = await connectToSqlServer();
         const qualification: any = await db?.request()
             .query(`SELECT 
-                    tbpo.id,
-                    tbo.id AS organization_id,
-                    tbo.bussisnesName AS organization_name,
-                    rtbo.id AS reserved_organization_id,
-                    rtbo.bussisnesName AS reserved_organization_name,
-                    tbq.qualification,
-                    tbpg.description,
-                    tbq.observations,
-                    MAX(tba.avarage) OVER () AS avarage,
-                    tbr.id AS idUser,
-                    tbr.role
-                FROM TB_ProductsOrganization AS tbpo
-                LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
-                LEFT JOIN TB_Organizations AS rtbo ON rtbo.id = tbpo.idOrganizationProductReserved
-                LEFT JOIN TB_Qualification AS tbq ON tbq.idProductsOrganization = tbpo.id
-                LEFT JOIN TB_PointsToGrade AS tbpg ON tbpg.id = tbq.idPointsToGrade
-                LEFT JOIN TB_Avarage AS tba ON tba.idPointsToGrade = tbq.idPointsToGrade
-                LEFT JOIN TB_User AS tbu ON tbu.idOrganization = tbo.id
-                LEFT JOIN TB_Rol AS tbr ON tbr.id = tbu.idRole
-                WHERE (tbq.qualification IS NOT NULL OR tbpg.description IS NOT NULL OR tbq.observations IS NOT NULL)`);
+                        tbpo.id,
+                        CASE 
+                            WHEN tbq.idOrganization = tbpo.idOrganization THEN tbq.idOrganization
+                            ELSE tbpo.idOrganizationProductReserved
+                        END AS organization_id,
+                        CASE 
+                            WHEN tbq.idOrganization = tbpo.idOrganization THEN tbo.bussisnesName
+                            ELSE rtbo.bussisnesName
+                        END AS organization_name,
+                        CASE 
+                            WHEN tbq.idOrganization = tbpo.idOrganization THEN rtbo.bussisnesName
+                            ELSE tbo.bussisnesName
+                        END AS reserved_organization_name,
+                        tbq.qualification,
+                        tbq.observations,
+                        tbpg.description,
+                        MAX(tba.avarage) OVER () AS avarage
+                    FROM TB_Qualification AS tbq
+                    LEFT JOIN TB_ProductsOrganization AS tbpo ON tbpo.id = tbq.idProductsOrganization
+                    LEFT JOIN TB_PointsToGrade AS tbpg ON tbpg.id = tbq.idPointsToGrade
+                    LEFT JOIN TB_Avarage AS tba ON tba.idPointsToGrade = tbq.idPointsToGrade
+                    LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
+                    LEFT JOIN TB_Organizations AS rtbo ON rtbo.id = tbpo.idOrganizationProductReserved`);
         
         if (!qualification || !qualification.recordset || !qualification.recordset.length) {
             return {
