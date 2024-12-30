@@ -594,7 +594,8 @@ export const getDonationHistoryById = async(ids : idHistory): Promise<IresponseR
                                 tbdp.url,
                                 tbpo.idOrganizationProductReserved,
                                 tbo_res.bussisnesName AS reservedBusinessName, 
-                                tbto_res.typeOrganization AS reservedTypeOrganization
+                                tbto_res.typeOrganization AS reservedTypeOrganization,
+	                            tbo_res.logo AS logoReserved
                             FROM TB_ProductsOrganization AS tbpo
                             LEFT JOIN TB_Organizations AS tbo ON tbpo.idOrganization = tbo.id
                             LEFT JOIN TB_TypeOrganization AS tbto ON tbto.id = tbo.idTypeOrganitation

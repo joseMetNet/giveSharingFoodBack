@@ -279,3 +279,50 @@ export const getQualification = async (id: idOrganizationQualification): Promise
         };
     }
 };
+
+export const getQualificationGeneral = async () => {
+    try {
+        const db = await connectToSqlServer();
+        const qualification: any = await db?.request()
+            .query(`SELECT 
+                    tbpo.id,
+                    tbo.id AS organization_id,
+                    tbo.bussisnesName AS organization_name,
+                    rtbo.id AS reserved_organization_id,
+                    rtbo.bussisnesName AS reserved_organization_name,
+                    tbq.qualification,
+                    tbpg.description,
+                    tbq.observations,
+                    MAX(tba.avarage) OVER () AS avarage,
+                    tbr.id AS idUser,
+                    tbr.role
+                FROM TB_ProductsOrganization AS tbpo
+                LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
+                LEFT JOIN TB_Organizations AS rtbo ON rtbo.id = tbpo.idOrganizationProductReserved
+                LEFT JOIN TB_Qualification AS tbq ON tbq.idProductsOrganization = tbpo.id
+                LEFT JOIN TB_PointsToGrade AS tbpg ON tbpg.id = tbq.idPointsToGrade
+                LEFT JOIN TB_Avarage AS tba ON tba.idPointsToGrade = tbq.idPointsToGrade
+                LEFT JOIN TB_User AS tbu ON tbu.idOrganization = tbo.id
+                LEFT JOIN TB_Rol AS tbr ON tbr.id = tbu.idRole
+                WHERE (tbq.qualification IS NOT NULL OR tbpg.description IS NOT NULL OR tbq.observations IS NOT NULL)`);
+        
+        if (!qualification || !qualification.recordset || !qualification.recordset.length) {
+            return {
+                code: 204,
+                message: { translationKey: "qualification.emptyResponse" },
+            };
+        }
+
+        return {
+            code: 200,
+            message: { translationKey: "qualification.succesfull" },
+            data: qualification.recordset
+        }
+    } catch (err) {
+        console.log("Error al traer calificaciones", err)
+        return {
+            code: 400,
+            message: { translationKey: "qualification.error_server", translationParams: { name: "getQualificationGeneral" } },
+        };        
+    };
+};
