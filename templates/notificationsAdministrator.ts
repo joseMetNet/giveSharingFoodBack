@@ -397,4 +397,256 @@ export class NotificationAdministrator {
       emailBody
     )
   }
+
+  static async cna04(product: any) {
+    const subject = "Notificación CNA-04";
+    const donorName = product.attendantName || "Donante";
+    const fundName = product.bussisnesName;
+    const emailBody: string = `<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Notificación CNA-04</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #FFFFFF;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #767676;
+            color: #FFFFFF;
+            padding: 10px 50px;
+            border-radius: 5px;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img {
+            margin-right: 15px;
+            width: 180px;
+            height: auto;
+        }
+
+        .notification-text {
+            font-size: 25px;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-align: right;
+            font-family: "Comic Sans MS", cursive;
+        }
+
+        .content {
+            max-width: 600px;
+            margin: 20px auto;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #000000;
+            font-family: "Comic Sans MS", cursive;
+        }
+
+        .footer {
+            max-width: 600px;
+            margin: 40px auto;
+            text-align: center;
+            background-color: #E3096A;
+            color: #FFFFFF;
+            padding: 30px 50px;
+            border-radius: 5px;
+        }
+
+        .footer span {
+            display: block;
+            font-family: "Comic Sans MS", cursive;
+            font-size: 18px;
+        }
+
+        .footer a {
+            color: #FFFFFF;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="logo">
+            <img src="https://storage-masivdrive.masivapp.com/16543/6b9388c0-587d-4f7d-a1c4-34341cb75fc6.png"
+                alt="Logo">
+        </div>
+        <div class="notification-text">
+            <p>NOTIFICACIÓN</p>
+        </div>
+    </div>
+
+    <div class="content">
+        <p>Hola, ADMIN</p>
+
+        <p>Le informamos que el donante ${donorName} ha ACEPTADO el certificado
+             emitido por la fundacion ${fundName}.</p>
+
+        <p>Por favor, tenga en cuenta esta aceptación para dar finalizado el proceso de donación. </p>
+
+        <p>Puede encontrar más detalles sobre esta reserva en:</p>
+
+        <p><a href="https://givesharingfood.azurewebsites.net/login">https://givesharingfood.azurewebsites.net/login</a>
+        </p>
+
+
+        <p>&nbsp;</p>
+    </div>
+
+    <div class="footer">
+        <span>¿Necesitas ayuda? Contáctanos</span>
+        <span><a href="mailto:givesharingfood@gmail.com">givesharingfood@gmail.com</a></span>
+    </div>
+</body>
+
+</html>`;
+    await sendEmailNotification(
+      subject,"Aceptación de Certificado",
+      ['danimetnet@gmail.com'],
+      emailBody
+    )
+  }
+
+  static async cna05(product: any) {
+    const subject = "Notificación CNA-05";
+    const donorName = product.attendantName || "Donante";
+    const fundName = product.bussisnesName;
+    const emailBody: string = `<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Notificación CNA-05</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #FFFFFF;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #767676;
+            color: #FFFFFF;
+            padding: 10px 50px;
+            border-radius: 5px;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img {
+            margin-right: 15px;
+            width: 180px;
+            height: auto;
+        }
+
+        .notification-text {
+            font-size: 25px;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-align: right;
+            font-family: "Comic Sans MS", cursive;
+        }
+
+        .content {
+            max-width: 600px;
+            margin: 20px auto;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #000000;
+            font-family: "Comic Sans MS", cursive;
+        }
+
+        .footer {
+            max-width: 600px;
+            margin: 40px auto;
+            text-align: center;
+            background-color: #E3096A;
+            color: #FFFFFF;
+            padding: 30px 50px;
+            border-radius: 5px;
+        }
+
+        .footer span {
+            display: block;
+            font-family: "Comic Sans MS", cursive;
+            font-size: 18px;
+        }
+
+        .footer a {
+            color: #FFFFFF;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="logo">
+            <img src="https://storage-masivdrive.masivapp.com/16543/6b9388c0-587d-4f7d-a1c4-34341cb75fc6.png"
+                alt="Logo">
+        </div>
+        <div class="notification-text">
+            <p>NOTIFICACIÓN</p>
+        </div>
+    </div>
+
+    <div class="content">
+        <p>Hola, ADMIN</p>
+
+        <p>Le informamos que el donante ${donorName} ha RECHAZADO el certificado emitido por la fundación ${fundName}.</p>
+
+        <p>Por favor,
+            <b> REALICE SEGUIMIENTO DE ESTE RECHAZO</b> y pongase en contacto con las partes.</p>
+
+        <p>Puede encontrar más detalles sobre
+            esta reserva en&nbsp;</p>
+
+        <p><a href="https://givesharingfood.azurewebsites.net/login">https://givesharingfood.azurewebsites.net/login</a>
+        </p>
+
+        <p>Se estima que la entrega se realizará
+            el [fecha]</p>
+
+        <p>&nbsp;</p>
+    </div>
+
+    <div class="footer">
+        <span>¿Necesitas ayuda? Contáctanos</span>
+        <span><a href="mailto:givesharingfood@gmail.com">givesharingfood@gmail.com</a></span>
+    </div>
+</body>
+
+</html>`;
+    await sendEmailNotification(
+        subject,"Rechazo de Certificado",['danimetnet@gmail.com'],
+        emailBody
+    )
+  }
 }

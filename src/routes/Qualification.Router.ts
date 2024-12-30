@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { body, param } from "express-validator";
 import { validateEnpoint } from "../middlewares/validatorEnpoint";
-import { getCommentsQuailification, getPointsToGrade, getQuailification, postQualification } from "../controllers/Qualification.Controller";
+import { getCommentsQuailification, getPointsToGrade, getQuailification, getQualificationGeneral, postQualification } from "../controllers/Qualification.Controller";
 
 const qualificationRouter = Router();
 
@@ -293,5 +293,40 @@ qualificationRouter.get(
     ],
     getQuailification
 );
+
+/**
+ * @swagger
+ * /getQualificationGeneral:
+ *   get:
+ *     tags:
+ *       - Qualifications
+ *     summary: Get all QualificationGeneral
+ *     description: Retrieve a list of all QualificationGeneral.
+ *     responses:
+ *       200:
+ *         description: A list of QualificationGeneral
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   department:
+ *                     type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+qualificationRouter.get("/getQualificationGeneral", getQualificationGeneral);
 
 export default qualificationRouter;

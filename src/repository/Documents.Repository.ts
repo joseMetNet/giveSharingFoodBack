@@ -8,6 +8,7 @@ import { streamToBuffer } from '../helpers/documents.Helper';
 import { DocumentsRepositoryService } from '../interface/Documents.Interface';
 import { NotificationDonor } from '../../templates/notificationsDonor';
 import { NotificationFoundation } from '../../templates/notificationFoundation';
+import { NotificationAdministrator } from '../../templates/notificationsAdministrator';
 
 export const getDocumentType = async () => {
     try {
@@ -429,7 +430,7 @@ export const putAcceptedOrRejectedDocument = async (
             .query(updateQuery);
 
         const organizationProductQuery = `
-            SELECT idOrganizationProductReserved
+            SELECT idOrganizationProductReserved, idOrganization
             FROM TB_ProductsOrganization
             WHERE id = @idProductOrganization
         `;
@@ -437,6 +438,7 @@ export const putAcceptedOrRejectedDocument = async (
             .input('idProductOrganization', idProductOrganization)
             .query(organizationProductQuery);
         const idOrganizationProductReserved = organizationProductResult?.recordset[0]?.idOrganizationProductReserved;
+        const idOrganization = organizationProductResult?.recordset[0]?.idOrganization;
 
         if (!idOrganizationProductReserved) {
             console.log("No se encontró idOrganizationProductReserved.");
@@ -456,12 +458,29 @@ export const putAcceptedOrRejectedDocument = async (
             .query(organizationQuery);
         const organizationEmail = organizationResult?.recordset[0]?.email;
         const organizationName = organizationResult?.recordset[0]?.bussisnesName || "Organización desconocida";
-
+        const organizacion = `SELECT bussisnesName FROM TB_Organizations WHERE id = @idOrganization`;
+        const organizacionResult: any = await db?.request()
+            .input('idOrganization', idOrganization)
+            .query(organizacion);
+        const organizacionName = organizacionResult?.recordset[0]?.bussisnesName || "Organización desconocida";
         
         if (organizationEmail) {
             await NotificationFoundation.cnf05({
                 email: organizationEmail,
                 bussisnesName: organizationName,
+            });
+        }
+        if (idStatus === 12) {
+            console.log("cna04");
+            await NotificationAdministrator.cna04({
+                bussisnesName: organizationName,
+                attendantName: organizacionName
+            });
+        } else if (idStatus === 13) {
+            console.log("cna05");
+            await NotificationAdministrator.cna05({
+                bussisnesName: organizationName,
+                attendantName: organizacionName
             });
         }
 

@@ -42,3 +42,13 @@ export const getQuailification: RequestHandler = async(req, res) => {
         res.status(500).json({ message: parseMessageI18n('error_server', req) });
     }
 }
+
+export const getQualificationGeneral: RequestHandler = async (req, res) => {
+    try {
+        const { code, message, ...resto }: QualificationRepositoryService = await repository.getQualificationGeneral();
+        res.status(code).json({message: parseMessageI18n(message, req), ...resto});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: parseMessageI18n('error_server', req)});
+    }
+}
