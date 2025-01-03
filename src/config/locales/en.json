@@ -98,6 +98,7 @@
 		"validate_field_int": "This is a required field of type integer",
 		"emptyResponse": "No information found",
 		"error_server": "An error occurred on the server",
-		"invalid_organization": "The id of the organization does not exist"
+		"invalid_organization": "The id of the organization does not exist",
+		"alreadyExists": "The product already has a qualification"
 	}
 }
