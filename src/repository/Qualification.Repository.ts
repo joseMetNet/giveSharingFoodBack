@@ -32,40 +32,123 @@ export const getPointsToGradeByIdRol = async (filter: IfilterQuantificationByIdR
     };
 }
 
+// export const postQualification = async (data: dataQualification): Promise<QualificationRepositoryService> => {
+//     try {
+//         const { idOrganization, idProductsOrganization, idPointsToGrade, qualification, observations } = data;
+//         const db = await connectToSqlServer();
+//         const organizationQuery = `SELECT idTypeOrganitation
+//                                     FROM TB_Organizations
+//                                     WHERE id = @IdOrganization`;
+
+//         const organizationResult = await db?.request()
+//             .input('IdOrganization', idOrganization)
+//             .query(organizationQuery);
+            
+//         const validateOrganization = organizationResult?.recordset;
+//         if ( validateOrganization && validateOrganization.length > 0 ) {
+//             const insertQualification = `INSERT INTO TB_Qualification 
+//             (idOrganization, idProductsOrganization, idPointsToGrade, qualification, observations)
+//             OUTPUT INSERTED.* 
+//             VALUES (@idOrganization, @idProductsOrganization, @idPointsToGrade, @qualification, @observations)`
+
+//             const insertQuery = await db?.request()
+//                     .input('idOrganization', idOrganization)
+//                     .input('idProductsOrganization', idProductsOrganization)
+//                     .input('idPointsToGrade', idPointsToGrade)
+//                     .input('qualification', qualification)
+//                     .input('observations', observations || null)
+//                     .query(insertQualification);
+
+//             const getQualificationsQuery = `SELECT qualification
+//             FROM TB_Qualification
+//             WHERE idProductsOrganization = @idProductsOrganization`;
+
+//             const qualificationsResult = await db?.request()
+//             .input('idProductsOrganization', idProductsOrganization)
+//             .query(getQualificationsQuery);
+
+//             const qualifications = qualificationsResult?.recordset.map((record: any) => record.qualification) || [];
+
+//             const totalQualifications = qualifications.length;
+//             const sumQualifications = qualifications.reduce((sum: number, qual: number) => sum + qual, 0);
+//             const avarage = totalQualifications > 0 ? sumQualifications / totalQualifications : null;
+
+//             const insertAverage = `INSERT INTO TB_Avarage 
+//             (idOrganization, idPointsToGrade, avarage)
+//             OUTPUT INSERTED.*
+//             VALUES (@idOrganization, @idPointsToGrade, @avarage)`;
+
+//             await db?.request()
+//             .input('idOrganization', idOrganization)
+//             .input('idPointsToGrade', idPointsToGrade)
+//             .input('avarage', avarage)
+//             .query(insertAverage);
+//             return {
+//                 code: 200,
+//                 message: 'qualification.succesfull',
+//                 data: insertQuery?.recordset
+//             };
+//         }
+//         return {
+//             code: 204,
+//             message: 'qualification.emptyResponse'
+//         };
+//     } catch (err) {
+//         console.log("Error al crear calificación", err);
+//         return {
+//             code: 404,
+//             message: { translationKey: "qualification..error_server" },
+//         }
+//     }
+// }
+
 export const postQualification = async (data: dataQualification): Promise<QualificationRepositoryService> => {
     try {
         const { idOrganization, idProductsOrganization, idPointsToGrade, qualification, observations } = data;
         const db = await connectToSqlServer();
+
+        if (!Array.isArray(idPointsToGrade) || !Array.isArray(qualification) || idPointsToGrade.length !== qualification.length) {
+            return {
+                code: 400,
+                message: 'qualification.invalidData',
+            };
+        }
+
         const organizationQuery = `SELECT idTypeOrganitation
-                                    FROM TB_Organizations
-                                    WHERE id = @IdOrganization`;
+                                   FROM TB_Organizations
+                                   WHERE id = @IdOrganization`;
 
         const organizationResult = await db?.request()
             .input('IdOrganization', idOrganization)
             .query(organizationQuery);
-            
+
         const validateOrganization = organizationResult?.recordset;
-        if ( validateOrganization && validateOrganization.length > 0 ) {
-            const insertQualification = `INSERT INTO TB_Qualification 
+        if (validateOrganization && validateOrganization.length > 0) {
+            const insertQualificationQuery = `INSERT INTO TB_Qualification 
             (idOrganization, idProductsOrganization, idPointsToGrade, qualification, observations)
             OUTPUT INSERTED.* 
-            VALUES (@idOrganization, @idProductsOrganization, @idPointsToGrade, @qualification, @observations)`
+            VALUES (@idOrganization, @idProductsOrganization, @idPointsToGrade, @qualification, @observations)`;
 
-            const insertQuery = await db?.request()
+            for (let i = 0; i < idPointsToGrade.length; i++) {
+                const pointToGrade = idPointsToGrade[i];
+                const qual = qualification[i];
+
+                await db?.request()
                     .input('idOrganization', idOrganization)
                     .input('idProductsOrganization', idProductsOrganization)
-                    .input('idPointsToGrade', idPointsToGrade)
-                    .input('qualification', qualification)
+                    .input('idPointsToGrade', pointToGrade)
+                    .input('qualification', qual)
                     .input('observations', observations || null)
-                    .query(insertQualification);
+                    .query(insertQualificationQuery);
+            }
 
             const getQualificationsQuery = `SELECT qualification
             FROM TB_Qualification
             WHERE idProductsOrganization = @idProductsOrganization`;
 
             const qualificationsResult = await db?.request()
-            .input('idProductsOrganization', idProductsOrganization)
-            .query(getQualificationsQuery);
+                .input('idProductsOrganization', idProductsOrganization)
+                .query(getQualificationsQuery);
 
             const qualifications = qualificationsResult?.recordset.map((record: any) => record.qualification) || [];
 
@@ -73,22 +156,24 @@ export const postQualification = async (data: dataQualification): Promise<Qualif
             const sumQualifications = qualifications.reduce((sum: number, qual: number) => sum + qual, 0);
             const avarage = totalQualifications > 0 ? sumQualifications / totalQualifications : null;
 
-            const insertAverage = `INSERT INTO TB_Avarage 
+            const insertAverageQuery = `INSERT INTO TB_Avarage 
             (idOrganization, idPointsToGrade, avarage)
             OUTPUT INSERTED.*
             VALUES (@idOrganization, @idPointsToGrade, @avarage)`;
 
             await db?.request()
-            .input('idOrganization', idOrganization)
-            .input('idPointsToGrade', idPointsToGrade)
-            .input('avarage', avarage)
-            .query(insertAverage);
+                .input('idOrganization', idOrganization)
+                .input('idPointsToGrade', null) // Este campo puede ajustarse según la estructura de TB_Avarage
+                .input('avarage', avarage)
+                .query(insertAverageQuery);
+
             return {
                 code: 200,
                 message: 'qualification.succesfull',
-                data: insertQuery?.recordset
+                data: qualificationsResult?.recordset
             };
         }
+
         return {
             code: 204,
             message: 'qualification.emptyResponse'
@@ -97,10 +182,10 @@ export const postQualification = async (data: dataQualification): Promise<Qualif
         console.log("Error al crear calificación", err);
         return {
             code: 404,
-            message: { translationKey: "qualification..error_server" },
-        }
+            message: { translationKey: "qualification.error_server" },
+        };
     }
-}
+};
 
 export const getCommentsQuailification = async(id: idOrganizationQualification): Promise<QualificationRepositoryService> => {
     try {
@@ -285,27 +370,27 @@ export const getQualificationGeneral = async () => {
         const db = await connectToSqlServer();
         const qualification: any = await db?.request()
             .query(`SELECT 
-                        tbpo.id,
-                        CASE 
-                            WHEN tbq.idOrganization = tbpo.idOrganization THEN tbq.idOrganization
-                            ELSE tbpo.idOrganizationProductReserved
-                        END AS organization_id,
-                        CASE 
-                            WHEN tbq.idOrganization = tbpo.idOrganization THEN tbo.bussisnesName
-                            ELSE rtbo.bussisnesName
-                        END AS organization_name,
-                        CASE 
-                            WHEN tbq.idOrganization = tbpo.idOrganization THEN rtbo.bussisnesName
-                            ELSE tbo.bussisnesName
-                        END AS reserved_organization_name,
-                        tbq.qualification,
-                        tbq.observations,
-                        tbpg.description,
-                        MAX(tba.avarage) OVER () AS avarage
+                    tbpo.id AS product_id,
+                    CASE 
+                    WHEN tbq.idOrganization = tbpo.idOrganization THEN tbq.idOrganization
+                    ELSE tbpo.idOrganizationProductReserved
+                    END AS organization_id,
+                    CASE 
+                    WHEN tbq.idOrganization = tbpo.idOrganization THEN tbo.bussisnesName
+                    ELSE rtbo.bussisnesName
+                    END AS organization_name,
+                    CASE 
+                    WHEN tbq.idOrganization = tbpo.idOrganization THEN rtbo.bussisnesName
+                    ELSE tbo.bussisnesName
+                    END AS reserved_organization_name,
+                    tbq.qualification,
+                    tbq.observations,
+                    tbpg.description,
+                    tba.avarage AS avarage
                     FROM TB_Qualification AS tbq
                     LEFT JOIN TB_ProductsOrganization AS tbpo ON tbpo.id = tbq.idProductsOrganization
                     LEFT JOIN TB_PointsToGrade AS tbpg ON tbpg.id = tbq.idPointsToGrade
-                    LEFT JOIN TB_Avarage AS tba ON tba.idPointsToGrade = tbq.idPointsToGrade
+                    LEFT JOIN TB_Avarage AS tba ON tba.idOrganization = tbq.idOrganization
                     LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
                     LEFT JOIN TB_Organizations AS rtbo ON rtbo.id = tbpo.idOrganizationProductReserved`);
         
