@@ -75,12 +75,12 @@ qualificationRouter.get(
 
 /**
  * @swagger
- * /postQuailification:
+ * /postQualification:
  *   post:
  *     tags:
  *       - Qualifications
  *     summary: Post a new qualification
- *     description: Create a new qualification with the provided details.
+ *     description: Create multiple qualifications with the provided details.
  *     requestBody:
  *       required: true
  *       content:
@@ -95,17 +95,26 @@ qualificationRouter.get(
  *                 type: integer
  *                 description: ID of the products organization
  *               idPointsToGrade:
- *                 type: integer
- *                 description: ID of the points to grade
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 description: Array of point IDs to grade
  *               qualification:
- *                 type: integer
- *                 description: Qualification value
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 description: Array of qualification values corresponding to the points
  *               observations:
  *                 type: string
- *                 description: Observations for the qualification
+ *                 description: Observations for the qualifications
+ *             required:
+ *               - idOrganization
+ *               - idProductsOrganization
+ *               - idPointsToGrade
+ *               - qualification
  *     responses:
  *       200:
- *         description: Qualification created successfully
+ *         description: Qualifications created successfully
  *         content:
  *           application/json:
  *             schema:
@@ -121,14 +130,9 @@ qualificationRouter.get(
  *             schema:
  *               type: object
  *               properties:
- *                 code:
- *                   type: integer
  *                 message:
- *                   type: object
- *                   properties:
- *                     translationKey:
- *                       type: string
- *                       example: qualification.error_invalid_data
+ *                   type: string
+ *                   example: qualification.invalidData
  *       500:
  *         description: Internal server error
  *         content:
@@ -141,13 +145,15 @@ qualificationRouter.get(
  *                   example: Internal server error
  */
 qualificationRouter.post(
-    "/postQuailification",
+    "/postQualification",
     [
         body("idOrganization", "qualification.validate_field_int").notEmpty().isInt(),
         body("idProductsOrganization", "qualification.validate_field_int").notEmpty().isInt(),
-        body("idPointsToGrade", "qualification.validate_field_int").notEmpty().isInt(),
-        body("qualification", "qualification.validate_field_int").notEmpty(),
-        body("observations", "qualification.validate_field_text").notEmpty().isString(),
+        body("idPointsToGrade", "qualification.validate_field_array").isArray({ min: 1 }),
+        body("qualification", "qualification.validate_field_array").isArray({ min: 1 }),
+        body("idPointsToGrade.*", "qualification.validate_field_int").isInt(),
+        body("qualification.*", "qualification.validate_field_int").isInt(),
+        body("observations", "qualification.validate_field_text").optional().isString(),
         validateEnpoint
     ],
     postQualification
