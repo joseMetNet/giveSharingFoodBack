@@ -99,7 +99,7 @@
 		"emptyResponse": "No se encontró información",
 		"error_server": "Ocurrió un error en el servidor",
 		"invalid_organization": "El id de la organización no existe",
-		"successful": "qualification.successful"
+		"alreadyExists": "El producto ya tiene una calificacion"
 	},
 	"": ""
 }

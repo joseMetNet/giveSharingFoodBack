@@ -107,6 +107,7 @@ export const postQualification = async (data: dataQualification): Promise<Qualif
         const { idOrganization, idProductsOrganization, idPointsToGrade, qualification, observations } = data;
         const db = await connectToSqlServer();
 
+        // Validar datos de entrada
         if (!Array.isArray(idPointsToGrade) || !Array.isArray(qualification) || idPointsToGrade.length !== qualification.length) {
             return {
                 code: 400,
@@ -114,20 +115,37 @@ export const postQualification = async (data: dataQualification): Promise<Qualif
             };
         }
 
-        const organizationQuery = `SELECT idTypeOrganitation
-                                   FROM TB_Organizations
-                                   WHERE id = @IdOrganization`;
+        // Verificar si ya existe una calificación para esta organización y producto
+        const existingQualificationQuery = `
+            SELECT 1 
+            FROM TB_Qualification 
+            WHERE idOrganization = @idOrganization AND idProductsOrganization = @idProductsOrganization
+        `;
 
+        const existingQualificationResult: any = await db?.request()
+            .input('idOrganization', idOrganization)
+            .input('idProductsOrganization', idProductsOrganization)
+            .query(existingQualificationQuery);
+
+        if (existingQualificationResult?.recordset.length > 0) {
+            return {
+                code: 409,
+                message: 'qualification.alreadyExists',
+            };
+        }
+        const organizationQuery = `SELECT idTypeOrganitation FROM TB_Organizations WHERE id = @IdOrganization`;
         const organizationResult = await db?.request()
             .input('IdOrganization', idOrganization)
             .query(organizationQuery);
 
         const validateOrganization = organizationResult?.recordset;
         if (validateOrganization && validateOrganization.length > 0) {
-            const insertQualificationQuery = `INSERT INTO TB_Qualification 
-            (idOrganization, idProductsOrganization, idPointsToGrade, qualification, observations)
-            OUTPUT INSERTED.* 
-            VALUES (@idOrganization, @idProductsOrganization, @idPointsToGrade, @qualification, @observations)`;
+            const insertQualificationQuery = `
+                INSERT INTO TB_Qualification 
+                (idOrganization, idProductsOrganization, idPointsToGrade, qualification, observations)
+                OUTPUT INSERTED.* 
+                VALUES (@idOrganization, @idProductsOrganization, @idPointsToGrade, @qualification, @observations)
+            `;
 
             for (let i = 0; i < idPointsToGrade.length; i++) {
                 const pointToGrade = idPointsToGrade[i];
@@ -142,28 +160,31 @@ export const postQualification = async (data: dataQualification): Promise<Qualif
                     .query(insertQualificationQuery);
             }
 
-            const getQualificationsQuery = `SELECT qualification
-            FROM TB_Qualification
-            WHERE idProductsOrganization = @idProductsOrganization`;
+            const getQualificationsQuery = `
+                SELECT qualification
+                FROM TB_Qualification
+                WHERE idProductsOrganization = @idProductsOrganization
+            `;
 
             const qualificationsResult = await db?.request()
                 .input('idProductsOrganization', idProductsOrganization)
                 .query(getQualificationsQuery);
 
             const qualifications = qualificationsResult?.recordset.map((record: any) => record.qualification) || [];
-
             const totalQualifications = qualifications.length;
             const sumQualifications = qualifications.reduce((sum: number, qual: number) => sum + qual, 0);
             const avarage = totalQualifications > 0 ? sumQualifications / totalQualifications : null;
 
-            const insertAverageQuery = `INSERT INTO TB_Avarage 
-            (idOrganization, idPointsToGrade, avarage)
-            OUTPUT INSERTED.*
-            VALUES (@idOrganization, @idPointsToGrade, @avarage)`;
+            const insertAverageQuery = `
+                INSERT INTO TB_Avarage 
+                (idOrganization, idPointsToGrade, avarage)
+                OUTPUT INSERTED.*
+                VALUES (@idOrganization, @idPointsToGrade, @avarage)
+            `;
 
             await db?.request()
                 .input('idOrganization', idOrganization)
-                .input('idPointsToGrade', null) // Este campo puede ajustarse según la estructura de TB_Avarage
+                .input('idPointsToGrade', null)
                 .input('avarage', avarage)
                 .query(insertAverageQuery);
 
@@ -186,6 +207,7 @@ export const postQualification = async (data: dataQualification): Promise<Qualif
         };
     }
 };
+
 
 export const getCommentsQuailification = async(id: idOrganizationQualification): Promise<QualificationRepositoryService> => {
     try {
@@ -347,7 +369,7 @@ export const getQualification = async (id: idOrganizationQualification): Promise
         if (qualifications && qualifications.length > 0) {
             return {
                 code: 200,
-                message: { translationKey: "qualification.successful" },
+                message: { translationKey: "qualification.succesfull" },
                 data: qualifications
             };
         } else {
@@ -369,8 +391,9 @@ export const getQualificationGeneral = async () => {
     try {
         const db = await connectToSqlServer();
         const qualification: any = await db?.request()
-            .query(`SELECT 
+            .query(`SELECT DISTINCT 
                     tbpo.id AS product_id,
+                    tbp.product,
                     CASE 
                     WHEN tbq.idOrganization = tbpo.idOrganization THEN tbq.idOrganization
                     ELSE tbpo.idOrganizationProductReserved
@@ -383,17 +406,26 @@ export const getQualificationGeneral = async () => {
                     WHEN tbq.idOrganization = tbpo.idOrganization THEN rtbo.bussisnesName
                     ELSE tbo.bussisnesName
                     END AS reserved_organization_name,
-                    tbq.qualification,
-                    tbq.observations,
-                    tbpg.description,
-                    tba.avarage AS avarage
+                    MAX(tbq.qualification) AS qualification,
+                    MAX(tbq.observations) AS observations,
+                    MAX(tbpg.description) AS description,
+                    MAX(tba.avarage) AS avarage
                     FROM TB_Qualification AS tbq
                     LEFT JOIN TB_ProductsOrganization AS tbpo ON tbpo.id = tbq.idProductsOrganization
+                    LEFT JOIN TB_Products AS tbp ON tbp.id = tbpo.idProduct
                     LEFT JOIN TB_PointsToGrade AS tbpg ON tbpg.id = tbq.idPointsToGrade
                     LEFT JOIN TB_Avarage AS tba ON tba.idOrganization = tbq.idOrganization
                     LEFT JOIN TB_Organizations AS tbo ON tbo.id = tbpo.idOrganization
-                    LEFT JOIN TB_Organizations AS rtbo ON rtbo.id = tbpo.idOrganizationProductReserved`);
-        
+                    LEFT JOIN TB_Organizations AS rtbo ON rtbo.id = tbpo.idOrganizationProductReserved
+                    GROUP BY 
+                    tbpo.id,
+                    tbq.idOrganization,
+                    tbpo.idOrganizationProductReserved,
+                    tbo.bussisnesName,
+                    rtbo.bussisnesName,
+                    tbpo.idOrganization,
+                    tbp.product`);
+
         if (!qualification || !qualification.recordset || !qualification.recordset.length) {
             return {
                 code: 204,
@@ -407,10 +439,10 @@ export const getQualificationGeneral = async () => {
             data: qualification.recordset
         }
     } catch (err) {
-        console.log("Error al traer calificaciones", err)
+        console.error("Error al traer calificaciones", err);
         return {
             code: 400,
             message: { translationKey: "qualification.error_server", translationParams: { name: "getQualificationGeneral" } },
         };        
-    };
+    }
 };
