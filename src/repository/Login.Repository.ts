@@ -30,14 +30,16 @@ export const loginUser = async (data: dataLogin): Promise<IresponseRepositorySer
 
         
         const user = `
-        SELECT tbu.id, tbu.idOrganization, tbo.idStatus AS idStatusOrganization, tbso.status AS statusOrganization, 
-        [name], tbu.email, idRole, tbr.[role], tbs.id AS idStatus, tbs.[status]
+        SELECT TOP 1 tbu.id, tbu.idOrganization, tbo.idStatus AS idStatusOrganization, tbso.status AS statusOrganization, 
+        [name], tbu.email, idRole, tbr.[role], tbs.id AS idStatus, tbs.[status], tbss.status AS subscriptionStatus
         FROM TB_User AS tbu
         LEFT JOIN TB_Rol AS tbr ON tbr.id = tbu.idRole
         LEFT JOIN TB_Status AS tbs ON tbs.id = tbu.idStatus
         LEFT JOIN TB_Organizations AS tbo ON  tbo.id = tbu.idOrganization
         LEFT JOIN TB_Status AS tbso ON tbso.id = tbo.idStatus
+        LEFT JOIN TB_Subscriptions AS tbss ON tbo.id = tbss.idOrganization 
         WHERE tbu.email = @email
+        ORDER BY tbss.id DESC;
         `;
 
         const token = await generateJWT(user, '1h');
