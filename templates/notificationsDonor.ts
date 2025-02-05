@@ -97,28 +97,22 @@ export class NotificationDonor {
     <div class="content">
         <p>Hola, ${donorName}</p>
 
-        <p>¡Felicitaciones! Tu registro en
-            GiveSharingFood ha sido revisado y aprobado con éxito.</p>
+        <p>¡Felicitaciones! Nos complace informarte que tu suscripción con Give Sharing Food ha sido estudiada y habilitada, lo que te permitirá realizar donaciones a través de nuestra plataforma.</p>
 
-        <p>Ahora puedes iniciar sesió n en
-            nuestro portal y comenzar a explorar opciones para donar alimentos.
+        <p>Ahora, solo nos queda un paso para que puedas comenzar a trabajar con nuestra red de contactos: el pago de la suscripción. La suscripción tiene un costo anual de 300.000 COP.
         </p>
 
-        <p>Haz clic aquí.</p>
+        <p>Te invitamos a realizar el pago a través de nuestra página, dando clic en pagar suscripción:</p>
 
         <p><a href="https://givesharingfood.azurewebsites.net/login">https://givesharingfood.azurewebsites.net/login</a>
         </p>
 
+        <p>Una vez confirmado el pago, estarás listo para empezar a colaborar con nuestra comunidad y hacer una diferencia significativa.</p>
+
         <p>&nbsp;</p>
 
-        <p>Gracias por unirte a nuestra
-            comunidad y por tu compromiso con ayudar a quienes má s lo necesitan.
+        <p>¡Gracias por ser parte de esta causa tan importante!.
         </p>
-
-        <p>¡Juntos podemos hacer una gran
-            diferencia!</p>
-
-        <p>¡Hasta pronto!</p>
 
         <p>&nbsp;</p>
     </div>
