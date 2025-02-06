@@ -100,5 +100,11 @@
 		"error_server": "An error occurred on the server",
 		"invalid_organization": "The id of the organization does not exist",
 		"alreadyExists": "The product already has a qualification"
+	},
+	"subscriptionConfig": {
+		"freeEnabled": "subscription freeEnabled",
+		"paidEnabled": "subscription paidEnabled",
+		"succesfull": "Orden y suscripción creadas exitosamente",
+		"error_server": "An error occurred on the server"
 	}
 }
