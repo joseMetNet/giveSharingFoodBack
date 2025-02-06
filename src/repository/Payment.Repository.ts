@@ -1,5 +1,5 @@
 import mercadopago from "mercadopago";
-import { IOrderResponse } from "../interface/Subscription.Interfarce";
+import { IOrderResponse, IresponseRepositoryService } from "../interface/Subscription.Interfarce";
 import { connectToSqlServer } from "../DB/config";
 import crypto from "crypto";
 import cron from "node-cron";
@@ -15,7 +15,9 @@ export const createOrderRepository = async (idOrganization: number): Promise<IOr
     const subscriptionCheck = await db?.request()
       .input("idOrganization", idOrganization)
       .query(`
-        SELECT status FROM TB_Subscriptions WHERE idOrganization = @idOrganization ORDER BY endDate DESC
+        SELECT status FROM TB_Subscriptions 
+        WHERE idOrganization = @idOrganization 
+        ORDER BY endDate DESC
       `);
 
     const existingSubscription = subscriptionCheck?.recordset[0];
@@ -24,17 +26,41 @@ export const createOrderRepository = async (idOrganization: number): Promise<IOr
       return { code: 400, message: "El usuario ya tiene una suscripción activa." };
     }
 
+    const configCheck = await db?.request().query(`SELECT * FROM TB_SubscriptionConfig`);
+    const config = configCheck?.recordset[0];
+
+    if (!config) {
+      return { code: 500, message: "Error: No hay configuración de suscripción disponible." };
+    }
+
+    const { subscriptionCost, durationMonths, allowFreeSubscription } = config;
     const subscriptionId = `${Date.now()}-${crypto.randomUUID()}`;
     const startDate = new Date();
     const endDate = new Date();
-    //endDate.setFullYear(startDate.getFullYear() + 1);
-    endDate.setMinutes(startDate.getMinutes() + 5);
-    const status = "Pago pendiente a la suscripción";
+    //endDate.setMonth(startDate.getMonth() + durationMonths); 
+    endDate.setMinutes(startDate.getMinutes() + durationMonths);
+    let status = "Pago pendiente a la suscripción";
+
+    if (allowFreeSubscription) {
+      status = "active";
+      await db?.request()
+        .input("idOrganization", idOrganization)
+        .input("subscriptionId", subscriptionId)
+        .input("status", status)
+        .input("startDate", startDate)
+        .input("endDate", endDate)
+        .query(`
+          INSERT INTO TB_Subscriptions (idOrganization, subscriptionId, status, startDate, endDate, cancelDate)
+          VALUES (@idOrganization, @subscriptionId, @status, @startDate, @endDate, NULL)
+        `);
+
+      return { code: 201, message: "subscriptionConfig.succesfull", data: null };
+    }
 
     const result = await mercadopago.preferences.create({
-      items: [{ title: "Suscripción GIVESHARINGFOOD", unit_price: 2000, currency_id: "COP", quantity: 1 }],
+      items: [{ title: "Suscripción GIVESHARINGFOOD", unit_price: subscriptionCost, currency_id: "COP", quantity: 1 }],
       external_reference: subscriptionId,
-      //notification_url: "https://b34d-176-57-207-35.ngrok-free.app/givesharingfood/webhook",
+      // notification_url: "https://6883-176-57-207-35.ngrok-free.app/givesharingfood/webhook",
       notification_url: "https://givesharingfoodbackend.azurewebsites.net/givesharingfood/webhook",
       back_urls: { success: "https://givesharingfood.azurewebsites.net" },
     });
@@ -50,14 +76,13 @@ export const createOrderRepository = async (idOrganization: number): Promise<IOr
         VALUES (@idOrganization, @subscriptionId, @status, @startDate, @endDate, NULL)
       `);
 
-    return { code: 201, message: "Orden y suscripción creadas exitosamente", data: result.body };
+    return { code: 201, message: "subscriptionConfig.succesfull", data: result.body };
 
   } catch (error) {
-    console.error("Error al crear orden en Mercado Pago:", error);
+    console.error("subscriptionConfig.error_server", error);
     return { code: 500, message: "Error al procesar la orden" };
   }
 };
-
 
 export const processWebhookRepository = async (subscriptionId: string, status: string): Promise<void> => {
   try {
@@ -107,3 +132,25 @@ cron.schedule("* * * * *", async () => {
     console.error("Error al actualizar suscripciones vencidas:", error);
   }
 });
+
+export const updateSubscriptionConfigRepository = async (subscriptionCost: number, durationMonths: number, allowFreeSubscription: boolean): Promise<IresponseRepositoryService> => {
+  try {
+    const db = await connectToSqlServer();
+
+    await db?.request()
+      .input("subscriptionCost", subscriptionCost)
+      .input("durationMonths", durationMonths)
+      .input("allowFreeSubscription", allowFreeSubscription)
+      .query(`
+        UPDATE TB_SubscriptionConfig 
+        SET subscriptionCost = @subscriptionCost, 
+            durationMonths = @durationMonths, 
+            allowFreeSubscription = @allowFreeSubscription
+      `);
+
+    return { code: 200, message: "Configuración de suscripción actualizada exitosamente." };
+  } catch (error) {
+    console.error("Error al actualizar configuración:", error);
+    return { code: 500, message: "Error al actualizar la configuración." };
+  }
+};

@@ -1,7 +1,8 @@
 import { RequestHandler } from "express";
 import mercadopago from "mercadopago";
 import * as mercadoPagoRepository from "../repository/Payment.Repository";
-import { IOrderResponse } from "../interface/Subscription.Interfarce";
+import { IOrderResponse, IresponseRepositoryService } from "../interface/Subscription.Interfarce";
+import { parseMessageI18n } from "../utils/parse-messga-i18";
 
 export const createOrder: RequestHandler = async (req, res) => {
     try {
@@ -9,9 +10,8 @@ export const createOrder: RequestHandler = async (req, res) => {
       if (!idOrganization) {
         return res.status(400).json({ message: "El idOrganization es obligatorio" });
       }
-  
       const { code, message, ...resto }: IOrderResponse = await mercadoPagoRepository.createOrderRepository(idOrganization);
-      res.status(code).json({ message, resto });
+      res.status(code).json({message: parseMessageI18n(message, req), ...resto});
     } catch (error) {
       console.error("Error en el controlador:", error);
       res.status(500).json({ message: "Error en el servidor" });
@@ -87,6 +87,19 @@ export const receiveWebhook: RequestHandler = async (req, res) => {
     res.status(500).json({ message: "Error procesando el webhook" });
   }
 };
-
+export const updateSubscriptionConfig: RequestHandler = async (req, res) => {
+  try {
+    const { subscriptionCost, durationMonths, allowFreeSubscription } = req.body;
+    if (!subscriptionCost || !durationMonths) {
+      return res.status(400).json({ message: "El costo y la duración son obligatorios." });
+    }
+    const { code, message, ...resto }: IresponseRepositoryService = await mercadoPagoRepository.updateSubscriptionConfigRepository(subscriptionCost, durationMonths, allowFreeSubscription
+    );
+    res.status(code).json({message: parseMessageI18n(message, req), ...resto});
+  } catch (error) {
+    console.error("Error en el controlador:", error);
+    res.status(500).json({message: parseMessageI18n('error_server', req)});
+  }
+};
 
 

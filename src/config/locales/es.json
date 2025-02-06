@@ -101,5 +101,11 @@
 		"invalid_organization": "El id de la organización no existe",
 		"alreadyExists": "El producto ya tiene una calificacion"
 	},
-	"": ""
+	"subscriptionConfig": {
+		"freeEnabled": "La suscripción ahora es gratuita.",
+		"paidEnabled": "La suscripción volvió a ser pagada.",
+		"succesfull": "OK",
+		"error_server": "Ocurrió un error en el servidor"
+	},
+	"Configuración de suscripción actualizada exitosamente.": "Configuración de suscripción actualizada exitosamente."
 }
