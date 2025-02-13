@@ -27,22 +27,39 @@ export const createOrderRepository = async (idOrganization: number): Promise<IOr
     }
 
     const configCheck = await db?.request().query(`SELECT * FROM TB_SubscriptionConfig`);
-    const config = configCheck?.recordset[0];
+    const orgCheck = await db?.request()
+      .input("idOrganization", idOrganization)
+      .query(`
+          SELECT tbto.typeOrganization, tbsc.foundationPays, tbsc.donorPays 
+          FROM TB_Organizations AS tbo
+          LEFT JOIN TB_TypeOrganization AS tbto ON tbo.idTypeOrganitation = tbto.id
+          CROSS JOIN TB_SubscriptionConfig AS tbsc
+          WHERE tbo.id = @idOrganization
+      `);
 
-    if (!config) {
-      return { code: 500, message: "Error: No hay configuración de suscripción disponible." };
+    const config = configCheck?.recordset[0];
+    const organization = orgCheck?.recordset[0];
+
+    if (!config || !organization) {
+      return { code: 500, message: "Error: No hay configuración de suscripción disponible o la organización no existe." };
     }
 
-    const { subscriptionCost, durationMonths, allowFreeSubscription } = config;
+    const { subscriptionCost, durationMonths } = config;
+    const { typeOrganization, foundationPays, donorPays } = organization;
+
+    const isFoundation = typeOrganization === "Fundación";
+    const isDonor = typeOrganization === "Donante";
+
+    const isFreeSubscription = (isFoundation && !foundationPays) || (isDonor && !donorPays);
+
     const subscriptionId = `${Date.now()}-${crypto.randomUUID()}`;
     const startDate = new Date();
     const endDate = new Date();
-    //endDate.setMonth(startDate.getMonth() + durationMonths); 
+    //endDate.setMonth(startDate.getMonth() + durationMonths);
     endDate.setMinutes(startDate.getMinutes() + durationMonths);
-    let status = "Pago pendiente a la suscripción";
+    let status = isFreeSubscription ? "active" : "Pago pendiente a la suscripción";
 
-    if (allowFreeSubscription) {
-      status = "active";
+    if (isFreeSubscription) {
       await db?.request()
         .input("idOrganization", idOrganization)
         .input("subscriptionId", subscriptionId)
@@ -60,8 +77,8 @@ export const createOrderRepository = async (idOrganization: number): Promise<IOr
     const result = await mercadopago.preferences.create({
       items: [{ title: "Suscripción GIVESHARINGFOOD", unit_price: subscriptionCost, currency_id: "COP", quantity: 1 }],
       external_reference: subscriptionId,
-      // notification_url: "https://6883-176-57-207-35.ngrok-free.app/givesharingfood/webhook",
       notification_url: "https://givesharingfoodbackend.azurewebsites.net/givesharingfood/webhook",
+      //notification_url: "https://912f-176-57-207-35.ngrok-free.app/givesharingfood/webhook",
       back_urls: { success: "https://givesharingfood.azurewebsites.net" },
     });
 
@@ -133,24 +150,47 @@ cron.schedule("* * * * *", async () => {
   }
 });
 
-export const updateSubscriptionConfigRepository = async (subscriptionCost: number, durationMonths: number, allowFreeSubscription: boolean): Promise<IresponseRepositoryService> => {
+export const updateSubscriptionConfigRepository = async (subscriptionCost: number, durationMonths: number, foundationPays: boolean, donorPays: boolean): Promise<IresponseRepositoryService> => {
   try {
     const db = await connectToSqlServer();
 
     await db?.request()
       .input("subscriptionCost", subscriptionCost)
       .input("durationMonths", durationMonths)
-      .input("allowFreeSubscription", allowFreeSubscription)
+      .input("foundationPays", foundationPays)
+      .input("donorPays", donorPays)
       .query(`
         UPDATE TB_SubscriptionConfig 
         SET subscriptionCost = @subscriptionCost, 
             durationMonths = @durationMonths, 
-            allowFreeSubscription = @allowFreeSubscription
+            foundationPays = @foundationPays,
+            donorPays = @donorPays
       `);
 
     return { code: 200, message: "Configuración de suscripción actualizada exitosamente." };
   } catch (error) {
     console.error("Error al actualizar configuración:", error);
     return { code: 500, message: "Error al actualizar la configuración." };
+  }
+};
+
+export const getSubscriptionConfigRepository = async (): Promise<IresponseRepositoryService> => {
+  try {
+    const db = await connectToSqlServer();
+
+    const result = await db?.request().query(`
+      SELECT subscriptionCost, durationMonths, foundationPays, donorPays 
+      FROM TB_SubscriptionConfig
+    `);
+
+    if (!result?.recordset.length) {
+      return { code: 404, message: "No se encontró configuración de suscripción." };
+    }
+
+    return { code: 200, message: "Configuración obtenida exitosamente.", data: result.recordset[0] };
+
+  } catch (error) {
+    console.error("Error al obtener la configuración:", error);
+    return { code: 500, message: "Error al obtener la configuración." };
   }
 };
