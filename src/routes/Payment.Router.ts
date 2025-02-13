@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   createOrder,
+  getSubscriptionConfig,
   receiveWebhook,
   updateSubscriptionConfig,
 } from "../controllers/CreateSubscription.Controller";
@@ -80,7 +81,9 @@ router.post("/webhook", receiveWebhook);
  *                 type: number
  *               durationMonths:
  *                 type: integer
- *               allowFreeSubscription:
+ *               foundationPays:
+ *                 type: boolean
+ *               donorPays:
  *                 type: boolean
  *     responses:
  *       200:
@@ -113,5 +116,58 @@ router.post("/webhook", receiveWebhook);
  *                   type: string
  */
 router.put("/subscription-config", updateSubscriptionConfig);
+
+/**
+ * @swagger
+ * /getSubscriptionConfig:
+ *   get:
+ *     tags:
+ *       - Subscriptions
+ *     summary: Get subscription configuration
+ *     description: Retrieve the current subscription settings.
+ *     responses:
+ *       200:
+ *         description: Subscription configuration retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Configuración obtenida exitosamente."
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     subscriptionCost:
+ *                       type: number
+ *                     durationMonths:
+ *                       type: integer
+ *                     foundationPays:
+ *                       type: boolean
+ *                     donorPays:
+ *                       type: boolean
+ *       404:
+ *         description: No subscription configuration found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "No se encontró configuración de suscripción."
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Error al obtener la configuración."
+ */
+router.get("/getSubscriptionConfig", getSubscriptionConfig);
 
 export default router;

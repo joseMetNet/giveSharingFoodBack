@@ -89,17 +89,29 @@ export const receiveWebhook: RequestHandler = async (req, res) => {
 };
 export const updateSubscriptionConfig: RequestHandler = async (req, res) => {
   try {
-    const { subscriptionCost, durationMonths, allowFreeSubscription } = req.body;
-    if (!subscriptionCost || !durationMonths) {
-      return res.status(400).json({ message: "El costo y la duración son obligatorios." });
+    const { subscriptionCost, durationMonths, foundationPays, donorPays } = req.body;
+
+    if (subscriptionCost === undefined || durationMonths === undefined || foundationPays === undefined || donorPays === undefined) {
+      return res.status(400).json({ message: "Todos los campos son obligatorios." });
     }
-    const { code, message, ...resto }: IresponseRepositoryService = await mercadoPagoRepository.updateSubscriptionConfigRepository(subscriptionCost, durationMonths, allowFreeSubscription
-    );
-    res.status(code).json({message: parseMessageI18n(message, req), ...resto});
+
+    const response = await mercadoPagoRepository.updateSubscriptionConfigRepository(subscriptionCost, durationMonths, foundationPays, donorPays);
+    return res.status(response.code).json({ message: response.message });
+
   } catch (error) {
     console.error("Error en el controlador:", error);
-    res.status(500).json({message: parseMessageI18n('error_server', req)});
+    return res.status(500).json({ message: "Error en el servidor." });
   }
 };
 
+export const getSubscriptionConfig: RequestHandler = async (req, res) => {
+  try {
+    const response = await mercadoPagoRepository.getSubscriptionConfigRepository();
+    return res.status(response.code).json({ message: response.message, data: response.data });
+
+  } catch (error) {
+    console.error("Error en el controlador:", error);
+    return res.status(500).json({ message: "Error en el servidor." });
+  }
+};
 
