@@ -97,17 +97,26 @@ export class NotificationFoundation {
     <div class="content">
       <p>Hola, ${fundationName}</p>
 
-      <p>¡Felicitaciones! Nos complace informarte que tu suscripción con Give Sharing Food ha sido estudiada y habilitada, lo que te permitirá realizar donaciones a través de nuestra plataforma.</p>
+<p>En línea con nuestra misión de apoyar incansablemente la lucha contra el hambre, y reconociendo la inestimable labor que realiza su fundación en este frente, nos complace enormemente darles la bienvenida como usuarios con navegación gratuita en nuestro sitio web. Su dedicación es fundamental para nuestra causa, y esta membresía es una forma de facilitarles el acceso a recursos y herramientas valiosas.</p>
       
-      <p>Ahora, solo nos queda un paso para que puedas comenzar a trabajar con nuestra red de contactos: el pago de la suscripción. La suscripción tiene un costo anual de 300.000 COP.</p>
-      
-      <p>Te invitamos a realizar el pago a través de nuestra página, dando clic en pagar suscripción:</p>
+      <p>Te invitamos a suscribirte a través de nuestra página, dando clic en el botón:</p>  
 
-      <p><a href="https://givesharingfood.azurewebsites.net/login">https://givesharingfood.azurewebsites.net/login</a></p>
-      
-      <p>Una vez confirmado el pago, estarás listo para empezar a colaborar con nuestra comunidad y hacer una diferencia significativa.</p>
-      
-      <p>¡Gracias por ser parte de esta causa tan importante!</p>
+      <p style="text-align: center;">
+        <a href="https://givesharingfood.azurewebsites.net/login" style="
+            display: inline-block;
+            background-color: #E3096A;
+            color: white;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+            font-family: 'Comic Sans MS', cursive;">
+            suscribirse
+        </a>
+    </p>
+      <p>Gracias por unirte a nuestra comunidad y por tu compromiso con ayudar a quienes más lo necesitan. </p>
       
       <p>&nbsp;</p>
     </div>
@@ -118,8 +127,146 @@ export class NotificationFoundation {
 </body>
 
 </html>`;
+    //await sendEmailNotification(subject, "Activacion de organización",[organization.email], emailBody);
     await sendEmailNotification(subject, "Activacion de organización",[organization.email], emailBody);
+    
+}
+
+static async cnf01_1(organization:any){
+    const subject = "Notificación CNF-01";
+    const fundationName = organization.bussisnesName;
+    const suscriptionCost = organization.suscriptionCost;
+    const emailBody: string = `<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notificación CNF-01</title>
+<link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #FFFFFF;
     }
+
+    .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: #767676;
+        color: #FFFFFF;
+        padding: 10px 50px;
+        border-radius: 5px;
+        max-width: 600px;
+        margin: 20px auto;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+    }
+
+    .logo img {
+        margin-right: 15px;
+        width: 180px;
+        height: auto;
+    }
+
+    .notification-text {
+        font-size: 25px;
+        font-weight: bold;
+        text-transform: uppercase;
+        text-align: right;
+        font-family: "Comic Sans MS", cursive;
+    }
+
+    .content {
+        max-width: 600px;
+        margin: 20px auto;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #000000;
+        font-family: "Comic Sans MS", cursive;
+    }
+
+    .footer {
+        max-width: 600px;
+        margin: 40px auto;
+        text-align: center;
+        background-color: #E3096A;
+        color: #FFFFFF;
+        padding: 30px 50px;
+        border-radius: 5px;
+    }
+
+    .footer span {
+        display: block;
+        font-family: "Comic Sans MS", cursive;
+        font-size: 18px;
+    }
+
+    .footer a {
+        color: #FFFFFF;
+        text-decoration: none;
+    }
+</style>
+</head>
+
+<body>
+<div class="header">
+    <div class="logo">
+        <img src="https://storage-masivdrive.masivapp.com/16543/6b9388c0-587d-4f7d-a1c4-34341cb75fc6.png"
+            alt="Logo">
+    </div>
+    <div class="notification-text">
+        <p>NOTIFICACIÓN</p>
+    </div>
+</div>
+
+<div class="content">
+  <p>Hola, ${fundationName}</p>
+
+<p>¡Felicitaciones! Nos complace informarte que tu suscripción con Give Sharing Food ha sido estudiada y habilitada, lo que te permitirá recibir donaciones a través de nuestra plataforma.</p>
+      
+      <p>Ahora, solo nos queda un paso para que puedas comenzar a trabajar con nuestra red de contactos: el pago de la suscripción. La suscripción tiene un costo mensual de ${suscriptionCost} COP.</p>
+        
+      <p>Te invitamos a suscribirte a través de nuestra página, dando clic en el botón:</p>  
+
+      <p style="text-align: center;">
+        <a href="https://givesharingfood.azurewebsites.net/login" style="
+            display: inline-block;
+            background-color: #E3096A;
+            color: white;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+            font-family: 'Comic Sans MS', cursive;">
+            suscribirse
+        </a>
+    </p>
+    <p>Una vez confirmado el pago, estarás listo para empezar a colaborar con nuestra comunidad y hacer una diferencia significativa</p>
+
+      <p>Gracias por unirte a nuestra comunidad y por tu compromiso con ayudar a quienes más lo necesitan. </p>
+  
+  <p>&nbsp;</p>
+</div>
+<div class="footer">
+    <span>¿Necesitas ayuda? Contáctanos</span>
+    <span><a href="mailto:givesharingfood@gmail.com">givesharingfood@gmail.com</a></span>
+</div>
+</body>
+
+</html>`;
+//await sendEmailNotification(subject, "Activacion de organización",[organization.email], emailBody);
+await sendEmailNotification(subject, "Activacion de organización",[organization.email], emailBody);
+
+}
 
     static async cnf02(product:any){
         const subject = "Notificación CNF-02";

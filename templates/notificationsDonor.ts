@@ -3,7 +3,8 @@ import { sendEmailNotification } from "../src/helpers/emailNotification.Helper";
 export class NotificationDonor {
     static async cnd01(organization: any) {
     const subject = "Notificación CND-01";
-    const donorName = organization.representativaName || "Donante";
+    const donorName = organization.bussisnesName || "Donante";
+    const subscriptionCost = organization.subscriptionCost;
     const emailBody: string = `<!DOCTYPE html>
 <html lang="en">
 
@@ -99,19 +100,31 @@ export class NotificationDonor {
 
         <p>¡Felicitaciones! Nos complace informarte que tu suscripción con Give Sharing Food ha sido estudiada y habilitada, lo que te permitirá realizar donaciones a través de nuestra plataforma.</p>
 
-        <p>Ahora, solo nos queda un paso para que puedas comenzar a trabajar con nuestra red de contactos: el pago de la suscripción. La suscripción tiene un costo anual de 300.000 COP.
-        </p>
+        <p>Ahora, solo nos queda un paso para que puedas comenzar a trabajar con nuestra red de contactos: el pago de la suscripción. La suscripción tiene un costo mensual de ${subscriptionCost} COP.</p>
 
-        <p>Te invitamos a realizar el pago a través de nuestra página, dando clic en pagar suscripción:</p>
+        <p>Te invitamos a suscribirte a través de nuestra página, dando clic en el botón:</p>  
 
-        <p><a href="https://givesharingfood.azurewebsites.net/login">https://givesharingfood.azurewebsites.net/login</a>
-        </p>
-
-        <p>Una vez confirmado el pago, estarás listo para empezar a colaborar con nuestra comunidad y hacer una diferencia significativa.</p>
+        <p style="text-align: center;">
+          <a href="https://givesharingfood.azurewebsites.net/login" style="
+              display: inline-block;
+              background-color: #E3096A;
+              color: white;
+              padding: 12px 20px;
+              font-size: 16px;
+              font-weight: bold;
+              text-decoration: none;
+              border-radius: 5px;
+              text-align: center;
+              font-family: 'Comic Sans MS', cursive;">
+              suscribirse
+          </a>
+      </p>
+    
+      <p>Una vez confirmado el pago, estarás listo para empezar a colaborar con nuestra comunidad y hacer una diferencia significativa.</p>
 
         <p>&nbsp;</p>
 
-        <p>¡Gracias por ser parte de esta causa tan importante!.
+        <p>¡Gracias por ser parte de esta causa tan importante!
         </p>
 
         <p>&nbsp;</p>

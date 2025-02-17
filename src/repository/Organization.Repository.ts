@@ -659,17 +659,125 @@ export const getTypeOrganization = async () => {
     };       
 }
 
+// export const putActiveOrInactiveOrganization = async (id: number): Promise<IresponseRepositoryService> => {
+//     try {
+//         const db = await connectToSqlServer();
+
+//         const selectQuery = `
+//             SELECT idStatus, bussisnesName, email
+//             FROM TB_Organizations
+//             WHERE id = @id
+//         `;
+//         const selectResult = await db?.request().input('id', id).query(selectQuery);
+//         const currentStatus = selectResult?.recordset[0]?.idStatus;
+//         const businessName = selectResult?.recordset[0]?.bussisnesName;
+//         const email = selectResult?.recordset[0]?.email;
+
+//         if (currentStatus === undefined) {
+//             return {
+//                 code: 404,
+//                 message: 'organizations.emptyResponse'
+//             };
+//         }
+//         const newStatus = currentStatus === 1 ? 8 : 1;
+//         const updateQuery = `
+//             UPDATE TB_Organizations
+//             SET idStatus = @newStatus
+//             WHERE id = @id
+//         `;
+//         await db?.request().input('id', id).input('newStatus', newStatus).query(updateQuery);
+//         if (newStatus === 1) {
+//             await NotificationFoundation.cnf01({
+//                 email,
+//                 bussisnesName: businessName,
+//             });
+//         }    
+//         return {
+//             code: 200,
+//             message: currentStatus === 1 ? 'organizations.deactivate' : 'organizations.activate'
+//         };
+//     } catch (err) {
+//         console.log("Error al cambiar el estado de la organizacion", err);
+//         return {
+//             code: 400,
+//             message: { translationKey: "organizations.error_server", translationParams: { name: "putActiveOrInactiveOrganization" } }
+//         };
+//     }
+// }
+
+
+
+// export const putStatusOrganization = async (id: number, idStatus: number): Promise<IresponseRepositoryService> => {
+//     try {
+//         const db = await connectToSqlServer();
+
+//         const selectQuery = `
+//             SELECT idStatus, bussisnesName, email
+//             FROM TB_Organizations
+//             WHERE id = @id
+//         `;
+//         const selectResult = await db?.request()
+//             .input('id', id)
+//             .query(selectQuery);
+
+//         const currentStatus = selectResult?.recordset[0]?.idStatus;
+//         const businessName = selectResult?.recordset[0]?.bussisnesName;
+//         const email = selectResult?.recordset[0]?.email;
+
+//         if (currentStatus === undefined) {
+//             return {
+//                 code: 404,
+//                 message: 'organizations.emptyResponse'
+//             };
+//         }
+//         await db?.request()
+//             .input('id', id)
+//             .input('newStatus', idStatus)
+//             .query(`
+//                 UPDATE TB_Organizations
+//                 SET idStatus = @newStatus
+//                 WHERE id = @id
+//             `);
+
+//         let message = '';
+//         if ((currentStatus === 1 && idStatus === 8) || (currentStatus === 8 && idStatus === 1)) {
+//             message = currentStatus === 1 ? 'organizations.deactivate' : 'organizations.activate';
+//         } else if ((currentStatus === 10 && idStatus === 11) || (currentStatus === 11 && idStatus === 10)) {
+//             message = currentStatus === 10 ? 'organizations.unblocked' : 'organizations.blocked';
+//         } else {
+//             message = 'organizations.status';
+//         }
+//         if (idStatus === 1 || idStatus === 11 || idStatus === 6) {
+//             await NotificationFoundation.cnf01({
+//                 email,
+//                 bussisnesName: businessName,
+//             });
+//         }    
+//         return {
+//             code: 200,
+//             message: message
+//         };
+//     } catch (err) {
+//         console.log("Error al cambiar el estado de la organización", err);
+//         return {
+//             code: 400,
+//             message: { translationKey: "organizations.error_server", translationParams: { name: "putStatusOrganization" }}
+//         };
+//     }
+// };
+
 export const putActiveOrInactiveOrganization = async (id: number): Promise<IresponseRepositoryService> => {
     try {
         const db = await connectToSqlServer();
 
         const selectQuery = `
-            SELECT idStatus, bussisnesName, email
+            SELECT idStatus, bussisnesName, email,idTypeOrganitation
             FROM TB_Organizations
             WHERE id = @id
         `;
         const selectResult = await db?.request().input('id', id).query(selectQuery);
         const currentStatus = selectResult?.recordset[0]?.idStatus;
+        const idTypeOrganitation = selectResult?.recordset[0]?.idTypeOrganitation;
         const businessName = selectResult?.recordset[0]?.bussisnesName;
         const email = selectResult?.recordset[0]?.email;
 
@@ -686,12 +794,38 @@ export const putActiveOrInactiveOrganization = async (id: number): Promise<Iresp
             WHERE id = @id
         `;
         await db?.request().input('id', id).input('newStatus', newStatus).query(updateQuery);
-        if (newStatus === 1) {
-            await NotificationFoundation.cnf01({
-                email,
-                bussisnesName: businessName,
-            });
-        }    
+
+        const subscriptionQuery = `
+        SELECT foundationPays, subscriptionCost 
+        FROM TB_SubscriptionConfig 
+    `;
+    const subscriptionResult = await db?.request()
+        .query(subscriptionQuery);
+
+    // const foundationPays = subscriptionResult?.recordset[0]?.foundationPays;
+    // const subscriptionCost = subscriptionResult?.recordset[0]?.subscriptionCost;
+        // if (newStatus === 1) {
+        //     if (idTypeOrganitation === 2) {
+        //         await NotificationDonor.cnd01({
+        //             email,
+        //             bussisnesName: businessName,
+        //             subscriptionCost : subscriptionCost,
+        //         });
+        //     } else {
+        //         if (foundationPays === 1) {
+        //             await NotificationFoundation.cnf01_1({
+        //                 email,
+        //                 bussisnesName: businessName,
+        //                 subscriptionCost : subscriptionCost,
+        //             });
+        //         } else {
+        //             await NotificationFoundation.cnf01({
+        //                 email,
+        //                 bussisnesName: businessName,
+        //             });
+        //         }
+        //     }
+        // }    
         return {
             code: 200,
             message: currentStatus === 1 ? 'organizations.deactivate' : 'organizations.activate'
@@ -709,8 +843,9 @@ export const putStatusOrganization = async (id: number, idStatus: number): Promi
     try {
         const db = await connectToSqlServer();
 
+        // Obtener datos de la organización
         const selectQuery = `
-            SELECT idStatus, bussisnesName, email
+            SELECT idStatus, bussisnesName, email, idTypeOrganitation
             FROM TB_Organizations
             WHERE id = @id
         `;
@@ -721,6 +856,7 @@ export const putStatusOrganization = async (id: number, idStatus: number): Promi
         const currentStatus = selectResult?.recordset[0]?.idStatus;
         const businessName = selectResult?.recordset[0]?.bussisnesName;
         const email = selectResult?.recordset[0]?.email;
+        const idTypeOrganitation = selectResult?.recordset[0]?.idTypeOrganitation;
 
         if (currentStatus === undefined) {
             return {
@@ -728,6 +864,17 @@ export const putStatusOrganization = async (id: number, idStatus: number): Promi
                 message: 'organizations.emptyResponse'
             };
         }
+
+        const subscriptionQuery = `
+            SELECT foundationPays, subscriptionCost 
+            FROM TB_SubscriptionConfig 
+        `;
+        const subscriptionResult = await db?.request()
+            .query(subscriptionQuery);
+
+        const foundationPays = subscriptionResult?.recordset[0]?.foundationPays;
+        const subscriptionCost = subscriptionResult?.recordset[0]?.subscriptionCost;
+        console.log(subscriptionCost)
         await db?.request()
             .input('id', id)
             .input('newStatus', idStatus)
@@ -745,12 +892,30 @@ export const putStatusOrganization = async (id: number, idStatus: number): Promi
         } else {
             message = 'organizations.status';
         }
+
         if (idStatus === 1 || idStatus === 11 || idStatus === 6) {
-            await NotificationFoundation.cnf01({
-                email,
-                bussisnesName: businessName,
-            });
-        }    
+            if (idTypeOrganitation === 2) {
+                await NotificationDonor.cnd01({
+                    email,
+                    bussisnesName: businessName,
+                    subscriptionCost : subscriptionCost,
+                });
+            } else {
+                if (foundationPays === 1) {
+                    await NotificationFoundation.cnf01_1({
+                        email,
+                        bussisnesName: businessName,
+                        subscriptionCost : subscriptionCost,
+                    });
+                } else {
+                    await NotificationFoundation.cnf01({
+                        email,
+                        bussisnesName: businessName,
+                    });
+                }
+            }
+        }
+        
         return {
             code: 200,
             message: message
@@ -763,7 +928,6 @@ export const putStatusOrganization = async (id: number, idStatus: number): Promi
         };
     }
 };
-
 export const getFoundationTypeOrgaization = async (page: number = 0, size: number = 10) => {
     try {
         const db = await connectToSqlServer();
@@ -861,13 +1025,14 @@ export const putBlockOrEnableOrganization = async (id: number): Promise<Irespons
         const db = await connectToSqlServer();
 
         const selectQuery = `
-            SELECT idStatus, bussisnesName, email
+            SELECT idStatus, bussisnesName, email, idTypeOrganitation
             FROM TB_Organizations
             WHERE id = @id
         `;
         const selectResult = await db?.request().input('id', id).query(selectQuery);
         const currentStatus = selectResult?.recordset[0]?.idStatus;
         const businessName = selectResult?.recordset[0]?.bussisnesName;
+        const idTypeOrganitation = selectResult?.recordset[0]?.idTypeOrganitation;
         const email = selectResult?.recordset[0]?.email;
 
         if (currentStatus === undefined) {
@@ -883,11 +1048,36 @@ export const putBlockOrEnableOrganization = async (id: number): Promise<Irespons
             WHERE id = @id
         `;
         await db?.request().input('id', id).input('newStatus', newStatus).query(updateQuery);
+        const subscriptionQuery = `
+        SELECT foundationPays, subscriptionCost 
+        FROM TB_SubscriptionConfig 
+    `;
+    const subscriptionResult = await db?.request()
+        .query(subscriptionQuery);
+
+    const foundationPays = subscriptionResult?.recordset[0]?.foundationPays;
+    const subscriptionCost = subscriptionResult?.recordset[0]?.subscriptionCost;
         if (newStatus === 11) {
-            await NotificationFoundation.cnf01({
-                email,
-                bussisnesName: businessName,
-            });
+            if (idTypeOrganitation === 2) {
+                await NotificationDonor.cnd01({
+                    email,
+                    bussisnesName: businessName,
+                    subscriptionCost : subscriptionCost,
+                });
+            } else {
+                if (foundationPays === 1) {
+                    await NotificationFoundation.cnf01_1({
+                        email,
+                        bussisnesName: businessName,
+                        subscriptionCost : subscriptionCost,
+                    });
+                } else {
+                    await NotificationFoundation.cnf01({
+                        email,
+                        bussisnesName: businessName,
+                    });
+                }
+            }
         }    
         return {
             code: 200,
@@ -901,6 +1091,52 @@ export const putBlockOrEnableOrganization = async (id: number): Promise<Irespons
         };
     }
 }
+
+// export const putBlockOrEnableOrganization = async (id: number): Promise<IresponseRepositoryService> => {
+//     try {
+//         const db = await connectToSqlServer();
+
+//         const selectQuery = `
+//             SELECT idStatus, bussisnesName, email
+//             FROM TB_Organizations
+//             WHERE id = @id
+//         `;
+//         const selectResult = await db?.request().input('id', id).query(selectQuery);
+//         const currentStatus = selectResult?.recordset[0]?.idStatus;
+//         const businessName = selectResult?.recordset[0]?.bussisnesName;
+//         const email = selectResult?.recordset[0]?.email;
+
+//         if (currentStatus === undefined) {
+//             return {
+//                 code: 404,
+//                 message: 'organizations.emptyResponse'
+//             };
+//         }
+//         const newStatus = currentStatus === 10 ? 11 : 10;
+//         const updateQuery = `
+//             UPDATE TB_Organizations
+//             SET idStatus = @newStatus
+//             WHERE id = @id
+//         `;
+//         await db?.request().input('id', id).input('newStatus', newStatus).query(updateQuery);
+//         if (newStatus === 11) {
+//             await NotificationFoundation.cnf01({
+//                 email,
+//                 bussisnesName: businessName,
+//             });
+//         }    
+//         return {
+//             code: 200,
+//             message: currentStatus === 10 ? 'organizations.unblocked' : 'organizations.blocked'
+//         };
+//     } catch (err) {
+//         console.log("Error al cambiar el estado de la organización", err);
+//         return {
+//             code: 400,
+//             message: { translationKey: "organizations.error_server", translationParams: { name: "putBlockOrEnableOrganization" } }
+//         };
+//     }
+// }
 
 export const getListOrganizationsByIdStatus = async (page: number = 0, size: number = 10, idStatus?: number) => {
     try {
