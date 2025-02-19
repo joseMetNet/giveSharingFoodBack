@@ -25,6 +25,6 @@ export interface IOrderData {
 }
   export interface IresponseRepositoryService {
     code: number;
-    message: string | ImessageComposed,
+    message: string | ImessageComposed | { translationKey: string },
     data?: any;
   }

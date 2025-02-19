@@ -2,9 +2,12 @@ import { Router } from "express";
 import {
   createOrder,
   getSubscriptionConfig,
+  getSuscriptionUserById,
   receiveWebhook,
   updateSubscriptionConfig,
 } from "../controllers/CreateSubscription.Controller";
+import { param } from "express-validator";
+import { validateEnpoint } from "../middlewares/validatorEnpoint";
 
 const router = Router();
 
@@ -169,5 +172,91 @@ router.put("/subscription-config", updateSubscriptionConfig);
  *                   example: "Error al obtener la configuración."
  */
 router.get("/getSubscriptionConfig", getSubscriptionConfig);
+
+/**
+ * @swagger
+ * /getSuscriptionUserById/{idUser}:
+ *   get:
+ *     tags:
+ *       - Subscriptions
+ *     summary: Get user by ID
+ *     description: Retrieve user details based on their unique ID.
+ *     parameters:
+ *       - in: path
+ *         name: idUser
+ *         required: true
+ *         description: ID of the user to retrieve
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: User found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 idOrganization:
+ *                   type: integer
+ *                 idStatusOrganization:
+ *                   type: integer
+ *                 statusOrganization:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                 idRole:
+ *                   type: integer
+ *                 role:
+ *                   type: string
+ *                 idStatus:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *                 subscriptionStatus:
+ *                   type: string
+ *       400:
+ *         description: Bad request - Invalid ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: user.invalid_id
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: user.not_found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+
+router.get(
+  "/getSuscriptionUserById/:idUser",
+  [
+      param("idUser", "user.invalid_id").notEmpty().isInt(),
+      validateEnpoint
+  ],
+  getSuscriptionUserById
+);
 
 export default router;
