@@ -115,3 +115,14 @@ export const getSubscriptionConfig: RequestHandler = async (req, res) => {
   }
 };
 
+export const getSuscriptionUserById: RequestHandler = async (req, res) => {
+  try {
+      const idUser = parseInt(req.params.idUser);
+      const { code, message, ...resto } = await mercadoPagoRepository.getSuscriptionUserById({ idUser });
+      res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: parseMessageI18n('error_server', req) });
+  }
+};
+
