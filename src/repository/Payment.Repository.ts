@@ -8,6 +8,99 @@ mercadopago.configure({
   access_token: process.env.MERCADOPAGO_API_KEY!,
 });
 
+// export const createOrderRepository = async (idOrganization: number): Promise<IOrderResponse> => {
+//   try {
+//     const db = await connectToSqlServer();
+
+//     const subscriptionCheck = await db?.request()
+//       .input("idOrganization", idOrganization)
+//       .query(`
+//         SELECT status FROM TB_Subscriptions 
+//         WHERE idOrganization = @idOrganization 
+//         ORDER BY endDate DESC
+//       `);
+
+//     const existingSubscription = subscriptionCheck?.recordset[0];
+
+//     if (existingSubscription && existingSubscription.status === "active") {
+//       return { code: 400, message: "El usuario ya tiene una suscripción activa." };
+//     }
+
+//     const configCheck = await db?.request().query(`SELECT * FROM TB_SubscriptionConfig`);
+//     const orgCheck = await db?.request()
+//       .input("idOrganization", idOrganization)
+//       .query(`
+//           SELECT tbto.typeOrganization, tbsc.foundationPays, tbsc.donorPays 
+//           FROM TB_Organizations AS tbo
+//           LEFT JOIN TB_TypeOrganization AS tbto ON tbo.idTypeOrganitation = tbto.id
+//           CROSS JOIN TB_SubscriptionConfig AS tbsc
+//           WHERE tbo.id = @idOrganization
+//       `);
+
+//     const config = configCheck?.recordset[0];
+//     const organization = orgCheck?.recordset[0];
+
+//     if (!config || !organization) {
+//       return { code: 500, message: "Error: No hay configuración de suscripción disponible o la organización no existe." };
+//     }
+
+//     const { subscriptionCost, durationMonths } = config;
+//     const { typeOrganization, foundationPays, donorPays } = organization;
+
+//     const isFoundation = typeOrganization === "Fundación";
+//     const isDonor = typeOrganization === "Donante";
+
+//     const isFreeSubscription = (isFoundation && !foundationPays) || (isDonor && !donorPays);
+
+//     const subscriptionId = `${Date.now()}-${crypto.randomUUID()}`;
+//     const startDate = new Date();
+//     const endDate = new Date();
+//     //endDate.setMonth(startDate.getMonth() + durationMonths);
+//     endDate.setMinutes(startDate.getMinutes() + durationMonths);
+//     let status = isFreeSubscription ? "active" : "Pago pendiente a la suscripción";
+
+//     if (isFreeSubscription) {
+//       await db?.request()
+//         .input("idOrganization", idOrganization)
+//         .input("subscriptionId", subscriptionId)
+//         .input("status", status)
+//         .input("startDate", startDate)
+//         .input("endDate", endDate)
+//         .query(`
+//           INSERT INTO TB_Subscriptions (idOrganization, subscriptionId, status, startDate, endDate, cancelDate)
+//           VALUES (@idOrganization, @subscriptionId, @status, @startDate, @endDate, NULL)
+//         `);
+
+//       return { code: 201, message: "subscriptionConfig.succesfull", data: null };
+//     }
+
+//     const result = await mercadopago.preferences.create({
+//       items: [{ title: "Suscripción GIVESHARINGFOOD", unit_price: subscriptionCost, currency_id: "COP", quantity: 1 }],
+//       external_reference: subscriptionId,
+//       notification_url: "https://givesharingfoodbackend.azurewebsites.net/givesharingfood/webhook",
+//       //notification_url: "https://912f-176-57-207-35.ngrok-free.app/givesharingfood/webhook",
+//       back_urls: { success: "https://givesharingfood.azurewebsites.net" },
+//     });
+
+//     await db?.request()
+//       .input("idOrganization", idOrganization)
+//       .input("subscriptionId", subscriptionId)
+//       .input("status", status)
+//       .input("startDate", startDate)
+//       .input("endDate", endDate)
+//       .query(`
+//         INSERT INTO TB_Subscriptions (idOrganization, subscriptionId, status, startDate, endDate, cancelDate)
+//         VALUES (@idOrganization, @subscriptionId, @status, @startDate, @endDate, NULL)
+//       `);
+
+//     return { code: 201, message: "subscriptionConfig.succesfull", data: result.body };
+
+//   } catch (error) {
+//     console.error("subscriptionConfig.error_server", error);
+//     return { code: 500, message: "Error al procesar la orden" };
+//   }
+// };
+
 export const createOrderRepository = async (idOrganization: number): Promise<IOrderResponse> => {
   try {
     const db = await connectToSqlServer();
@@ -26,15 +119,18 @@ export const createOrderRepository = async (idOrganization: number): Promise<IOr
       return { code: 400, message: "El usuario ya tiene una suscripción activa." };
     }
 
-    const configCheck = await db?.request().query(`SELECT * FROM TB_SubscriptionConfig`);
+    const configCheck = await db?.request().query(`
+      SELECT foundationPays, donorPays, foundationCost, donorCost, durationMonths 
+      FROM TB_SubscriptionConfig
+    `);
+
     const orgCheck = await db?.request()
       .input("idOrganization", idOrganization)
       .query(`
-          SELECT tbto.typeOrganization, tbsc.foundationPays, tbsc.donorPays 
-          FROM TB_Organizations AS tbo
-          LEFT JOIN TB_TypeOrganization AS tbto ON tbo.idTypeOrganitation = tbto.id
-          CROSS JOIN TB_SubscriptionConfig AS tbsc
-          WHERE tbo.id = @idOrganization
+        SELECT tbto.typeOrganization, tbo.idTypeOrganitation
+        FROM TB_Organizations AS tbo
+        LEFT JOIN TB_TypeOrganization AS tbto ON tbo.idTypeOrganitation = tbto.id
+        WHERE tbo.id = @idOrganization
       `);
 
     const config = configCheck?.recordset[0];
@@ -44,13 +140,21 @@ export const createOrderRepository = async (idOrganization: number): Promise<IOr
       return { code: 500, message: "Error: No hay configuración de suscripción disponible o la organización no existe." };
     }
 
-    const { subscriptionCost, durationMonths } = config;
-    const { typeOrganization, foundationPays, donorPays } = organization;
+    const { foundationPays, donorPays, foundationCost, donorCost, durationMonths } = config;
+    const { typeOrganization } = organization;
 
-    const isFoundation = typeOrganization === "Fundación";
-    const isDonor = typeOrganization === "Donante";
+    let subscriptionCost = 0;
+    if (typeOrganization === "Fundación") {
+      subscriptionCost = foundationCost;
+    } else if (typeOrganization === "Donante") {
+      subscriptionCost = donorCost;
+    } else {
+      return { code: 400, message: "Tipo de organización no válido." };
+    }
 
-    const isFreeSubscription = (isFoundation && !foundationPays) || (isDonor && !donorPays);
+
+    const isFreeSubscription = (typeOrganization === "Fundación" && !foundationPays) || 
+                               (typeOrganization === "Donante" && !donorPays);
 
     const subscriptionId = `${Date.now()}-${crypto.randomUUID()}`;
     const startDate = new Date();
@@ -77,8 +181,8 @@ export const createOrderRepository = async (idOrganization: number): Promise<IOr
     const result = await mercadopago.preferences.create({
       items: [{ title: "Suscripción GIVESHARINGFOOD", unit_price: subscriptionCost, currency_id: "COP", quantity: 1 }],
       external_reference: subscriptionId,
-      notification_url: "https://givesharingfoodbackend.azurewebsites.net/givesharingfood/webhook",
-      //notification_url: "https://912f-176-57-207-35.ngrok-free.app/givesharingfood/webhook",
+      // notification_url: "https://givesharingfoodbackend.azurewebsites.net/givesharingfood/webhook",
+      notification_url: "https://83aa-176-57-207-35.ngrok-free.app/givesharingfood/webhook",
       back_urls: { success: "https://givesharingfood.azurewebsites.net" },
     });
 
@@ -150,18 +254,21 @@ cron.schedule("* * * * *", async () => {
   }
 });
 
-export const updateSubscriptionConfigRepository = async (subscriptionCost: number, durationMonths: number, foundationPays: boolean, donorPays: boolean): Promise<IresponseRepositoryService> => {
+export const updateSubscriptionConfigRepository = async (foundationCost: number, donorCost: number, durationMonths: number, foundationPays: boolean, donorPays: boolean
+): Promise<IresponseRepositoryService> => {
   try {
     const db = await connectToSqlServer();
 
     await db?.request()
-      .input("subscriptionCost", subscriptionCost)
+      .input("foundationCost", foundationCost)
+      .input("donorCost", donorCost)
       .input("durationMonths", durationMonths)
       .input("foundationPays", foundationPays)
       .input("donorPays", donorPays)
       .query(`
         UPDATE TB_SubscriptionConfig 
-        SET subscriptionCost = @subscriptionCost, 
+        SET foundationCost = @foundationCost, 
+            donorCost = @donorCost, 
             durationMonths = @durationMonths, 
             foundationPays = @foundationPays,
             donorPays = @donorPays
@@ -179,7 +286,7 @@ export const getSubscriptionConfigRepository = async (): Promise<IresponseReposi
     const db = await connectToSqlServer();
 
     const result = await db?.request().query(`
-      SELECT subscriptionCost, durationMonths, foundationPays, donorPays 
+      SELECT durationMonths, foundationPays, donorPays, foundationCost,	donorCost
       FROM TB_SubscriptionConfig
     `);
 

@@ -89,13 +89,22 @@ export const receiveWebhook: RequestHandler = async (req, res) => {
 };
 export const updateSubscriptionConfig: RequestHandler = async (req, res) => {
   try {
-    const { subscriptionCost, durationMonths, foundationPays, donorPays } = req.body;
+    const { foundationCost, donorCost, durationMonths, foundationPays, donorPays } = req.body;
 
-    if (subscriptionCost === undefined || durationMonths === undefined || foundationPays === undefined || donorPays === undefined) {
+    if (
+      foundationCost === undefined || 
+      donorCost === undefined || 
+      durationMonths === undefined || 
+      foundationPays === undefined || 
+      donorPays === undefined
+    ) {
       return res.status(400).json({ message: "Todos los campos son obligatorios." });
     }
 
-    const response = await mercadoPagoRepository.updateSubscriptionConfigRepository(subscriptionCost, durationMonths, foundationPays, donorPays);
+    const response = await mercadoPagoRepository.updateSubscriptionConfigRepository(
+      foundationCost, donorCost, durationMonths, foundationPays, donorPays
+    );
+
     return res.status(response.code).json({ message: response.message });
 
   } catch (error) {

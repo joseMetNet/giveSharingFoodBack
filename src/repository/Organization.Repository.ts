@@ -866,15 +866,16 @@ export const putStatusOrganization = async (id: number, idStatus: number): Promi
         }
 
         const subscriptionQuery = `
-            SELECT foundationPays, subscriptionCost 
+            SELECT foundationPays, foundationCost, donorCost
             FROM TB_SubscriptionConfig 
         `;
         const subscriptionResult = await db?.request()
             .query(subscriptionQuery);
 
         const foundationPays = subscriptionResult?.recordset[0]?.foundationPays;
-        const subscriptionCost = subscriptionResult?.recordset[0]?.subscriptionCost;
-        console.log(subscriptionCost)
+        const foundationCost = subscriptionResult?.recordset[0]?.foundationCost;
+        const donorCost = subscriptionResult?.recordset[0]?.donorCost;
+        console.log(foundationCost)
         await db?.request()
             .input('id', id)
             .input('newStatus', idStatus)
@@ -898,14 +899,14 @@ export const putStatusOrganization = async (id: number, idStatus: number): Promi
                 await NotificationDonor.cnd01({
                     email,
                     bussisnesName: businessName,
-                    subscriptionCost : subscriptionCost,
+                    subscriptionCost : donorCost,
                 });
             } else {
                 if (foundationPays === 1) {
                     await NotificationFoundation.cnf01_1({
                         email,
                         bussisnesName: businessName,
-                        subscriptionCost : subscriptionCost,
+                        subscriptionCost : foundationCost,
                     });
                 } else {
                     await NotificationFoundation.cnf01({
@@ -1049,27 +1050,28 @@ export const putBlockOrEnableOrganization = async (id: number): Promise<Irespons
         `;
         await db?.request().input('id', id).input('newStatus', newStatus).query(updateQuery);
         const subscriptionQuery = `
-        SELECT foundationPays, subscriptionCost 
+        SELECT foundationPays, foundationCost, donorCost
         FROM TB_SubscriptionConfig 
     `;
     const subscriptionResult = await db?.request()
         .query(subscriptionQuery);
 
     const foundationPays = subscriptionResult?.recordset[0]?.foundationPays;
-    const subscriptionCost = subscriptionResult?.recordset[0]?.subscriptionCost;
+    const foundationCost = subscriptionResult?.recordset[0]?.foundationCost;
+    const donorCost = subscriptionResult?.recordset[0]?.donorCost;
         if (newStatus === 11) {
             if (idTypeOrganitation === 2) {
                 await NotificationDonor.cnd01({
                     email,
                     bussisnesName: businessName,
-                    subscriptionCost : subscriptionCost,
+                    subscriptionCost : donorCost,
                 });
             } else {
                 if (foundationPays === 1) {
                     await NotificationFoundation.cnf01_1({
                         email,
                         bussisnesName: businessName,
-                        subscriptionCost : subscriptionCost,
+                        subscriptionCost : foundationCost,
                     });
                 } else {
                     await NotificationFoundation.cnf01({
