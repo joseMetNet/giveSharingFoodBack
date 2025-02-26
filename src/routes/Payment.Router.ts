@@ -80,14 +80,21 @@ router.post("/webhook", receiveWebhook);
  *           schema:
  *             type: object
  *             properties:
- *               subscriptionCost:
+ *               foundationCost:
  *                 type: number
+ *                 description: Subscription cost for foundations.
+ *               donorCost:
+ *                 type: number
+ *                 description: Subscription cost for donors.
  *               durationMonths:
  *                 type: integer
+ *                 description: Duration of the subscription in months.
  *               foundationPays:
  *                 type: boolean
+ *                 description: Whether the foundation pays for the subscription.
  *               donorPays:
  *                 type: boolean
+ *                 description: Whether the donor pays for the subscription.
  *     responses:
  *       200:
  *         description: Subscription updated successfully

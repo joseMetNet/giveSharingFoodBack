@@ -16,7 +16,7 @@ export interface IOrderData {
   
   export interface IOrderResponse {
     code: number;
-    message: string;
+    message: string | ImessageComposed | { translationKey: string },
     data?: any;
   }
   export interface ImessageComposed {

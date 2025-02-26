@@ -104,7 +104,8 @@
 	"subscriptionConfig": {
 		"freeEnabled": "subscription freeEnabled",
 		"paidEnabled": "subscription paidEnabled",
-		"succesfull": "Orden y suscripción creadas exitosamente",
+		"succesfull": "OK",
 		"error_server": "An error occurred on the server"
-	}
+	},
+	"Configuración de suscripción actualizada exitosamente.": "Configuración de suscripción actualizada exitosamente."
 }
