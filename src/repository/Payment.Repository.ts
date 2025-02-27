@@ -181,8 +181,8 @@ export const createOrderRepository = async (idOrganization: number): Promise<IOr
     const result = await mercadopago.preferences.create({
       items: [{ title: "Suscripción GIVESHARINGFOOD", unit_price: subscriptionCost, currency_id: "COP", quantity: 1 }],
       external_reference: subscriptionId,
-      // notification_url: "https://givesharingfoodbackend.azurewebsites.net/givesharingfood/webhook",
-      notification_url: "https://83aa-176-57-207-35.ngrok-free.app/givesharingfood/webhook",
+      notification_url: "https://givesharingfoodbackend.azurewebsites.net/givesharingfood/webhook",
+      // notification_url: "https://83aa-176-57-207-35.ngrok-free.app/givesharingfood/webhook",
       back_urls: { success: "https://givesharingfood.azurewebsites.net" },
     });
 
