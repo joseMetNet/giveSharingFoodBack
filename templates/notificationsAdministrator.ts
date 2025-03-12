@@ -136,7 +136,7 @@ export class NotificationAdministrator {
     await sendEmailNotification(
       subject,
       "Nueva Organización",
-      ['danimetnet@gmail.com'],
+      ['givesharingfood@gmail.com'],
       emailBody
     );
   }
@@ -262,7 +262,7 @@ export class NotificationAdministrator {
     await sendEmailNotification(
       subject,
       "Nuevo Producto",
-      ['danimetnet@gmail.com'],
+      ['givesharingfood@gmail.com'],
       emailBody
     );
   }
@@ -393,7 +393,7 @@ export class NotificationAdministrator {
     await sendEmailNotification(
       subject,
       "Reserva de Producto",
-      ['danimetnet@gmail.com'],
+      ['givesharingfood@gmail.com'],
       emailBody
     )
   }
@@ -518,7 +518,7 @@ export class NotificationAdministrator {
 </html>`;
     await sendEmailNotification(
       subject,"Aceptación de Certificado",
-      ['danimetnet@gmail.com'],
+      ['givesharingfood@gmail.com'],
       emailBody
     )
   }

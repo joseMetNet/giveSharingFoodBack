@@ -103,10 +103,8 @@ export const uploadProductFile = async (filePath: string, originalBlobName: stri
 
         const blobUrl = `https://${blobServiceClient.accountName}.blob.core.windows.net/${containerName}/${blockBlobClient.name}`;
 
-        // Conexión a la base de datos
         const db = await connectToSqlServer();
 
-        // Obtener idProduct, idOrganization y idOrganizationProductReserved desde TB_ProductsOrganization
         const productOrganizationQuery = `
             SELECT idProduct, idOrganization, idOrganizationProductReserved
             FROM TB_ProductsOrganization
@@ -125,7 +123,6 @@ export const uploadProductFile = async (filePath: string, originalBlobName: stri
             };
         }
 
-        // Obtener el nombre del producto desde TB_Products
         const productQuery = `
             SELECT product
             FROM TB_Products
@@ -137,7 +134,6 @@ export const uploadProductFile = async (filePath: string, originalBlobName: stri
 
         const productName = productResult.recordset[0]?.product || "Producto desconocido";
 
-        // Obtener el email y nombre de la organización principal
         const organizationQuery = `
             SELECT email, bussisnesName
             FROM TB_Organizations
@@ -154,7 +150,6 @@ export const uploadProductFile = async (filePath: string, originalBlobName: stri
             console.log(`No se encontró email para la organización con ID ${idOrganization}`);
         }
 
-        // Obtener bussisnesName de idOrganizationProductReserved
         const reservedOrganizationQuery = `
             SELECT bussisnesName
             FROM TB_Organizations
@@ -166,7 +161,6 @@ export const uploadProductFile = async (filePath: string, originalBlobName: stri
 
         const reservedOrganizationName = reservedOrganizationResult.recordset[0]?.bussisnesName || "Organización reservada desconocida";
 
-        // Insertar el registro en TB_ProductDocuments
         await db?.request()
             .input('document', originalBlobName)
             .input('url', blobUrl)
@@ -180,7 +174,7 @@ export const uploadProductFile = async (filePath: string, originalBlobName: stri
             console.log("bussisnesName",organizationName);
             console.log("productName",productName);
             console.log("reservedOrganizationName",reservedOrganizationName);
-        // Enviar notificación a la organización principal
+
         if (organizationEmail) {
             await NotificationDonor.cnd05({
                 email: organizationEmail,
@@ -400,7 +394,6 @@ export const putAcceptedOrRejectedDocument = async (
     try {
         const db = await connectToSqlServer();
 
-        // Obtener el estado actual y el idProductOrganization del documento
         const documentQuery = `
             SELECT idStatus, idProductOrganization
             FROM TB_ProductDocuments
@@ -417,7 +410,6 @@ export const putAcceptedOrRejectedDocument = async (
             };
         }
 
-        // Actualizar el estado y las observaciones del documento
         const updateQuery = `
             UPDATE TB_ProductDocuments
             SET idStatus = @newStatus, observations = @observations

@@ -127,7 +127,6 @@ export class NotificationFoundation {
 </body>
 
 </html>`;
-    //await sendEmailNotification(subject, "Activacion de organización",[organization.email], emailBody);
     await sendEmailNotification(subject, "Activacion de organización",[organization.email], emailBody);
     
 }
@@ -263,7 +262,6 @@ static async cnf01_1(organization:any){
 </body>
 
 </html>`;
-//await sendEmailNotification(subject, "Activacion de organización",[organization.email], emailBody);
 await sendEmailNotification(subject, "Activacion de organización",[organization.email], emailBody);
 
 }

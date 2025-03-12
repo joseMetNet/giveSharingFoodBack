@@ -48,7 +48,6 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
         const { idProduct, idOrganization, idMeasure, quantity, expirationDate, idUser, price, attendantName, attendantPhone, attendantEmail, attendantAddres, idCity, idDepartment } = data;
         const db = await connectToSqlServer();
 
-        // Verificar si la organización existe
         const checkOrgQuery = `SELECT id FROM TB_Organizations WHERE id = @idOrganization`;
         const orgResult = await db?.request()
             .input('idOrganization', idOrganization)
@@ -61,7 +60,6 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
             };
         }
 
-        // Insertar el producto en TB_ProductsOrganization
         const insertQuery = `
         INSERT INTO TB_ProductsOrganization (idProduct, idOrganization, idMeasure, quantity, expirationDate, idStatus, idUser, price, attendantName, attendantPhone, attendantEmail, attendantAddres, idCity, idDepartment)
         OUTPUT INSERTED.*
@@ -88,7 +86,6 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
             throw new Error("Error al insertar el producto en la base de datos.");
         }
 
-        // Obtener datos para la notificación
         const selectOrgQuery = `
             SELECT bussisnesName
             FROM TB_Organizations
@@ -116,7 +113,6 @@ export const postProducts = async(data: postProduct): Promise<postProductReposit
             bussisnesName,
             attendantName,
         });
-        // Nueva consulta para obtener correos electrónicos
         const emailQuery = `
             SELECT DISTINCT tbu.email
             FROM TB_User AS tbu
@@ -546,7 +542,6 @@ export const putProductReserved = async (ids: number[]): Promise<ProductReposito
     try {
         const db = await connectToSqlServer();
 
-        // Verificar los productos en la base de datos
         const checkProductQuery = `
             SELECT id, idOrganizationProductReserved, attendantEmail, idProduct, attendantName 
             FROM TB_ProductsOrganization 
@@ -565,7 +560,6 @@ export const putProductReserved = async (ids: number[]): Promise<ProductReposito
             };
         }
 
-        // Obtener los idProduct únicos para consultar en TB_Products
         const productIds = [...new Set(foundProducts.map((p: any) => p.idProduct))];
         const productQuery = `
             SELECT id, product AS productName 
@@ -575,7 +569,6 @@ export const putProductReserved = async (ids: number[]): Promise<ProductReposito
         const productResult: any = await db?.request().query(productQuery);
         const productData = productResult.recordset;
 
-        // Actualizar el estado de los productos
         const updateQuery = `
             UPDATE TB_ProductsOrganization 
             SET idStatus = 3, solicitDate = getDate() 
@@ -583,7 +576,6 @@ export const putProductReserved = async (ids: number[]): Promise<ProductReposito
         `;
         await db?.request().query(updateQuery);
 
-        // Obtener información de las organizaciones relacionadas
         const organizationIds = [...new Set(foundProducts.map((p: any) => p.idOrganizationProductReserved))];
         const organizationQuery = `
             SELECT id, email, bussisnesName 
@@ -593,15 +585,14 @@ export const putProductReserved = async (ids: number[]): Promise<ProductReposito
         const organizationResult: any = await db?.request().query(organizationQuery);
         const organizationEmails = organizationResult.recordset;
 
-        // Procesar y enviar notificaciones
         await Promise.all(
             foundProducts.map(async (product: any) => {
                 const organization = organizationEmails.find((org: any) => org.id === product.idOrganizationProductReserved);
                 const productName = productData.find((p: any) => p.idProduct === product.idProduct)?.productName || "Producto";
-                //const date = product.solicitDate || new Date().toISOString();
+
                 const today = new Date();
                 const date = today.toISOString().split('T')[0];
-                // Validar datos necesarios para las notificaciones
+
                 if (!organization) {
                     console.log(`No se encontró organización para el producto ID ${product.id}`);
                     return;
@@ -613,12 +604,10 @@ export const putProductReserved = async (ids: number[]): Promise<ProductReposito
                     productName,
                     attendantEmail: product.attendantEmail,
                 };
-                // Notificación al asistente
                 if (product.attendantEmail) {
                     await NotificationDonor.cnd03(productDetails);
                 }
 
-                // Notificación a la organización
                 if (organization.email) {
                     await NotificationFoundation.cnf03({
                         email: organization.email,
@@ -721,7 +710,6 @@ export const putProductDelivered = async (id: number): Promise<ProductRepository
     try {
         const db = await connectToSqlServer();
 
-        // Verificar si el producto existe
         const checkProductQuery = `
             SELECT id, idOrganization, idProduct, attendantEmail, attendantName
             FROM TB_ProductsOrganization 
@@ -739,7 +727,6 @@ export const putProductDelivered = async (id: number): Promise<ProductRepository
         const product = checkProductResult.recordset[0];
 
 
-        // Actualizar el estado del producto
         const updateQuery = `
             UPDATE TB_ProductsOrganization 
             SET idStatus = 5, deliverDate = getDate() 
@@ -747,7 +734,6 @@ export const putProductDelivered = async (id: number): Promise<ProductRepository
         `;
         await db?.request().query(updateQuery);
 
-        // Obtener información de la organización
         const organizationQuery = `
             SELECT email, bussisnesName 
             FROM TB_Organizations 
@@ -765,12 +751,11 @@ export const putProductDelivered = async (id: number): Promise<ProductRepository
             bussisnesName: organization?.bussisnesName,
             attendantEmail: product.attendantEmail,
         };
-        // Enviar notificación al asistente
+
         if (product.attendantEmail) {
             await NotificationDonor.cnd04(productDetails);
         }
 
-        // Enviar notificación a la organización
         if (organization?.email) {
             await NotificationFoundation.cnf04({
                 email: organization.email,

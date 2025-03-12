@@ -32,82 +32,11 @@ export const getPointsToGradeByIdRol = async (filter: IfilterQuantificationByIdR
     };
 }
 
-// export const postQualification = async (data: dataQualification): Promise<QualificationRepositoryService> => {
-//     try {
-//         const { idOrganization, idProductsOrganization, idPointsToGrade, qualification, observations } = data;
-//         const db = await connectToSqlServer();
-//         const organizationQuery = `SELECT idTypeOrganitation
-//                                     FROM TB_Organizations
-//                                     WHERE id = @IdOrganization`;
-
-//         const organizationResult = await db?.request()
-//             .input('IdOrganization', idOrganization)
-//             .query(organizationQuery);
-            
-//         const validateOrganization = organizationResult?.recordset;
-//         if ( validateOrganization && validateOrganization.length > 0 ) {
-//             const insertQualification = `INSERT INTO TB_Qualification 
-//             (idOrganization, idProductsOrganization, idPointsToGrade, qualification, observations)
-//             OUTPUT INSERTED.* 
-//             VALUES (@idOrganization, @idProductsOrganization, @idPointsToGrade, @qualification, @observations)`
-
-//             const insertQuery = await db?.request()
-//                     .input('idOrganization', idOrganization)
-//                     .input('idProductsOrganization', idProductsOrganization)
-//                     .input('idPointsToGrade', idPointsToGrade)
-//                     .input('qualification', qualification)
-//                     .input('observations', observations || null)
-//                     .query(insertQualification);
-
-//             const getQualificationsQuery = `SELECT qualification
-//             FROM TB_Qualification
-//             WHERE idProductsOrganization = @idProductsOrganization`;
-
-//             const qualificationsResult = await db?.request()
-//             .input('idProductsOrganization', idProductsOrganization)
-//             .query(getQualificationsQuery);
-
-//             const qualifications = qualificationsResult?.recordset.map((record: any) => record.qualification) || [];
-
-//             const totalQualifications = qualifications.length;
-//             const sumQualifications = qualifications.reduce((sum: number, qual: number) => sum + qual, 0);
-//             const avarage = totalQualifications > 0 ? sumQualifications / totalQualifications : null;
-
-//             const insertAverage = `INSERT INTO TB_Avarage 
-//             (idOrganization, idPointsToGrade, avarage)
-//             OUTPUT INSERTED.*
-//             VALUES (@idOrganization, @idPointsToGrade, @avarage)`;
-
-//             await db?.request()
-//             .input('idOrganization', idOrganization)
-//             .input('idPointsToGrade', idPointsToGrade)
-//             .input('avarage', avarage)
-//             .query(insertAverage);
-//             return {
-//                 code: 200,
-//                 message: 'qualification.succesfull',
-//                 data: insertQuery?.recordset
-//             };
-//         }
-//         return {
-//             code: 204,
-//             message: 'qualification.emptyResponse'
-//         };
-//     } catch (err) {
-//         console.log("Error al crear calificación", err);
-//         return {
-//             code: 404,
-//             message: { translationKey: "qualification..error_server" },
-//         }
-//     }
-// }
-
 export const postQualification = async (data: dataQualification): Promise<QualificationRepositoryService> => {
     try {
         const { idOrganization, idProductsOrganization, idPointsToGrade, qualification, observations } = data;
         const db = await connectToSqlServer();
 
-        // Validar datos de entrada
         if (!Array.isArray(idPointsToGrade) || !Array.isArray(qualification) || idPointsToGrade.length !== qualification.length) {
             return {
                 code: 400,
@@ -115,7 +44,6 @@ export const postQualification = async (data: dataQualification): Promise<Qualif
             };
         }
 
-        // Verificar si ya existe una calificación para esta organización y producto
         const existingQualificationQuery = `
             SELECT 1 
             FROM TB_Qualification 
@@ -244,66 +172,11 @@ export const getCommentsQuailification = async(id: idOrganizationQualification):
     }
 }
 
-// export const getQualification = async(id: idOrganizationQualification): Promise<QualificationRepositoryService> => {
-//     try {
-//         const { idOrganization } = id;
-//         const db = await connectToSqlServer();
-
-//         const organizationCheckQuery = `SELECT id FROM TB_Organizations WHERE id = @idOrganization`;
-//         const organizationCheckResult = await db?.request()
-//             .input('idOrganization', idOrganization)
-//             .query(organizationCheckQuery);
-
-//         if (organizationCheckResult?.recordset.length === 0) {
-//             return {
-//                 code: 400,
-//                 message: { translationKey: "qualification.invalid_organization" }
-//             };
-//         }
-
-//         // Consultar las calificaciones
-//         const qualificationsQuery = `
-//             SELECT 
-//             tbptg.description, 
-//             tbq.qualification,
-//             AVG(tbq.qualification) OVER (PARTITION BY tbptg.description) AS max_average
-//             FROM TB_Qualification AS tbq
-//             LEFT JOIN TB_PointsToGrade AS tbptg ON tbq.idPointsToGrade = tbptg.id
-//             WHERE tbq.idOrganization = @idOrganization`;
-
-//         const resultQualifications = await db?.request()
-//             .input('idOrganization', idOrganization)
-//             .query(qualificationsQuery);
-
-//         const qualification = resultQualifications?.recordset;
-
-//         if (qualification && qualification.length > 0) {
-//             return {
-//                 code: 200,
-//                 message: { translationKey: "qualification.succesfull" },
-//                 data: qualification
-//             };
-//         } else {
-//             return {
-//                 code: 400,
-//                 message: { translationKey: "qualification.emptyResponse" }
-//             };
-//         }
-//     } catch (err) {
-//         console.log("Error al traer las calificaciones", err);
-//         return {
-//             code: 400,
-//             message: { translationKey: "qualification.error_server" }
-//         };
-//     }
-// };
-
 export const getQualification = async (id: idOrganizationQualification): Promise<QualificationRepositoryService> => {
     try {
         const { idOrganization } = id;
         const db = await connectToSqlServer();
 
-        // Verificar si la organización existe y obtener el idRol del usuario relacionado
         const organizationCheckQuery = `
             SELECT org.id AS organizationId, usr.idRole 
             FROM TB_Organizations AS org
@@ -323,7 +196,6 @@ export const getQualification = async (id: idOrganizationQualification): Promise
 
         const { idRole } = organizationCheckResult.recordset[0];
 
-        // Si el idRol es 1, devolver calificaciones de todas las organizaciones
         if (idRole === 1) {
             const allQualificationsQuery = `
                 SELECT 
@@ -349,7 +221,6 @@ export const getQualification = async (id: idOrganizationQualification): Promise
             };
         }
 
-        // Si el idRol no es 1, devolver solo las calificaciones de la organización
         const qualificationsQuery = `
             SELECT 
                 tbptg.description, 
