@@ -13,16 +13,6 @@ export const getPointsToGrade: RequestHandler = async (req, res) => {
     }
 }
 
-// export const postQualification: RequestHandler = async(req, res) => {
-//     try {
-//         const { code, message, ...resto }: QualificationRepositoryService = await repository.postQualification(req.body);
-//         res.status(code).json({ message: parseMessageI18n(message, req), ...resto });
-//     } catch (err) {
-//         console.log(err);
-//         res.status(500).json({ message: parseMessageI18n("error_server", req) });
-//     }
-// }
-
 export const postQualification: RequestHandler = async (req, res) => {
     try {
         const { idPointsToGrade, qualification } = req.body;

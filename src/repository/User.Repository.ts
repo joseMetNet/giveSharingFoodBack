@@ -64,7 +64,6 @@ export const updateContacts = async (idUser: number, data: dataUser): Promise<Ir
         const { name, phone, googleAddress, idCity, idDepartmen, email, password } = data;
         const db = await connectToSqlServer();
 
-        // Actualizar password  del servicio de gestión de usuarios 
         if (email && password) {
             await updateUserInUserManagement(email, password);
         }
@@ -208,7 +207,6 @@ export const putActiveOrInactiveUser = async (id: number): Promise<IresponseRepo
     try {
         const db = await connectToSqlServer();
 
-        // Consultar el estado actual del usuario
         const selectQuery = `
             SELECT idStatus, name, email
             FROM TB_User
@@ -237,7 +235,6 @@ export const putActiveOrInactiveUser = async (id: number): Promise<IresponseRepo
             .input('newStatus', newStatus)
             .query(updateQuery);
 
-        // Enviar notificación
         await NotificationFoundation.cnf01({ email, bussisnesName: name });
 
         return {
@@ -375,7 +372,6 @@ export const getUsersByIdStatus = async (page: number = 0, size: number = 10, id
             };
         }
 
-        // Query para contar el total de registros
         const totalCountQuery = await db?.request().query(`
             SELECT COUNT(*) AS totalCount 
             FROM TB_User AS tbu
