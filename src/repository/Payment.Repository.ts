@@ -59,7 +59,6 @@ export const createOrderRepository = async (idOrganization: number): Promise<IOr
       return { code: 400, message: "Tipo de organización no válido." };
     }
 
-
     const isFreeSubscription = (typeOrganization === "Fundación" && !foundationPays) || 
                                (typeOrganization === "Donante" && !donorPays);
 
